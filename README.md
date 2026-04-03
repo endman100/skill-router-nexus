@@ -1,5 +1,88 @@
 # skill-router-nexus
 
+> **⚠️ Experimental Project** — This project is highly experimental and under active development. APIs, folder structures, and routing conventions may change without notice. All skills are automatically discovered and classified by the agent on a scheduled basis; they are **not** manually curated. If you encounter any conflicts or misclassifications, please let us know — thank you! Use at your own risk.
+
+## Project Overview (English)
+
+**skill-router-nexus** is a mandatory routing hub for AI Agent skill knowledge bases.
+
+Its core goals are:
+
+- **Single Entry Point**: All agents must route through this router to locate the correct sub-skill before executing any task. Direct access is prohibited.
+- **Structured Classification**: Skills across 44 functional domains (workflow automation, cloud, e-commerce, LLM, social media, etc.) are organized into corresponding folders.
+- **Extensible Architecture**: A standardized skill registration process allows the knowledge base to grow on demand, with a cap of 50 skills per category.
+- **Tooling Support**: `skill_reader.py` provides fast scanning of all registered sub-skills and their descriptions for agent querying and indexing.
+
+### Installation
+
+#### Requirements
+
+- Python 3.8+
+- Git
+
+#### Steps
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-org/skill-router-nexus.git
+cd skill-router-nexus
+
+# 2. (Optional) Create a virtual environment
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
+
+# 3. Install dependencies (currently standard library only)
+# If a requirements.txt is added later:
+# pip install -r requirements.txt
+```
+
+#### Scan all skills
+
+```bash
+# List all skills in the knowledge base
+python skill_reader.py
+
+# List skills under a specific category (e.g. GitHub)
+python skill_reader.py -c GitHub
+```
+
+### Knowledge Base Structure
+
+```
+skill-router-nexus/
+├── SKILL.md              ← Mandatory router entry point (must-read for agents)
+├── skill_reader.py       ← Sub-skill scanning tool
+├── Agent-and-Workflow/
+├── CI-CD-and-Monitoring/
+├── Cloud-and-Hosting/
+├── Coding/
+├── ...  (44 category folders in total)
+└── Writing-and-Content/
+```
+
+Each sub-skill resides in its corresponding category folder with a `SKILL.md` descriptor:
+
+```
+skill-router-nexus/<category>/<skill-name>/SKILL.md
+```
+
+### Adding a New Skill
+
+1. Read the "Adding a Skill" section in `SKILL.md`
+2. Copy the new skill folder into the appropriate category directory
+3. Verify that `SKILL.md` exists and can be parsed correctly by `skill_reader.py`
+
+See [SKILL.md](SKILL.md) for details.
+
+---
+
+## 中文版 (Chinese Version)
+
+> **⚠️ 實驗性專案** — 本專案為高度實驗性質，仍在積極開發中。API、資料夾結構與路由規則皆可能在未事先通知的情況下變更。所有 skill 皆由 agent 自行定時搜索並自動分類，**非人工手動策展**。若發現任何衝突或分類錯誤，煩請告知，感謝！請自行評估風險後使用。
+
 ## 專案目標
 
 **skill-router-nexus** 是一個 AI Agent 技能知識庫的強制路由中樞。
