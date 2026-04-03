@@ -91,9 +91,16 @@ metadata:
 讀取新 skill 的 `SKILL.md`，根據「分類判定規則」確定目標分類資料夾。
 
 ### Step B — 複製 skill
+> **⚠️ 路徑推導規則：禁止猜測或硬編碼路徑。**
+> 本 `SKILL.md` 所在目錄即為 skill 知識庫的根目錄。
+> 你讀取本檔時已知其完整路徑，以該目錄為基準放置新 skill。
+> 例如：若本檔路徑為 `D:\skills\skill-router-nexus\SKILL.md`，
+> 則目標路徑為 `D:\skills\skill-router-nexus\<分類資料夾>\<skill-name>\`。
+> **嚴禁將 skill 放到本檔所在目錄的父層或其他位置。**
+
 將 skill 資料夾複製到對應分類目錄下：
 ```
-skill-router-nexus/<分類資料夾>/<skill-name>/
+<本 SKILL.md 所在目錄>/<分類資料夾>/<skill-name>/
 ```
 
 ### Step C — 驗證
