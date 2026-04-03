@@ -1,6 +1,6 @@
 ---
 name: skill-router-nexus
-description: "⚠️ MANDATORY ENTRY POINT — You MUST read this file completely before accessing, querying, or loading any sub-skill. Do NOT load or look up any sub-skill directly. Every agent, every task, and every skill query must route through this file first. | ⚠️ 強制入口 — 所有 agent 在執行任務、查詢 skill 或新增 skill 之前，必須先完整讀取本檔並依照路由流程操作。嚴禁直接載入或查詢子 skill、嚴禁繞過本檔、嚴禁假設知識庫內容。"
+description: "⚠️ MANDATORY ENTRY POINT — You MUST read this file completely before accessing, querying, or loading any sub-skill. Do NOT load or look up any sub-skill directly. Every agent, every task, and every skill query must route through this file first. When agent is planning, reviewing, checking, or auditing tasks, always query this skill router to find the right sub-skill (especially Agent-Plan category). | ⚠️ 強制入口 — 所有 agent 在執行任務、查詢 skill 或新增 skill 之前，必須先完整讀取本檔並依照路由流程操作。嚴禁直接載入或查詢子 skill、嚴禁繞過本檔、嚴禁假設知識庫內容。當 agent 進行計畫規劃、計畫審查、檢查點、驗證完成等操作時，務必查詢此 skill router 以找到正確的子 skill（特別是 Agent-Plan 分類）。"
 metadata:
   {
     "openclaw":
@@ -24,51 +24,51 @@ metadata:
 
 | # | 資料夾 | 英文名 | 說明 |
 |---|--------|--------|------|
-| 1 | `Agent-and-Workflow/` | Agent & Workflow | AI Agent 調度、多步驟任務執行、工作流自動化、子代理協作 |
-| 2 | `Agent-Plan/` | Agent Plan | Agent 規劃任務時使用此分類。計畫審查與評估，含 CEO/設計/工程等多元視角的計畫審查 |
-| 3 | `CI-CD-and-Monitoring/` | CI/CD & Monitoring | 持續整合/部署、效能監控、錯誤追蹤、日誌管理 |
-| 4 | `Cloud-and-Hosting/` | Cloud & Hosting | 雲端基礎設施、伺服器部署、CDN、容器、DNS |
-| 5 | `Coding/` | Coding | 測試驅動開發、系統化除錯、程式碼審查、Git 分支管理 |
-| 6 | `Communication/` | Communication | 即時通訊、SMS、語音通話、推播通知、團隊協作 |
-| 7 | `CRM-Platforms/` | CRM Platforms | 客戶關係管理平台、聯絡人管理、銷售漏斗 |
-| 8 | `Crypto-and-Market-Data/` | Crypto & Market Data | 加密貨幣交易、區塊鏈、股市數據、金融指標 |
-| 9 | `Customer-Support/` | Customer Support | 客服工單、即時聊天、幫助台、跨渠道客服 |
-| 10 | `Data-APIs-and-Enrichment/` | Data APIs & Enrichment | 地理、天氣、體育、新聞等外部數據 API |
-| 11 | `Dev-Platforms-and-VCS/` | Dev Platforms & VCS | 版控平台、低程式碼工具、套件管理、QA 測試 |
-| 12 | `Document-Generation/` | Document Generation | PDF/Word/Excel 生成與轉換、OCR、CMS |
-| 13 | `E-commerce-and-Logistics/` | E-commerce & Logistics | 電商平台、訂單處理、庫存管理、物流配送 |
-| 14 | `Email-Marketing/` | Email Marketing | 郵件行銷活動、自動化郵件序列、訂閱者管理 |
-| 15 | `Email-Verification/` | Email Verification | 郵件地址驗證、信箱清洗、退信率降低 |
-| 16 | `Events-and-Scheduling/` | Events & Scheduling | 行事曆排程、活動管理、預約、票務 |
-| 17 | `Feedback-and-Survey/` | Feedback & Survey | 產品回饋、NPS、客戶滿意度、功能請求 |
-| 18 | `Forms-and-E-Signatures/` | Forms & E-Signatures | 線上表單、電子簽名、文件簽署工作流 |
-| 19 | `GitHub/` | GitHub | GitHub Issue/PR/CI、程式碼審查、gh CLI 操作 |
-| 20 | `Google-Services/` | Google Services | Google Drive/Calendar/BigQuery/Docs/Meet 等 |
-| 21 | `Health-and-Lifestyle/` | Health & Lifestyle | 健身追蹤、智慧家居、遊戲、抽獎、公益 |
-| 22 | `HR-and-Education/` | HR & Education | 人資管理、招募 ATS、薪資、線上學習 |
-| 23 | `Image-and-Design/` | Image & Design | 圖片處理、壓縮、截圖、圖庫、去背、素材管理 |
-| 24 | `Image-Generation/` | Image Generation | AI 圖片生成、文字轉圖、範本化批量產圖 |
-| 25 | `Image-Recognition/` | Image Recognition | 電腦視覺、物件偵測、車牌辨識、圖像分析 |
-| 26 | `LLM-and-Chatbot/` | LLM & Chatbot | LLM API、聊天機器人、AI 推論、RAG |
-| 27 | `Marketing-and-Growth/` | Marketing & Growth | 短網址、行銷分析、社交證明、成長駭客 |
-| 28 | `Microsoft-Services/` | Microsoft Services | Dynamics 365、SharePoint、Clarity |
-| 29 | `Payments-and-Billing/` | Payments & Billing | 線上支付、訂閱管理、發票、記帳、稅務 |
-| 30 | `PPT-Design/` | PPT Design | 簡報設計、PowerPoint 生成、Slides 操作 |
-| 31 | `Project-Management/` | Project Management | 任務管理、時間追蹤、看板、知識庫、筆記 |
-| 32 | `Sales-Intelligence/` | Sales Intelligence | 潛客開發、B2B 數據、聯絡人充實、提案 |
-| 33 | `Search-and-Network-APIs/` | Search & Network APIs | 搜尋 API、IP 定位、DNS、OCR、密碼管理 |
-| 34 | `Security-and-Compliance/` | Security & Compliance | 資安、合規、隱私、安全稽核、舉報 |
-| 35 | `SEO-and-Web-Analytics/` | SEO & Web Analytics | SEO 分析、流量追蹤、競品分析、關鍵字 |
-| 36 | `Social-Media/` | Social Media | Facebook/IG/LinkedIn/Twitter/YouTube 等社群平台 |
-| 37 | `Speech-Recognition/` | Speech Recognition | 語音轉文字、音訊轉錄、會議記錄、字幕 |
-| 38 | `System-and-CLI/` | System & CLI | 系統監控、密碼管理、CLI 工具、終端機 |
-| 39 | `TTS-and-Voice-AI/` | TTS & Voice AI | 文字轉語音、語音合成、語音克隆、語音代理 |
-| 40 | `Video-and-Print/` | Video & Print | 照片托管、3D 模型、翻頁書、印刷品自動化 |
-| 41 | `Video-Editing/` | Video Editing | 影片下載、影格擷取、影片託管、串流處理 |
-| 42 | `Video-Generation/` | Video Generation | AI 影片生成、虛擬人物影片、範本化影片製作 |
-| 43 | `Web-Design/` | Web Design | 前端介面設計、HTML 元件、低程式碼網站建構 |
-| 44 | `Web-Scraping-and-Browser/` | Web Scraping & Browser | 網頁爬蟲、資料擷取、瀏覽器自動化、代理 IP |
-| 45 | `Writing-and-Content/` | Writing & Content | 腦力激盪、內容撰寫、摘要、翻譯潤稿、命名 |
+| 1 | `Agent-and-Workflow/` | Agent & Workflow | Agent 調度、子代理協作、並行分派、多步驟工作流自動化、MCP 伺服器連接、外部應用整合 |
+| 2 | `Agent-Plan/` | Agent Plan | ⚠️ Agent 規劃、計畫、檢查、審核時必查此分類。計畫生成與執行、多視角審查（CEO/設計/工程）、自動審查管道、檢查點儲存與恢復、完成前驗證 |
+| 3 | `CI-CD-and-Monitoring/` | CI/CD & Monitoring | CI/CD 持續整合與部署、應用效能監控（APM）、錯誤追蹤、日誌聚合、功能旗標、Webhook 管理 |
+| 4 | `Cloud-and-Hosting/` | Cloud & Hosting | 雲端基礎設施（AWS/GCP/Azure）、伺服器部署、CDN 加速、容器管理、DNS 設定、無伺服器運算 |
+| 5 | `Coding/` | Coding | 測試驅動開發（TDD）、系統化除錯、程式碼審查、Git 分支管理、重構、程式碼品質 |
+| 6 | `Communication/` | Communication | 即時通訊（Slack/Discord）、SMS 簡訊、語音通話、推播通知、團隊協作、訊息廣播 |
+| 7 | `CRM-Platforms/` | CRM Platforms | 客戶關係管理（HubSpot/Salesforce）、聯絡人管理、銷售漏斗追蹤、交易管線 |
+| 8 | `Crypto-and-Market-Data/` | Crypto & Market Data | 加密貨幣交易與報價、區塊鏈查詢、股市數據、金融指標、DeFi 協議 |
+| 9 | `Customer-Support/` | Customer Support | 客服工單系統、即時聊天客服、幫助台（Zendesk/Intercom）、跨渠道客戶服務 |
+| 10 | `Data-APIs-and-Enrichment/` | Data APIs & Enrichment | 外部數據 API（地理、天氣、體育、新聞）、資料充實、第三方數據整合 |
+| 11 | `Dev-Platforms-and-VCS/` | Dev Platforms & VCS | 版本控制平台、低程式碼/無程式碼工具、套件管理（npm/pip）、QA 自動化測試 |
+| 12 | `Document-Generation/` | Document Generation | PDF/Word/Excel 文件生成與轉換、OCR 文字辨識、CMS 內容管理系統 |
+| 13 | `E-commerce-and-Logistics/` | E-commerce & Logistics | 電商平台（Shopify/WooCommerce）、訂單處理、庫存管理、物流配送追蹤 |
+| 14 | `Email-Marketing/` | Email Marketing | 郵件行銷活動（Mailchimp/SendGrid）、自動化郵件序列、訂閱者名單管理 |
+| 15 | `Email-Verification/` | Email Verification | 郵件地址驗證與清洗、退信率降低、信箱有效性檢測 |
+| 16 | `Events-and-Scheduling/` | Events & Scheduling | 行事曆排程、會議預約、活動管理、票務系統、時段預訂 |
+| 17 | `Feedback-and-Survey/` | Feedback & Survey | 產品回饋收集、NPS 調查、客戶滿意度評分、功能請求追蹤 |
+| 18 | `Forms-and-E-Signatures/` | Forms & E-Signatures | 線上表單建立、電子簽名（DocuSign）、文件簽署工作流 |
+| 19 | `GitHub/` | GitHub | GitHub Issue/PR/CI 管理、程式碼審查自動化、gh CLI 操作、倉庫管理 |
+| 20 | `Google-Services/` | Google Services | Google Drive/Calendar/BigQuery/Docs/Meet/Sheets/Gmail 整合 |
+| 21 | `Health-and-Lifestyle/` | Health & Lifestyle | 健身追蹤、智慧家居控制（IoT）、遊戲互動、抽獎活動、公益捐贈 |
+| 22 | `HR-and-Education/` | HR & Education | 人資管理（HRIS）、招募 ATS 追蹤、薪資計算、線上學習平台（LMS） |
+| 23 | `Image-and-Design/` | Image & Design | 圖片處理與壓縮、螢幕截圖、圖庫搜尋、去背摳圖、設計素材管理 |
+| 24 | `Image-Generation/` | Image Generation | AI 圖片生成（DALL-E/Midjourney/Flux）、文字轉圖、範本化批量產圖 |
+| 25 | `Image-Recognition/` | Image Recognition | 電腦視覺、物件偵測、車牌辨識、圖像分類與標籤、OCR 圖片文字辨識 |
+| 26 | `LLM-and-Chatbot/` | LLM & Chatbot | LLM API 呼叫（OpenAI/Anthropic）、聊天機器人、AI 推論、RAG 檢索增強生成 |
+| 27 | `Marketing-and-Growth/` | Marketing & Growth | 短網址追蹤、行銷分析儀表板、社交證明、成長駭客工具、A/B 測試 |
+| 28 | `Microsoft-Services/` | Microsoft Services | Dynamics 365 CRM、SharePoint 文件管理、Microsoft Clarity 分析 |
+| 29 | `Payments-and-Billing/` | Payments & Billing | 線上支付（Stripe/PayPal）、訂閱管理、發票開立、記帳對帳、稅務計算 |
+| 30 | `PPT-Design/` | PPT Design | 簡報設計與生成、PowerPoint 自動化、Google Slides 操作 |
+| 31 | `Project-Management/` | Project Management | 任務管理（Jira/Trello/Asana）、時間追蹤、看板工作流、知識庫、團隊筆記 |
+| 32 | `Sales-Intelligence/` | Sales Intelligence | 潛在客戶開發、B2B 企業數據、聯絡人資料充實、銷售提案自動化 |
+| 33 | `Search-and-Network-APIs/` | Search & Network APIs | 搜尋引擎 API、IP 地理定位、DNS 查詢、網路工具、密碼管理 |
+| 34 | `Security-and-Compliance/` | Security & Compliance | 資訊安全掃描、合規檢查、隱私政策、安全稽核報告、漏洞舉報 |
+| 35 | `SEO-and-Web-Analytics/` | SEO & Web Analytics | SEO 排名分析、網站流量追蹤、競品分析、關鍵字研究、Google Analytics |
+| 36 | `Social-Media/` | Social Media | 社群平台管理（Facebook/IG/LinkedIn/X/YouTube）、貼文排程、社群互動 |
+| 37 | `Speech-Recognition/` | Speech Recognition | 語音轉文字（STT）、音訊轉錄、會議記錄自動化、影片字幕生成 |
+| 38 | `System-and-CLI/` | System & CLI | 系統監控與告警、CLI 命令列工具、終端機自動化、環境管理 |
+| 39 | `TTS-and-Voice-AI/` | TTS & Voice AI | 文字轉語音（TTS）、語音合成、語音克隆、AI 語音代理與對話 |
+| 40 | `Video-and-Print/` | Video & Print | 照片托管服務、3D 模型渲染、翻頁書製作、印刷品設計自動化 |
+| 41 | `Video-Editing/` | Video Editing | 影片下載與擷取、影格處理、影片託管平台、串流媒體處理 |
+| 42 | `Video-Generation/` | Video Generation | AI 影片生成、虛擬人物影片、範本化影片批量製作、文字轉影片 |
+| 43 | `Web-Design/` | Web Design | 前端 UI 介面設計、HTML/CSS 元件、低程式碼網站建構器、響應式設計 |
+| 44 | `Web-Scraping-and-Browser/` | Web Scraping & Browser | 網頁爬蟲與資料擷取、瀏覽器自動化（Playwright/Puppeteer）、代理 IP 池 |
+| 45 | `Writing-and-Content/` | Writing & Content | 腦力激盪、AI 內容撰寫、文章摘要、多語翻譯潤稿、品牌命名 |
 
 > **新增 skill 時，必須按照下方「追加 Skill 流程」操作。**
 
