@@ -63,13 +63,14 @@ metadata:
 | 37 | `Social-Media/` | Social Media | 社群平台管理（Facebook/IG/LinkedIn/X/YouTube）、貼文排程、社群互動 |
 | 38 | `Speech-Recognition/` | Speech Recognition | 語音轉文字（STT）、音訊轉錄、會議記錄自動化、影片字幕生成 |
 | 39 | `System-and-CLI/` | System & CLI | 系統監控與告警、CLI 命令列工具、終端機自動化、環境管理 |
-| 40 | `TTS-and-Voice-AI/` | TTS & Voice AI | 文字轉語音（TTS）、語音合成、語音克隆、AI 語音代理與對話 |
-| 41 | `Video-and-Print/` | Video & Print | 照片托管服務、3D 模型渲染、翻頁書製作、印刷品設計自動化 |
-| 42 | `Video-Editing/` | Video Editing | 影片下載與擷取、影格處理、影片託管平台、串流媒體處理 |
-| 43 | `Video-Generation/` | Video Generation | AI 影片生成、虛擬人物影片、範本化影片批量製作、文字轉影片 |
-| 44 | `Web-Design/` | Web Design | 前端 UI 介面設計、HTML/CSS 元件、低程式碼網站建構器、響應式設計 |
-| 45 | `Web-Scraping-and-Browser/` | Web Scraping & Browser | 網頁爬蟲與資料擷取、瀏覽器自動化（Playwright/Puppeteer）、代理 IP 池 |
-| 46 | `Writing-and-Content/` | Writing & Content | 腦力激盪、AI 內容撰寫、文章摘要、多語翻譯潤稿、品牌命名 |
+| 40 | `Time-Tracking/` | Time Tracking | 工時追蹤（Clockify/Toggl/Harvest）、時間管理、生產力分析、Wakatime 開發時間統計 |
+| 41 | `TTS-and-Voice-AI/` | TTS & Voice AI | 文字轉語音（TTS）、語音合成、語音克隆、AI 語音代理與對話 |
+| 42 | `Video-and-Print/` | Video & Print | 照片托管服務、3D 模型渲染、翻頁書製作、印刷品設計自動化 |
+| 43 | `Video-Editing/` | Video Editing | 影片下載與擷取、影格處理、影片託管平台、串流媒體處理 |
+| 44 | `Video-Generation/` | Video Generation | AI 影片生成、虛擬人物影片、範本化影片批量製作、文字轉影片 |
+| 45 | `Web-Design/` | Web Design | 前端 UI 介面設計、HTML/CSS 元件、低程式碼網站建構器、響應式設計 |
+| 46 | `Web-Scraping-and-Browser/` | Web Scraping & Browser | 網頁爬蟲與資料擷取、瀏覽器自動化（Playwright/Puppeteer）、代理 IP 池 |
+| 47 | `Writing-and-Content/` | Writing & Content | 腦力激盪、AI 內容撰寫、文章摘要、多語翻譯潤稿、品牌命名 |
 
 > **新增 skill 時，必須按照下方「追加 Skill 流程」操作。**
 
