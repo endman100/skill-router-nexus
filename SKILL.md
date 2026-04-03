@@ -46,29 +46,30 @@ metadata:
 | 20 | `Google-Services/` | Google Services | Google Drive/Calendar/BigQuery/Docs/Meet/Sheets/Gmail 整合 |
 | 21 | `Health-and-Lifestyle/` | Health & Lifestyle | 健身追蹤、智慧家居控制（IoT）、遊戲互動、抽獎活動、公益捐贈 |
 | 22 | `HR-and-Education/` | HR & Education | 人資管理（HRIS）、招募 ATS 追蹤、薪資計算、線上學習平台（LMS） |
-| 23 | `Image-and-Design/` | Image & Design | 圖片處理與壓縮、螢幕截圖、圖庫搜尋、去背摳圖、設計素材管理 |
-| 24 | `Image-Generation/` | Image Generation | AI 圖片生成（DALL-E/Midjourney/Flux）、文字轉圖、範本化批量產圖 |
-| 25 | `Image-Recognition/` | Image Recognition | 電腦視覺、物件偵測、車牌辨識、圖像分類與標籤、OCR 圖片文字辨識 |
-| 26 | `LLM-and-Chatbot/` | LLM & Chatbot | LLM API 呼叫（OpenAI/Anthropic）、聊天機器人、AI 推論、RAG 檢索增強生成 |
-| 27 | `Marketing-and-Growth/` | Marketing & Growth | 短網址追蹤、行銷分析儀表板、社交證明、成長駭客工具、A/B 測試 |
-| 28 | `Microsoft-Services/` | Microsoft Services | Dynamics 365 CRM、SharePoint 文件管理、Microsoft Clarity 分析 |
-| 29 | `Payments-and-Billing/` | Payments & Billing | 線上支付（Stripe/PayPal）、訂閱管理、發票開立、記帳對帳、稅務計算 |
-| 30 | `PPT-Design/` | PPT Design | 簡報設計與生成、PowerPoint 自動化、Google Slides 操作 |
-| 31 | `Project-Management/` | Project Management | 任務管理（Jira/Trello/Asana）、時間追蹤、看板工作流、知識庫、團隊筆記 |
-| 32 | `Sales-Intelligence/` | Sales Intelligence | 潛在客戶開發、B2B 企業數據、聯絡人資料充實、銷售提案自動化 |
-| 33 | `Search-and-Network-APIs/` | Search & Network APIs | 搜尋引擎 API、IP 地理定位、DNS 查詢、網路工具、密碼管理 |
-| 34 | `Security-and-Compliance/` | Security & Compliance | 資訊安全掃描、合規檢查、隱私政策、安全稽核報告、漏洞舉報 |
-| 35 | `SEO-and-Web-Analytics/` | SEO & Web Analytics | SEO 排名分析、網站流量追蹤、競品分析、關鍵字研究、Google Analytics |
-| 36 | `Social-Media/` | Social Media | 社群平台管理（Facebook/IG/LinkedIn/X/YouTube）、貼文排程、社群互動 |
-| 37 | `Speech-Recognition/` | Speech Recognition | 語音轉文字（STT）、音訊轉錄、會議記錄自動化、影片字幕生成 |
-| 38 | `System-and-CLI/` | System & CLI | 系統監控與告警、CLI 命令列工具、終端機自動化、環境管理 |
-| 39 | `TTS-and-Voice-AI/` | TTS & Voice AI | 文字轉語音（TTS）、語音合成、語音克隆、AI 語音代理與對話 |
-| 40 | `Video-and-Print/` | Video & Print | 照片托管服務、3D 模型渲染、翻頁書製作、印刷品設計自動化 |
-| 41 | `Video-Editing/` | Video Editing | 影片下載與擷取、影格處理、影片託管平台、串流媒體處理 |
-| 42 | `Video-Generation/` | Video Generation | AI 影片生成、虛擬人物影片、範本化影片批量製作、文字轉影片 |
-| 43 | `Web-Design/` | Web Design | 前端 UI 介面設計、HTML/CSS 元件、低程式碼網站建構器、響應式設計 |
-| 44 | `Web-Scraping-and-Browser/` | Web Scraping & Browser | 網頁爬蟲與資料擷取、瀏覽器自動化（Playwright/Puppeteer）、代理 IP 池 |
-| 45 | `Writing-and-Content/` | Writing & Content | 腦力激盪、AI 內容撰寫、文章摘要、多語翻譯潤稿、品牌命名 |
+| 23 | `Knowledge-and-Productivity/` | Knowledge & Productivity | 筆記工具（Notion/Obsidian/Bear）、無程式碼資料庫（Baserow/Ninox/Grist）、儀表板、書籤管理、生產力工具 |
+| 24 | `Image-and-Design/` | Image & Design | 圖片處理與壓縮、螢幕截圖、圖庫搜尋、去背摳圖、設計素材管理 |
+| 25 | `Image-Generation/` | Image Generation | AI 圖片生成（DALL-E/Midjourney/Flux）、文字轉圖、範本化批量產圖 |
+| 26 | `Image-Recognition/` | Image Recognition | 電腦視覺、物件偵測、車牌辨識、圖像分類與標籤、OCR 圖片文字辨識 |
+| 27 | `LLM-and-Chatbot/` | LLM & Chatbot | LLM API 呼叫（OpenAI/Anthropic）、聊天機器人、AI 推論、RAG 檢索增強生成 |
+| 28 | `Marketing-and-Growth/` | Marketing & Growth | 短網址追蹤、行銷分析儀表板、社交證明、成長駭客工具、A/B 測試 |
+| 29 | `Microsoft-Services/` | Microsoft Services | Dynamics 365 CRM、SharePoint 文件管理、Microsoft Clarity 分析 |
+| 30 | `Payments-and-Billing/` | Payments & Billing | 線上支付（Stripe/PayPal）、訂閱管理、發票開立、記帳對帳、稅務計算 |
+| 31 | `PPT-Design/` | PPT Design | 簡報設計與生成、PowerPoint 自動化、Google Slides 操作 |
+| 32 | `Project-Management/` | Project Management | 任務管理（Trello/Shortcut）、看板工作流、敏捷開發（Scrum）、團隊協作、自由工作者專案管理 |
+| 33 | `Sales-Intelligence/` | Sales Intelligence | 潛在客戶開發、B2B 企業數據、聯絡人資料充實、銷售提案自動化 |
+| 34 | `Search-and-Network-APIs/` | Search & Network APIs | 搜尋引擎 API、IP 地理定位、DNS 查詢、網路工具、密碼管理 |
+| 35 | `Security-and-Compliance/` | Security & Compliance | 資訊安全掃描、合規檢查、隱私政策、安全稽核報告、漏洞舉報 |
+| 36 | `SEO-and-Web-Analytics/` | SEO & Web Analytics | SEO 排名分析、網站流量追蹤、競品分析、關鍵字研究、Google Analytics |
+| 37 | `Social-Media/` | Social Media | 社群平台管理（Facebook/IG/LinkedIn/X/YouTube）、貼文排程、社群互動 |
+| 38 | `Speech-Recognition/` | Speech Recognition | 語音轉文字（STT）、音訊轉錄、會議記錄自動化、影片字幕生成 |
+| 39 | `System-and-CLI/` | System & CLI | 系統監控與告警、CLI 命令列工具、終端機自動化、環境管理 |
+| 40 | `TTS-and-Voice-AI/` | TTS & Voice AI | 文字轉語音（TTS）、語音合成、語音克隆、AI 語音代理與對話 |
+| 41 | `Video-and-Print/` | Video & Print | 照片托管服務、3D 模型渲染、翻頁書製作、印刷品設計自動化 |
+| 42 | `Video-Editing/` | Video Editing | 影片下載與擷取、影格處理、影片託管平台、串流媒體處理 |
+| 43 | `Video-Generation/` | Video Generation | AI 影片生成、虛擬人物影片、範本化影片批量製作、文字轉影片 |
+| 44 | `Web-Design/` | Web Design | 前端 UI 介面設計、HTML/CSS 元件、低程式碼網站建構器、響應式設計 |
+| 45 | `Web-Scraping-and-Browser/` | Web Scraping & Browser | 網頁爬蟲與資料擷取、瀏覽器自動化（Playwright/Puppeteer）、代理 IP 池 |
+| 46 | `Writing-and-Content/` | Writing & Content | 腦力激盪、AI 內容撰寫、文章摘要、多語翻譯潤稿、品牌命名 |
 
 > **新增 skill 時，必須按照下方「追加 Skill 流程」操作。**
 
