@@ -1,6 +1,6 @@
 # skill_reader.py — skill-router-nexus 子 skill 掃描工具
 # 由 SKILL.md Step 2 路由流程呼叫，請勿單獨修改路由邏輯
-# 用法：python skill_reader.py [-c <category>]
+# 用法：python skill_reader.py [-c <category>]...
 import argparse
 import re
 import sys
@@ -23,13 +23,39 @@ def parse_fm(content):
     return meta
 
 
-def scan(base, category=None):
-    if category:
-        cat_path = base / category
-        if not cat_path.is_dir():
-            print(f"找不到分類：{category}", file=sys.stderr)
-            sys.exit(1)
-        dirs = [(category, cat_path)]
+def parse_categories(raw_categories):
+    if not raw_categories:
+        return []
+
+    categories = []
+    for item in raw_categories:
+        for token in item.split(","):
+            name = token.strip()
+            if name:
+                categories.append(name)
+
+    deduped = []
+    seen = set()
+    for name in categories:
+        if name not in seen:
+            deduped.append(name)
+            seen.add(name)
+    return deduped
+
+
+def scan(base, categories=None):
+    if categories:
+        dirs = []
+        missing = []
+        for category in categories:
+            cat_path = base / category
+            if not cat_path.is_dir():
+                missing.append(category)
+                continue
+            dirs.append((category, cat_path))
+
+        if missing:
+            raise ValueError(f"找不到分類：{', '.join(missing)}")
     else:
         dirs = [(d.name, d) for d in sorted(base.iterdir()) if d.is_dir() and d.name not in SKIP]
 
@@ -54,11 +80,23 @@ def scan(base, category=None):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--category", "-c")
+    p.add_argument(
+        "--category",
+        "-c",
+        action="append",
+        help="可重複指定或用逗號分隔，例如 -c GitHub -c Coding 或 -c GitHub,Coding",
+    )
     args = p.parse_args()
 
     base = Path(__file__).parent
-    skills = scan(base, args.category)
+    categories = parse_categories(args.category)
+
+    try:
+        skills = scan(base, categories)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
+
     if not skills:
         print("（找不到任何 skill）")
     else:

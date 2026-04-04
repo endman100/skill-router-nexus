@@ -45,6 +45,12 @@ source .venv/bin/activate
 # List all skills in the knowledge base
 python skill_reader.py
 
+# List skills under multiple categories (recommended for cross-domain tasks)
+python skill_reader.py -c Agent-Plan -c Coding -c CI-CD-and-Monitoring
+
+# Comma-separated multi-category input is also supported
+python skill_reader.py -c Agent-Plan,Coding,CI-CD-and-Monitoring
+
 # List skills under a specific category (e.g. GitHub)
 python skill_reader.py -c GitHub
 ```
@@ -127,6 +133,12 @@ source .venv/bin/activate
 ```bash
 # 列出知識庫中所有 skill
 python skill_reader.py
+
+# 一次列出多個分類的 skill（跨域任務建議）
+python skill_reader.py -c Agent-Plan -c Coding -c CI-CD-and-Monitoring
+
+# 也支援逗號分隔
+python skill_reader.py -c Agent-Plan,Coding,CI-CD-and-Monitoring
 
 # 只列出特定分類的 skill（例如 GitHub）
 python skill_reader.py -c GitHub

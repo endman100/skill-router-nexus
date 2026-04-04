@@ -116,9 +116,10 @@ metadata:
 ## 路由流程（強制執行，禁止跳步）
 
 ### Step 1 — 判斷任務分類
-分析任務屬於上方分類中的哪一個（可複合）。
+先判斷任務主軸，再圈出 2 到 4 個候選分類（主分類 + 相關分類）。
+若任務同時涉及規劃、實作、整合、驗證、部署任一組合，預設至少命中 2 個分類，不建議只看單一分類。
 
-### Step 2 — 用 skill_reader.py 掃描
+### Step 2 — 用 skill_reader.py 多分類掃描
 
 > **⚠️ 路徑推導規則：禁止猜測或硬編碼路徑。**
 > `skill_reader.py` 與本 `SKILL.md` 位於同一目錄。
@@ -127,23 +128,28 @@ metadata:
 > 則腳本路徑為 `/foo/bar/skill-router-nexus/skill_reader.py`。
 
 ```bash
-# 掃描單一分類（推薦）—— <SKILL_DIR> 替換為本檔所在目錄的實際絕對路徑
-python "<SKILL_DIR>/skill_reader.py" --category Feedback-and-Survey
+# 掃描多個分類（推薦）—— <SKILL_DIR> 替換為本檔所在目錄的實際絕對路徑
+python "<SKILL_DIR>/skill_reader.py" --category Agent-Plan --category Coding --category CI-CD-and-Monitoring
+
+# 也可用逗號分隔一次傳入多分類
+python "<SKILL_DIR>/skill_reader.py" --category Agent-Plan,Coding,CI-CD-and-Monitoring
 
 # 掃描全部分類（慎用，避免 token 浪費）
 python "<SKILL_DIR>/skill_reader.py"
 ```
 `skill_reader.py` 會自動解析每個子 skill 的 frontmatter 並輸出 `name`、`description`、`path`。
+優先掃描 Step 1 選出的候選分類，再決定是否擴大掃描範圍。
 
 ### Step 3 — 根據輸出進行 mapping
-比對 `skill_reader.py` 輸出的 `description` 與任務，選出最多 N 個最匹配的 skill使用。
+比對 `skill_reader.py` 輸出的 `description` 與任務，從每個命中分類至少挑 1 個 skill。
+總數建議 2 到 6 個 skill；複合型任務可提高到 8 個，但仍維持最小必要載入。
 
 ### Step 4 — On-demand 載入選定 skill
-讀取這些選定的 skill 的完整 `SKILL.md`，依其指令執行任務。
+分批讀取這些選定 skill 的完整 `SKILL.md`（先主分類，再輔助分類），依其指令執行任務。
 
 ### Step 5 — 回報來源路徑
 完成後必須告知使用者：
-> 「已使用 `skill-router-nexus → Feedback-and-Survey → systematic-debugging` 完成任務」
+> 「已使用 `skill-router-nexus → Agent-Plan + Coding → gstack-plan-eng-review + systematic-debugging` 完成任務」
 > ....
 
 ---
@@ -155,4 +161,6 @@ python "<SKILL_DIR>/skill_reader.py"
 | 假設任何子 skill 已載入 | 每次 session 必須重新路由 |
 | 直接進入子資料夾而不讀此檔 | 此檔是強制入口，不可繞過 |
 | 直接查詢或搜尋子 skill 而不先讀此檔 | 查詢行為同樣必須經由路由流程 |
+| 跨域任務只命中單一分類就結束 | 容易遺漏關鍵能力，降低路由品質 |
+| 命中分類後只選 1 個 skill 且不做比對 | 缺乏備援與交叉驗證，風險較高 |
 | 一次性 pre-load 整個分類 | 浪費 token，違反最小載入原則 |
