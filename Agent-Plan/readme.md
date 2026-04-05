@@ -1,5 +1,5 @@
 # Agent Plan
 
-⚠️ Agent 進行規劃、計畫、檢查、審核時必查此分類。
+⚠️ Agent 進行想法澄清、問題拆解、方向探索與初版計畫生成時，優先查看此分類。
 
-此分類涵蓋計畫生成與執行、多視角審查（CEO/設計/工程）、自動審查管道、檢查點儲存與恢復、完成前驗證等 skill。適用於 Agent 需要規劃任務、審查計畫、設立檢查點、或驗證完成度的場景。
+此分類聚焦於把模糊需求轉成可執行方案，包括 brainstorming、unblock、learning quest 與初版計畫形成。若任務已經進入 review、execution 或 verification 階段，應優先改查對應的 Agent 子分類。

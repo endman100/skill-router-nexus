@@ -9,7 +9,7 @@
 Its core goals are:
 
 - **Single Entry Point**: All agents must route through this router to locate the correct sub-skill before executing any task. Direct access is prohibited.
-- **Structured Classification**: Skills across 44 functional domains (workflow automation, cloud, e-commerce, LLM, social media, etc.) are organized into corresponding folders.
+- **Structured Classification**: Skills across multiple functional domains (agent planning, execution, verification, skill tooling, cloud, e-commerce, LLM, social media, etc.) are organized into corresponding folders.
 - **Extensible Architecture**: A standardized skill registration process allows the knowledge base to grow on demand, with a cap of 50 skills per category.
 - **Tooling Support**: `skill_reader.py` provides fast scanning of all registered sub-skills and their descriptions for agent querying and indexing.
 
@@ -46,10 +46,10 @@ source .venv/bin/activate
 python skill_reader.py
 
 # List skills under multiple categories (recommended for cross-domain tasks)
-python skill_reader.py -c Agent-Plan -c Coding -c CI-CD-and-Monitoring
+python skill_reader.py -c Agent-Plan -c Agent-Execute -c Coding
 
 # Comma-separated multi-category input is also supported
-python skill_reader.py -c Agent-Plan,Coding,CI-CD-and-Monitoring
+python skill_reader.py -c Agent-Plan,Agent-Plan-Review,Coding
 
 # List skills under a specific category (e.g. GitHub)
 python skill_reader.py -c GitHub
@@ -61,11 +61,16 @@ python skill_reader.py -c GitHub
 skill-router-nexus/
 ├── SKILL.md              ← Mandatory router entry point (must-read for agents)
 ├── skill_reader.py       ← Sub-skill scanning tool
-├── Agent-and-Workflow/
+├── Agent-Plan/
+├── Agent-Plan-Review/
+├── Agent-Execute/
+├── Agent-Verification/
+├── MCP-Util/
+├── Skill-Util/
 ├── CI-CD-and-Monitoring/
 ├── Cloud-and-Hosting/
 ├── Coding/
-├── ...  (44 category folders in total)
+├── ...
 └── Writing-and-Content/
 ```
 
@@ -96,7 +101,7 @@ See [SKILL.md](SKILL.md) for details.
 它的核心目標是：
 
 - **統一入口**：所有 agent 在執行任務前，必須先通過本 router 找到正確的子 skill，禁止直接跳過存取。
-- **結構化分類**：將 44 個功能領域的 skill（工作流自動化、雲端、電商、LLM、社群媒體…等）整齊歸類於對應資料夾中。
+- **結構化分類**：將多個功能領域的 skill（Agent 規劃、執行、驗證、skill tooling、雲端、電商、LLM、社群媒體…等）整齊歸類於對應資料夾中。
 - **可擴展架構**：提供標準化的 skill 追加流程，讓知識庫能隨需求持續成長，每個分類上限 50 個 skill。
 - **工具輔助掃描**：透過 `skill_reader.py` 快速列出所有已登錄的子 skill 及其描述，便於 agent 查詢與索引。
 
@@ -135,10 +140,10 @@ source .venv/bin/activate
 python skill_reader.py
 
 # 一次列出多個分類的 skill（跨域任務建議）
-python skill_reader.py -c Agent-Plan -c Coding -c CI-CD-and-Monitoring
+python skill_reader.py -c Agent-Plan -c Agent-Execute -c Coding
 
 # 也支援逗號分隔
-python skill_reader.py -c Agent-Plan,Coding,CI-CD-and-Monitoring
+python skill_reader.py -c Agent-Plan,Agent-Plan-Review,Coding
 
 # 只列出特定分類的 skill（例如 GitHub）
 python skill_reader.py -c GitHub
@@ -152,11 +157,16 @@ python skill_reader.py -c GitHub
 skill-router-nexus/
 ├── SKILL.md              ← 強制路由器入口（agent 必讀）
 ├── skill_reader.py       ← 子 skill 掃描工具
-├── Agent-and-Workflow/
+├── Agent-Plan/
+├── Agent-Plan-Review/
+├── Agent-Execute/
+├── Agent-Verification/
+├── MCP-Util/
+├── Skill-Util/
 ├── CI-CD-and-Monitoring/
 ├── Cloud-and-Hosting/
 ├── Coding/
-├── ...（共 44 個分類資料夾）
+├── ...
 └── Writing-and-Content/
 ```
 
