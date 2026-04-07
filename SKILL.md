@@ -76,6 +76,7 @@ metadata:
 | 50 | `Web-Scraping-and-Browser/` | Web Scraping & Browser | 此分類涵蓋網頁爬蟲、資料擷取、瀏覽器自動化、代理 IP 管理、搜尋結果抓取、以及結構化資料提取。適用於需要從網站批量擷取資料、自動化瀏覽器操作、或建置資料採集管道的場景。 |
 | 51 | `Writing-and-Content/` | Writing & Content | 此分類涵蓋腦力激盪、內容研究與撰寫、摘要生成、翻譯潤稿、命名發想、以及寫作計畫制定。適用於需要輔助內容創作、改善文案品質、或規劃寫作流程的場景。 |
 | 52 | `ComfyUI/` | ComfyUI | 此分類涵蓋 ComfyUI 自訂節點開發的完整知識庫，包括 V3 節點結構、資料型別（IMAGE/LATENT/MASK 等）、輸入輸出設定、前端 JavaScript 擴充、執行生命週期（快取/驗證/lazy）、打包發布、以及 V1 → V3 遷移指南。適用於需要開發、除錯、遷移或打包 ComfyUI 自訂節點的場景。 |
+| 53 | `Entrepreneurship/` | Entrepreneurship | 此分類涵蓋 Minimalist Entrepreneur（極簡創業家）方法論的完整工作流，基於 Sahil Lavingia（Gumroad 創辦人）所著《The Minimalist Entrepreneur》。包括社群識別（find-community）、構想驗證（validate-idea）、MVP 建構（mvp）、手動流程化（processize）、早期客戶獲取（first-customers）、定價策略（pricing）、內容行銷計畫（marketing-plan）、可持續成長決策（grow-sustainably）、公司文化與價值觀（company-values）、以及業務決策審查（minimalist-review）。適用於 bootstrapped 創業者、獨立開發者、或任何希望以小規模可獲利方式建立事業的人。 |
 
 > **新增 skill 時，必須按照下方「追加 Skill 流程」操作。**
 
