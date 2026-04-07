@@ -36,14 +36,14 @@ If the user is vague, suggest the most common configuration for their task type.
 
 ### Step 2: Select and Compose Template
 
-Based on user intent, load the appropriate base template from `templates/` directory and customize it:
+Based on user intent, load the appropriate base template from `{SKILL Path}/templates/` directory and customize it:
 
 1. Read the matching template JSON file
 2. Modify parameters according to user requirements
 3. Add optional modules (ControlNet, LoRA, etc.) by inserting additional nodes and links
 4. Validate the workflow DAG structure
 
-**Fallback — Official Template Repository:** If no matching template is found in the local `templates/` directory, search the ComfyUI official template repository: https://github.com/Comfy-Org/workflow_templates/tree/main/templates . The official repo contains 443 templates across 9 categories (Image / Video / Audio / 3D / LLM / Utility / Use Cases / Getting Started / Node Basics). First read `templates/index.json` to find a matching template name, then download the corresponding JSON file to use as the base template. The official templates use the same format as this project (LiteGraph UI format, version 0.4).
+**Fallback — Official Template Repository:** If no matching template is found in the local `{SKILL Path}/templates/` directory, search the ComfyUI official template repository: https://github.com/Comfy-Org/workflow_templates/tree/main/templates . The official repo contains 443 templates across 9 categories (Image / Video / Audio / 3D / LLM / Utility / Use Cases / Getting Started / Node Basics). First read `{SKILL Path}/templates/index.json` to find a matching template name, then download the corresponding JSON file to use as the base template. The official templates use the same format as this project (LiteGraph UI format, version 0.4).
 
 ### Step 3: Generate and Deliver
 
@@ -229,80 +229,80 @@ CLIPTextEncode_party(enhanced_prompt) → CONDITIONING → KSampler → image
 #### Text-to-Image
 | Template | File | Description |
 |----------|------|-------------|
-| SD 1.5 Text to Image | `templates/sd15-txt2img.json` | Basic SD 1.5 text-to-image |
-| SDXL Text to Image | `templates/sdxl-txt2img.json` | SDXL with dual CLIP encoding |
-| SD3 Text to Image | `templates/sd3-txt2img.json` | SD3 with TripleCLIPLoader + CLIPTextEncodeSD3 |
-| FLUX Text to Image | `templates/flux-txt2img.json` | FLUX.1 with guidance, advanced sampling |
+| SD 1.5 Text to Image | `{SKILL Path}/templates/sd15-txt2img.json` | Basic SD 1.5 text-to-image |
+| SDXL Text to Image | `{SKILL Path}/templates/sdxl-txt2img.json` | SDXL with dual CLIP encoding |
+| SD3 Text to Image | `{SKILL Path}/templates/sd3-txt2img.json` | SD3 with TripleCLIPLoader + CLIPTextEncodeSD3 |
+| FLUX Text to Image | `{SKILL Path}/templates/flux-txt2img.json` | FLUX.1 with guidance, advanced sampling |
 
 #### Image-to-Image
 | Template | File | Description |
 |----------|------|-------------|
-| SD 1.5 Image to Image | `templates/sd15-img2img.json` | SD 1.5 img2img with VAEEncode |
-| SDXL Image to Image | `templates/sdxl-img2img.json` | SDXL img2img |
-| FLUX Image to Image | `templates/flux-img2img.json` | FLUX img2img with advanced sampling |
+| SD 1.5 Image to Image | `{SKILL Path}/templates/sd15-img2img.json` | SD 1.5 img2img with VAEEncode |
+| SDXL Image to Image | `{SKILL Path}/templates/sdxl-img2img.json` | SDXL img2img |
+| FLUX Image to Image | `{SKILL Path}/templates/flux-img2img.json` | FLUX img2img with advanced sampling |
 
 #### LoRA
 | Template | File | Description |
 |----------|------|-------------|
-| SD 1.5 + LoRA | `templates/sd15-lora.json` | SD 1.5 with LoRA loading |
-| SDXL + LoRA | `templates/sdxl-lora.json` | SDXL with LoRA loading |
-| FLUX + LoRA | `templates/flux-lora.json` | FLUX.1 with LoRA loading |
+| SD 1.5 + LoRA | `{SKILL Path}/templates/sd15-lora.json` | SD 1.5 with LoRA loading |
+| SDXL + LoRA | `{SKILL Path}/templates/sdxl-lora.json` | SDXL with LoRA loading |
+| FLUX + LoRA | `{SKILL Path}/templates/flux-lora.json` | FLUX.1 with LoRA loading |
 
 #### ControlNet
 | Template | File | Description |
 |----------|------|-------------|
-| SD 1.5 + ControlNet | `templates/sd15-controlnet.json` | SD 1.5 with ControlNet |
-| SDXL + ControlNet | `templates/sdxl-controlnet.json` | SDXL with ControlNetApplyAdvanced |
+| SD 1.5 + ControlNet | `{SKILL Path}/templates/sd15-controlnet.json` | SD 1.5 with ControlNet |
+| SDXL + ControlNet | `{SKILL Path}/templates/sdxl-controlnet.json` | SDXL with ControlNetApplyAdvanced |
 
 #### Inpainting
 | Template | File | Description |
 |----------|------|-------------|
-| SD 1.5 Inpaint | `templates/sd15-inpaint.json` | SD 1.5 inpainting workflow |
-| SDXL Inpaint | `templates/sdxl-inpaint.json` | SDXL inpainting with VAEEncodeForInpaint |
+| SD 1.5 Inpaint | `{SKILL Path}/templates/sd15-inpaint.json` | SD 1.5 inpainting workflow |
+| SDXL Inpaint | `{SKILL Path}/templates/sdxl-inpaint.json` | SDXL inpainting with VAEEncodeForInpaint |
 
 #### Video Generation
 | Template | File | Description |
 |----------|------|-------------|
-| Wan 2.2 Text to Video | `templates/wan22-txt2vid.json` | Wan 2.2 text-to-video (832x480, 81 frames) |
-| Wan 2.2 Image to Video | `templates/wan22-img2vid.json` | Wan 2.2 image-to-video with CLIP vision |
-| Wan 2.2 First-Last Frame | `templates/wan22-first-last.json` | Wan 2.2 first+last frame interpolation |
-| Wan 2.2 Fun Control | `templates/wan22-fun-control.json` | Wan 2.2 control video + reference image |
-| Wan 2.2 Camera Control | `templates/wan22-camera.json` | Wan 2.2 camera motion control |
-| HunyuanVideo T2V | `templates/hunyuan-video.json` | HunyuanVideo text-to-video |
-| HunyuanVideo I2V | `templates/hunyuan-video-i2v.json` | HunyuanVideo image-to-video |
-| LTXV Text to Video | `templates/ltxv-txt2vid.json` | LTXV text-to-video (768x512, 97 frames) |
-| LTXV Image to Video | `templates/ltxv-img2vid.json` | LTXV image-to-video with LTXVImgToVideo |
-| Mochi Text to Video | `templates/mochi-txt2vid.json` | Mochi text-to-video (848x480, 25 frames) |
-| Cosmos Text to Video | `templates/cosmos-txt2vid.json` | Cosmos text-to-video (1280x704, 121 frames) |
-| Cosmos Image to Video | `templates/cosmos-img2vid.json` | Cosmos image-to-video with start frame |
+| Wan 2.2 Text to Video | `{SKILL Path}/templates/wan22-txt2vid.json` | Wan 2.2 text-to-video (832x480, 81 frames) |
+| Wan 2.2 Image to Video | `{SKILL Path}/templates/wan22-img2vid.json` | Wan 2.2 image-to-video with CLIP vision |
+| Wan 2.2 First-Last Frame | `{SKILL Path}/templates/wan22-first-last.json` | Wan 2.2 first+last frame interpolation |
+| Wan 2.2 Fun Control | `{SKILL Path}/templates/wan22-fun-control.json` | Wan 2.2 control video + reference image |
+| Wan 2.2 Camera Control | `{SKILL Path}/templates/wan22-camera.json` | Wan 2.2 camera motion control |
+| HunyuanVideo T2V | `{SKILL Path}/templates/hunyuan-video.json` | HunyuanVideo text-to-video |
+| HunyuanVideo I2V | `{SKILL Path}/templates/hunyuan-video-i2v.json` | HunyuanVideo image-to-video |
+| LTXV Text to Video | `{SKILL Path}/templates/ltxv-txt2vid.json` | LTXV text-to-video (768x512, 97 frames) |
+| LTXV Image to Video | `{SKILL Path}/templates/ltxv-img2vid.json` | LTXV image-to-video with LTXVImgToVideo |
+| Mochi Text to Video | `{SKILL Path}/templates/mochi-txt2vid.json` | Mochi text-to-video (848x480, 25 frames) |
+| Cosmos Text to Video | `{SKILL Path}/templates/cosmos-txt2vid.json` | Cosmos text-to-video (1280x704, 121 frames) |
+| Cosmos Image to Video | `{SKILL Path}/templates/cosmos-img2vid.json` | Cosmos image-to-video with start frame |
 
 #### Upscale
 | Template | File | Description |
 |----------|------|-------------|
-| Image Upscale | `templates/upscale-model.json` | Upscale with model (RealESRGAN etc.) |
+| Image Upscale | `{SKILL Path}/templates/upscale-model.json` | Upscale with model (RealESRGAN etc.) |
 
 #### Audio
 | Template | File | Description |
 |----------|------|-------------|
-| Stable Audio | `templates/stable-audio.json` | Stable Audio generation (47s audio) |
+| Stable Audio | `{SKILL Path}/templates/stable-audio.json` | Stable Audio generation (47s audio) |
 
 #### 3D Generation
 | Template | File | Description |
 |----------|------|-------------|
-| Hunyuan3D v2 | `templates/hunyuan3d-v2.json` | Image to 3D mesh with Hunyuan3D v2 |
+| Hunyuan3D v2 | `{SKILL Path}/templates/hunyuan3d-v2.json` | Image to 3D mesh with Hunyuan3D v2 |
 
 #### Special Architectures
 | Template | File | Description |
 |----------|------|-------------|
-| Stable Cascade | `templates/stable-cascade.json` | Two-stage (Stage C + Stage B) generation |
+| Stable Cascade | `{SKILL Path}/templates/stable-cascade.json` | Two-stage (Stage C + Stage B) generation |
 
 #### LLM Integration (requires comfyui_LLM_party)
 | Template | File | Description |
 |----------|------|-------------|
-| LLM Chat (API) | `templates/comfyui_LLM_party/llm-chat-api.json` | API LLM chat (OpenAI/Gemini/DeepSeek) |
-| LLM Chat (Ollama) | `templates/comfyui_LLM_party/llm-chat-ollama.json` | Local Ollama LLM chat |
-| LLM Prompt Enhance | `templates/comfyui_LLM_party/llm-prompt-enhance.json` | LLM enhances prompt → FLUX generates image |
-| LLM Script to Video | `templates/comfyui_LLM_party/llm-script-to-video.json` | LLM script → characters → storyboard pipeline |
+| LLM Chat (API) | `{SKILL Path}/templates/comfyui_LLM_party/llm-chat-api.json` | API LLM chat (OpenAI/Gemini/DeepSeek) |
+| LLM Chat (Ollama) | `{SKILL Path}/templates/comfyui_LLM_party/llm-chat-ollama.json` | Local Ollama LLM chat |
+| LLM Prompt Enhance | `{SKILL Path}/templates/comfyui_LLM_party/llm-prompt-enhance.json` | LLM enhances prompt → FLUX generates image |
+| LLM Script to Video | `{SKILL Path}/templates/comfyui_LLM_party/llm-script-to-video.json` | LLM script → characters → storyboard pipeline |
 
 **CRITICAL RULE: ComfyUI auto-adds a hidden `control_after_generate` widget after every seed INT that has `control_after_generate: True`. You MUST include `"randomize"` in widgets_values right after every seed value. This applies to KSampler, RandomNoise, and any node with a seed INT.**
 
