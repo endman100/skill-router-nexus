@@ -90,6 +90,135 @@ See [SKILL.md](SKILL.md) for details.
 
 ---
 
+## Global Routing Rule Installation
+
+> Install the following rules into your agent environment to ensure Copilot automatically triggers routing during planning, verification, and execution scenarios.
+
+### ⚡ Quickest Way — Ask Your Agent to Install It
+
+Paste the following prompt into any agent (Copilot, Claude, Cursor, etc.) and it will read the README and complete the installation automatically:
+
+```
+Please read the "Global Routing Rule Installation" section in
+<YOUR_SKILL_DIR>/skill-router-nexus/README.md and install the routing rules
+in the appropriate location for my current environment.
+Tell me which file was created and where it was placed.
+```
+
+> Replace `<YOUR_SKILL_DIR>` with the actual path (e.g. `c:\Users\user\.copilot\skills`).  
+> The agent will detect your environment (VS Code / Cursor / Claude etc.) and choose the correct installation method.
+
+---
+
+### GitHub Copilot (VS Code) — Recommended, global scope
+
+Create a `.instructions.md` in the VS Code User Prompts folder with `applyTo: "**"` to apply it across all workspaces.
+
+**Windows:**
+```powershell
+$dest = "$env:APPDATA\Code\User\prompts"
+New-Item -ItemType Directory -Path $dest -Force | Out-Null
+```
+
+**macOS / Linux:**
+```bash
+mkdir -p "$HOME/Library/Application Support/Code/User/prompts"
+# Linux:
+# mkdir -p "$HOME/.config/Code/User/prompts"
+```
+
+Then add `skill-router-rules.instructions.md` in that folder with the following content:
+
+````markdown
+---
+applyTo: "**"
+---
+
+# Mandatory Routing Rules (Global, Highest Priority)
+
+Before ANY of the following situations, **you MUST call `read_file` to fully read the skill-router-nexus `SKILL.md` before taking any action**:
+
+| Trigger | Keyword Examples |
+|---------|-----------------|
+| Planning a task | plan, blueprint, roadmap, how to implement |
+| Reviewing a plan | review, audit, stress-test |
+| Executing a task | implement, build, run |
+| Verifying / declaring completion | done, verify, submit, PR, confirm finished |
+| Querying or adding a skill | skill, capability, knowledge base |
+
+## SKILL.md Path
+
+`<YOUR_SKILL_DIR>/skill-router-nexus/SKILL.md`
+
+After reading, **strictly follow the 5-step routing process in SKILL.md** — no skipping allowed.
+````
+
+> Replace `<YOUR_SKILL_DIR>` with the actual root path of your skill knowledge base.
+
+---
+
+### Claude (claude.ai / API system prompt)
+
+Add to the very beginning of the system prompt:
+
+```
+Additional rule:
+In any of the following scenarios, you MUST first use the read_file tool to fully read
+<YOUR_SKILL_DIR>/skill-router-nexus/SKILL.md before taking any action:
+1. Planning a task (plan / blueprint / roadmap / how to implement)
+2. Reviewing a plan (review / audit / stress-test)
+3. Executing a task (implement / build / run)
+4. Verifying or declaring completion (done / verify / submit / PR)
+5. Accessing, querying, or adding any skill
+After reading, strictly follow the 5-step routing process. No skipping allowed.
+```
+
+---
+
+### Cursor / Windsurf / Cline — Rules Files
+
+Create a rules file in the workspace root or at `~/.cursor/rules` (Cursor):
+
+**Cursor:** `.cursor/rules/skill-router.mdc` or `.cursorrules`  
+**Windsurf:** `.windsurfrules`  
+**Cline:** `.clinerules`
+
+```
+# Skill Router Nexus — Mandatory Routing Rule
+
+Before ANY of the following, fully read <YOUR_SKILL_DIR>/skill-router-nexus/SKILL.md first:
+1. Planning a task (plan / blueprint / roadmap / how to implement)
+2. Reviewing a plan (review / audit / stress-test)
+3. Executing a task (implement / build / run)
+4. Verifying or declaring completion (done / verify / submit / PR)
+5. Accessing, querying, or adding any skill
+
+Strictly follow the 5-step routing process in SKILL.md. No skipping.
+```
+
+---
+
+### Generic AGENTS.md / system prompt snippet
+
+Paste into any environment supporting `AGENTS.md` or custom system prompts:
+
+```markdown
+## Mandatory Skill Router Rule
+
+Before ANY of the following actions, you MUST first call read_file to fully read
+`<YOUR_SKILL_DIR>/skill-router-nexus/SKILL.md`, then strictly follow its 5-step routing process:
+
+1. Planning a task (plan / blueprint / roadmap / how to implement)
+2. Reviewing a plan (review / audit / stress-test)
+3. Executing a task (implement / build / run)
+4. Verifying or declaring completion (done / verify / submit / PR)
+5. Accessing, querying, or adding any skill
+
+Never skip or bypass this router. Never assume sub-skill content without routing first.
+```
+
+---
+
 ## 中文版 (Chinese Version)
 
 > **⚠️ 實驗性專案** — 本專案為高度實驗性質，仍在積極開發中。API、資料夾結構與路由規則皆可能在未事先通知的情況下變更。所有 skill 皆由 agent 自行定時搜索並自動分類，**非人工手動策展**。若發現任何衝突或分類錯誤，煩請告知，感謝！請自行評估風險後使用。
@@ -185,6 +314,133 @@ skill-router-nexus/<分類>/<skill-name>/SKILL.md
 3. 確認 `SKILL.md` 存在且可被 `skill_reader.py` 正確解析
 
 詳細說明請見 [SKILL.md](SKILL.md)。
+
+---
+
+## 全域路由規則安裝
+
+> 將以下規則裝入你的 Agent 環境，確保 Copilot 在計畫、驗證、執行等場景自動觸發路由。
+
+### ⚡ 最快方式 — 直接請 Agent 安裝
+
+把以下指令貼給任何 Agent（Copilot、Claude、Cursor 等），它會自動讀取 README 並完成安裝：
+
+```
+請閱讀 <YOUR_SKILL_DIR>/skill-router-nexus/README.md 中的「全域路由規則安裝」章節，
+並依照適合我目前環境的方式，將路由規則安裝到正確位置。
+安裝完成後告訴我安裝了哪個檔案、放在哪裡。
+```
+
+> 將 `<YOUR_SKILL_DIR>` 替換為實際路徑（例如 `c:\Users\user\.copilot\skills`）。  
+> Agent 會自行判斷你的環境（VS Code / Cursor / Claude 等）並選擇對應的安裝方式。
+
+---
+
+### GitHub Copilot（VS Code）— 推薦，全域生效
+
+在 VS Code User Prompts 資料夾建立 `.instructions.md`，設定 `applyTo: "**"` 使其對所有工作區套用。
+
+**Windows：**
+```powershell
+$dest = "$env:APPDATA\Code\User\prompts"
+New-Item -ItemType Directory -Path $dest -Force | Out-Null
+```
+
+**macOS / Linux：**
+```bash
+mkdir -p "$HOME/Library/Application Support/Code/User/prompts"
+# Linux:
+# mkdir -p "$HOME/.config/Code/User/prompts"
+```
+
+然後在該資料夾新增 `skill-router-rules.instructions.md`，內容如下：
+
+````markdown
+---
+applyTo: "**"
+---
+
+# 強制路由規則（全域，最高優先級）
+
+以下任何情境發生時，**必須先呼叫 `read_file` 完整讀取 skill-router-nexus 的 `SKILL.md`，再執行任何操作**：
+
+| 觸發情境 | 關鍵詞範例 |
+|---------|-----------|
+| 制定計畫 / 規劃任務 | 計畫、規劃、plan、blueprint、roadmap、怎麼做、如何實作 |
+| 計畫審查 | review、審查、評估、壓力測試 |
+| 執行任務 / 實作 | 執行、implement、build、開始做 |
+| 完成驗證 / 宣告完成 | 完成了嗎、done、verify、驗證、確認完成、submit、PR |
+| 查詢或新增 skill | skill、能力、知識庫、找技能 |
+
+## SKILL.md 路徑
+
+`<YOUR_SKILL_DIR>/skill-router-nexus/SKILL.md`
+
+讀取後，**嚴格依照 SKILL.md 中的「路由流程」五步驟操作**，不可跳步。
+````
+
+> 將 `<YOUR_SKILL_DIR>` 替換為你的實際 skill 知識庫根目錄路徑。
+
+---
+
+### Claude（claude.ai / API system prompt）
+
+在 system prompt 最前方加入：
+
+```
+追加規則：
+在以下任何情境，你必須首先使用 read_file 工具完整讀取 <YOUR_SKILL_DIR>/skill-router-nexus/SKILL.md，再執行任何操作：
+1. 制定計畫 / 規劃任務（plan、blueprint、roadmap、怎麼做）
+2. 計畫審查（review、審查、壓力測試）
+3. 執行任務 / 實作（implement、build、執行）
+4. 完成驗證 / 宣告完成（done、verify、驗證、submit、PR）
+5. 查詢或新增 skill（skill、能力、知識庫）
+讀取後嚴格依照 SKILL.md 的「路由流程」五步驟操作，不可跳步。
+```
+
+---
+
+### Cursor / Windsurf / Cline — Rules 檔案
+
+在工作區根目錄或 `~/.cursor/rules`（Cursor）建立規則檔，內容如下：
+
+**Cursor：** 建立 `.cursor/rules/skill-router.mdc` 或 `.cursorrules`  
+**Windsurf：** 建立 `.windsurfrules`  
+**Cline：** 建立 `.clinerules`
+
+```
+# Skill Router Nexus — 強制路由規則
+
+以下情境必須先完整讀取 <YOUR_SKILL_DIR>/skill-router-nexus/SKILL.md 再行動：
+1. 制定計畫 / 規劃任務（plan、blueprint、roadmap、怎麼做）
+2. 計畫審查（review、審查、壓力測試）
+3. 執行任務 / 實作（implement、build、執行）
+4. 完成驗證 / 宣告完成（done、verify、驗證、submit、PR）
+5. 查詢或新增 skill
+
+讀取後嚴格依照 SKILL.md 的「路由流程」五步驟操作，不可跳步。
+```
+
+---
+
+### 通用 AGENTS.md / system prompt 片段
+
+可貼入任何支援 `AGENTS.md` 或自訂 system prompt 的環境：
+
+```markdown
+## Mandatory Skill Router Rule
+
+Before ANY of the following actions, you MUST first call read_file to fully read
+`<YOUR_SKILL_DIR>/skill-router-nexus/SKILL.md`, then strictly follow its 5-step routing process:
+
+1. Planning a task (plan / blueprint / roadmap / how to implement)
+2. Reviewing a plan (review / audit / stress-test)
+3. Executing a task (implement / build / run)
+4. Verifying or declaring completion (done / verify / submit / PR)
+5. Accessing, querying, or adding any skill
+
+Never skip or bypass this router. Never assume sub-skill content without routing first.
+```
 
 ---
 

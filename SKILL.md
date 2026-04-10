@@ -1,6 +1,6 @@
 ---
 name: skill-router-nexus
-description: "⚠️ MANDATORY ENTRY POINT — You MUST read this file completely before accessing, querying, or loading any sub-skill. Do NOT load or look up any sub-skill directly. Every agent, every task, and every skill query must route through this file first. When agent is planning, reviewing, checking, or auditing tasks, always query this skill router to find the right sub-skill (especially Agent-Plan category). | ⚠️ 強制入口 — 所有 agent 在執行任務、查詢 skill 或新增 skill 之前，必須先完整讀取本檔並依照路由流程操作。嚴禁直接載入或查詢子 skill、嚴禁繞過本檔、嚴禁假設知識庫內容。當 agent 進行計畫規劃、計畫審查、檢查點、驗證完成等操作時，務必查詢此 skill router 以找到正確的子 skill（特別是 Agent-Plan 分類）。"
+description: "⚠️ MANDATORY ENTRY POINT — ALWAYS read this file FIRST before: (1) planning any task (plan / blueprint / roadmap / how to implement), (2) reviewing a plan (review / audit / stress-test), (3) executing a task (implement / build / run), (4) verifying completion (done / verify / submit / PR / confirm finished), (5) accessing, querying, or adding any sub-skill. Do NOT load or look up any sub-skill directly. Every agent, every task, and every skill query must route through this file first. | ⚠️ 強制入口 — 以下情境必須先完整讀取本檔再行動：(1) 制定計畫（計畫、規劃、plan、blueprint、怎麼做）；(2) 計畫審查（review、審查、壓力測試）；(3) 執行任務（執行、implement、build）；(4) 驗證完成（驗證、done、verify、確認完成、submit、PR）；(5) 存取、查詢或新增任何 skill。嚴禁直接載入或查詢子 skill、嚴禁繞過本檔。"
 metadata:
   {
     "openclaw":
