@@ -77,6 +77,7 @@ metadata:
 | 51 | `Writing-and-Content/` | Writing & Content | 此分類涵蓋腦力激盪、內容研究與撰寫、摘要生成、翻譯潤稿、命名發想、以及寫作計畫制定。適用於需要輔助內容創作、改善文案品質、或規劃寫作流程的場景。 |
 | 52 | `ComfyUI/` | ComfyUI | 此分類涵蓋 ComfyUI 自訂節點開發的完整知識庫，包括 V3 節點結構、資料型別（IMAGE/LATENT/MASK 等）、輸入輸出設定、前端 JavaScript 擴充、執行生命週期（快取/驗證/lazy）、打包發布、以及 V1 → V3 遷移指南。適用於需要開發、除錯、遷移或打包 ComfyUI 自訂節點的場景。 |
 | 53 | `Entrepreneurship/` | Entrepreneurship | 此分類涵蓋 Minimalist Entrepreneur（極簡創業家）方法論的完整工作流，基於 Sahil Lavingia（Gumroad 創辦人）所著《The Minimalist Entrepreneur》。包括社群識別（find-community）、構想驗證（validate-idea）、MVP 建構（mvp）、手動流程化（processize）、早期客戶獲取（first-customers）、定價策略（pricing）、內容行銷計畫（marketing-plan）、可持續成長決策（grow-sustainably）、公司文化與價值觀（company-values）、以及業務決策審查（minimalist-review）。適用於 bootstrapped 創業者、獨立開發者、或任何希望以小規模可獲利方式建立事業的人。 |
+| 54 | `AI-Research/` | AI Research | 涵蓋 AI 研究完整生命週期的 95 個 skill（來源：Orchestra Research）。包括自主研究編排（autoresearch）、模型架構（LitGPT、Mamba、NanoGPT、RWKV、TorchTitan）、分詞、微調（Axolotl、LLaMA-Factory、PEFT、Unsloth）、機制性可解釋性、資料處理、後訓練（TRL、GRPO、OpenRLHF、SimPO、verl 等）、安全對齊、分散式訓練（DeepSpeed、FSDP、Megatron-Core 等）、基礎設施、優化與量化（Flash Attention、bitsandbytes、GPTQ、AWQ 等）、評估、推論服務（vLLM、TensorRT-LLM、llama.cpp、SGLang）、MLOps、Agent 框架、RAG、提示工程、觀測、多模態（CLIP、Whisper、LLaVA、SAM 等）、前沿技術、論文撰寫、以及研究構想。適用於任何 AI/ML 研究、訓練、推論、評估、論文撰寫相關的場景。 |
 
 > **新增 skill 時，必須按照下方「追加 Skill 流程」操作。**
 
