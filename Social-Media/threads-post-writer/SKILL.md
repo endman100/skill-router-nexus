@@ -205,15 +205,6 @@ python {SKILL_PATH}/to_preview_md.py <json_file_path> [base_filename]
 
 ---
 
-## arXiv 論文專用格式
-
-當文章主題來源為 arXiv 論文時，套用以下額外規則：
-
-1. **第一行**必須是：`分享一些冷門但有用的論文 - {論文名稱}`
-2. **最後一行**必須放上論文連結，格式為：`連結：https://arxiv.org/abs/xxxx.xxxxx`
-
----
-
 ## 注意事項
 
 - 若使用者提供的主題資訊不足，先詢問補充，再開始撰寫
