@@ -20,8 +20,8 @@ JSON 格式規範：
 
 驗證規則：
     1. 頂層必須是 list
-    2. 段落數量：5–9 段
-    3. 每個段落至少 5 句
+    2. 段落數量：8–9 段
+    3. 每個段落至少 8 句
 """
 
 import json
@@ -42,9 +42,9 @@ def validate(data) -> list[str]:
         if not isinstance(para, list):
             errors.append(f"第 {i + 1} 段格式錯誤：應為 list（句子陣列），實際為 {type(para).__name__}")
             continue
-        if len(para) < 5:
+        if len(para) < 8:
             errors.append(
-                f"第 {i + 1} 段句子不足：目前 {len(para)} 句，至少需要 5 句"
+                f"第 {i + 1} 段句子不足：目前 {len(para)} 句，至少需要 8 句"
             )
 
     return errors
