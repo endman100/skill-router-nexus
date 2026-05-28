@@ -88,6 +88,16 @@ skill-router-nexus/<category>/<skill-name>/SKILL.md
 
 See [SKILL.md](SKILL.md) for details.
 
+#### Imported Asset Hygiene
+
+When importing skills from external repositories, keep only files that support the skill at runtime or provide necessary agent context.
+
+- Remove README-only showcase media, such as images, GIFs, or videos under `docs/readme/`, `readme/`, screenshots folders, or files referenced only by README files. These assets are useful for GitHub presentation but are not required for `SKILL.md` routing or agent execution.
+- Keep assets referenced by `SKILL.md`, scripts, templates, examples needed by the workflow, or files that the skill copies into outputs.
+- Before deleting media, confirm references are README-only by searching the skill directory for the exact filename. Do not delete files referenced by `SKILL.md`, scripts, templates, or bundled examples.
+- For imported PNG screenshots or photographic previews, convert to JPEG only when transparency is not needed and the image is not a pixel-perfect source asset, icon, diagram with sharp edges, or template input. After conversion, update all Markdown, HTML, CSS, JSON, YAML, and script references from `.png` to `.jpg`/`.jpeg`.
+- After deleting or converting assets, run `python skill_reader.py` and search for stale filename references before considering the import complete.
+
 ---
 
 ## Global Routing Rule Installation
@@ -314,6 +324,16 @@ skill-router-nexus/<分類>/<skill-name>/SKILL.md
 3. 確認 `SKILL.md` 存在且可被 `skill_reader.py` 正確解析
 
 詳細說明請見 [SKILL.md](SKILL.md)。
+
+### 匯入資產整理規則
+
+從外部倉庫匯入 skill 時，只保留會支援 skill 執行或提供必要 agent 上下文的檔案。
+
+- 移除只供 README 展示使用的媒體，例如位於 `docs/readme/`、`readme/`、screenshots 類資料夾，或只被 README 引用的圖片、GIF、影片。這些檔案對 GitHub 展示有用，但不是 `SKILL.md` 路由或 agent 執行所必需。
+- 保留被 `SKILL.md`、scripts、templates、必要 examples、或 skill 會複製到輸出成品的 assets 引用的檔案。
+- 刪除媒體前，先在該 skill 資料夾內搜尋精確檔名，確認引用只出現在 README。若 `SKILL.md`、腳本、模板或必要範例有引用，不要刪。
+- 匯入的 PNG 若只是截圖或照片式預覽，且不需要透明背景、不是像素精準來源素材、不是 icon、不是銳利線條圖表、也不是模板輸入，可以轉成 JPEG。轉換後必須同步修正 Markdown、HTML、CSS、JSON、YAML 與腳本中的 `.png` 路徑為 `.jpg` / `.jpeg`。
+- 刪除或轉換資產後，執行 `python skill_reader.py`，並搜尋舊檔名引用，確認沒有壞路徑後才算匯入完成。
 
 ---
 

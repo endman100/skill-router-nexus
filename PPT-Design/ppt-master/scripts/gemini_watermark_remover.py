@@ -44,8 +44,8 @@ SMALL_MARGIN = 32
 
 # Watermark background image paths
 SCRIPT_DIR = Path(__file__).parent
-BG_48_PATH = SCRIPT_DIR / "assets" / "bg_48.png"
-BG_96_PATH = SCRIPT_DIR / "assets" / "bg_96.png"
+BG_48_PATH = SCRIPT_DIR / "assets" / "bg_48.jpg"
+BG_96_PATH = SCRIPT_DIR / "assets" / "bg_96.jpg"
 
 
 def detect_watermark_config(width: int, height: int) -> dict[str, int]:

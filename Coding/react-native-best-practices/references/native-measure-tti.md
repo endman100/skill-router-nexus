@@ -57,7 +57,7 @@ npm install react-native-performance
 
 ## React Native Startup Pipeline
 
-![TTI Warm Start Diagram](images/tti-warm-start-diagram.png)
+![TTI Warm Start Diagram](images/tti-warm-start-diagram.jpg)
 
 The diagram shows a warm start (app was in memory):
 

@@ -13,7 +13,7 @@ Defined in the Design Specification & Content Outline; each image has a status a
 ```markdown
 | Filename | Dimensions | Purpose | Status | Generation Description |
 |----------|-----------|---------|--------|----------------------|
-| cover_bg.png | 1280x720 | Cover background | Pending | Modern tech abstract background, deep blue gradient |
+| cover_bg.jpg | 1280x720 | Cover background | Pending | Modern tech abstract background, deep blue gradient |
 | product.png | 600x400 | Page 3 | Existing | - |
 | team.png | 600x400 | Page 5 | Placeholder | Team collaboration scene (to be added later) |
 ```

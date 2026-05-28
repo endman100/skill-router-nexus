@@ -179,7 +179,7 @@
 
 | Filename | Dimensions | Ratio | Purpose | Type | Status | Generation Description |
 | -------- | --------- | ----- | ------- | ---- | ------ | --------------------- |
-| cover_bg.png | {canvas_info['dimensions']} | [ratio] | Cover background | [Background/Photography/Illustration/Diagram/Decorative] | [Pending/Existing/Placeholder] | [AI generation prompt] |
+| cover_bg.jpg | {canvas_info['dimensions']} | [ratio] | Cover background | [Background/Photography/Illustration/Diagram/Decorative] | [Pending/Existing/Placeholder] | [AI generation prompt] |
 
 **Status descriptions**:
 

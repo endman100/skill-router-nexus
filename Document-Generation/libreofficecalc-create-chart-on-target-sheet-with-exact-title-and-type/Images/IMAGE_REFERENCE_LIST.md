@@ -1,0 +1,24 @@
+# Image Reference List
+
+- `Images/chart_exact_title_entry.jpg`
+  - use_for: `recognize_global_ui_state`
+  - source_image_path: `/home/admin/datasets/opencua_agentnet/ubuntu_images/extracted/af25c746-be6f-4b37-b209-7f18691ea037.png`
+- `Images/chart_exact_title_entry_focus_crop.jpg`
+  - use_for: `inspect_contextual_work_region`
+  - source_image_path: `/home/admin/datasets/mm_skill_creator/4_15_codex_skills/ubuntu/libreoffice_calc/LIBREOFFICECALC_Create_Chart_on_Target_Sheet_with_Exact_Title_and_Type/Images/chart_exact_title_entry.jpg`
+- `Images/chart_subtype_selected_on_target_sheet.jpg`
+  - use_for: `recognize_global_ui_state`
+  - source_image_path: `/home/admin/datasets/opencua_agentnet/ubuntu_images/extracted/9b9af7d6-0a69-4a1c-b742-52b595e43ae1.png`
+- `Images/chart_subtype_selected_on_target_sheet_focus_crop.jpg`
+  - use_for: `inspect_contextual_work_region`
+  - source_image_path: `/home/admin/datasets/mm_skill_creator/4_15_codex_skills/ubuntu/libreoffice_calc/LIBREOFFICECALC_Create_Chart_on_Target_Sheet_with_Exact_Title_and_Type/Images/chart_subtype_selected_on_target_sheet.jpg`
+- `Images/chart_subtype_selected_on_target_sheet_after.jpg`
+  - use_for: `compare_state_transition`
+  - source_image_path: `/home/admin/datasets/opencua_agentnet/ubuntu_images/extracted/0596c4d5-7d3d-4ad5-bd90-e7012dbbf95e.png`
+- `Images/finished_chart_visible_on_target_sheet.jpg`
+  - use_for: `recognize_global_ui_state`
+  - source_image_path: `/home/admin/datasets/opencua_agentnet/ubuntu_images/extracted/0596c4d5-7d3d-4ad5-bd90-e7012dbbf95e.png`
+- `Images/finished_chart_visible_on_target_sheet_focus_crop.jpg`
+  - use_for: `inspect_contextual_work_region`
+  - source_image_path: `/home/admin/datasets/mm_skill_creator/4_15_codex_skills/ubuntu/libreoffice_calc/LIBREOFFICECALC_Create_Chart_on_Target_Sheet_with_Exact_Title_and_Type/Images/finished_chart_visible_on_target_sheet.jpg`
+

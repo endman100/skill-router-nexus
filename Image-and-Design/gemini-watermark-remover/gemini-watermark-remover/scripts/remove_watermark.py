@@ -22,7 +22,7 @@ def calculate_position(width: int, height: int, logo_size: int, margin_right: in
 
 def load_alpha_map(logo_size: int) -> List[float]:
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    asset_name = "bg_48.png" if logo_size == 48 else "bg_96.png"
+    asset_name = "bg_48.jpg" if logo_size == 48 else "bg_96.jpg"
     asset_path = os.path.abspath(os.path.join(script_dir, "..", "assets", asset_name))
 
     with Image.open(asset_path) as img:

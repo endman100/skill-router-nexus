@@ -32,7 +32,7 @@ python remove_watermark.py ./in.png ./out.png
 ## What this skill provides
 
 - `scripts/remove_watermark.py`: CLI entry point and core algorithm.
-- `assets/bg_48.png`, `assets/bg_96.png`: Pre-captured watermark alpha maps.
+- `assets/bg_48.jpg`, `assets/bg_96.jpg`: Pre-captured watermark alpha maps.
 - `references/algorithm.md`: Math, detection rules, and limits.
 
 ## Workflow

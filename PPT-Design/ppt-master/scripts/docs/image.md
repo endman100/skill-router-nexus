@@ -87,7 +87,7 @@ python3 scripts/gemini_watermark_remover.py <image_path> -q
 ```
 
 Notes:
-- Requires `scripts/assets/bg_48.png` and `scripts/assets/bg_96.png`
+- Requires `scripts/assets/bg_48.jpg` and `scripts/assets/bg_96.jpg`
 - Best used after downloading “full size” Gemini images
 
 Dependencies:

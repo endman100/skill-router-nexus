@@ -117,15 +117,15 @@ Create an architecture diagram for a microservices system with:
 
 ### Web Application (React + Node.js + PostgreSQL)
 
-![Web App Architecture](examples/images/web-app.png)
+![Web App Architecture](examples/images/web-app.jpg)
 
 ### AWS Serverless (Lambda + API Gateway + DynamoDB)
 
-![AWS Serverless Architecture](examples/images/aws-serverless.png)
+![AWS Serverless Architecture](examples/images/aws-serverless.jpg)
 
 ### Microservices (Kubernetes + API Gateway)
 
-![Microservices Architecture](examples/images/microservices.png)
+![Microservices Architecture](examples/images/microservices.jpg)
 
 ## ✨ Features
 
@@ -160,7 +160,7 @@ Create an architecture diagram for a microservices system with:
 3. Click **+ Add** and upload the zip file
 4. Toggle the skill on
 
-![Claude Skills Settings](examples/images/claude-skills-settings.png)
+![Claude Skills Settings](examples/images/claude-skills-settings.jpg)
 
 ### Claude.ai Projects (Alternative)
 

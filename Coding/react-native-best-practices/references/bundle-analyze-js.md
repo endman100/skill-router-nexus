@@ -78,7 +78,7 @@ npx source-map-explorer output.js --no-border-checks
 
 Opens browser with treemap visualization:
 
-![Bundle Treemap from source-map-explorer](images/bundle-treemap-source-map-explorer.png)
+![Bundle Treemap from source-map-explorer](images/bundle-treemap-source-map-explorer.jpg)
 
 The treemap shows:
 - **Hierarchy**: `node_modules/` → `react-native/` → `Libraries/` → individual files
@@ -114,7 +114,7 @@ Then launch UI:
 npx expo-atlas
 ```
 
-![Expo Atlas Treemap](images/expo-atlas-treemap.png)
+![Expo Atlas Treemap](images/expo-atlas-treemap.jpg)
 
 Expo Atlas provides more accurate visualization for Expo projects, with similar treemap interface showing module sizes and dependencies.
 

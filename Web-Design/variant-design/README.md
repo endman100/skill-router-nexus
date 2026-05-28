@@ -14,7 +14,7 @@ Three variations from a single prompt — each feels like a different studio:
 
 | A — Editorial | B — Dark Dashboard | C — SaaS Landing |
 |---|---|---|
-| ![Editorial](assets/sample-A-editorial.png) | ![Dashboard](assets/sample-B-dashboard.png) | ![SaaS](assets/sample-C-saas.png) |
+| ![Editorial](assets/sample-A-editorial.jpg) | ![Dashboard](assets/sample-B-dashboard.jpg) | ![SaaS](assets/sample-C-saas.jpg) |
 
 ---
 

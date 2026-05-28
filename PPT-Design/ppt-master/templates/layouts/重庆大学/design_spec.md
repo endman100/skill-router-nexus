@@ -122,7 +122,7 @@ Small circle elements representing the nighttime lights of the Mountain City:
 ### 1. Cover Page (01_cover.svg)
 
 **Layout Structure**:
-- Upper-right area: Logo (using logo.png)
+- Upper-right area: Logo (using logo.jpg)
 - Center-left: Main title + subtitle
 - Lower-left corner: Large diagonal deep-blue color block (extending from lower-left to upper-right)
 - Bottom: Presenter info, date
@@ -168,8 +168,8 @@ Small circle elements representing the nighttime lights of the Mountain City:
 
 | File | Applicable Context | Notes |
 |------|-------------------|-------|
-| `重庆大学logo.png` | Light/white backgrounds | Blue version |
-| `重庆大学logo2.png` | Dark/blue backgrounds | White version |
+| `重庆大学logo.jpg` | Light/white backgrounds | Blue version |
+| `重庆大学logo2.jpg` | Dark/blue backgrounds | White version |
 
 **Recommended Logo Sizes**:
 - Cover page: Width 280-320px
