@@ -143,7 +143,7 @@ Upload IPA, APK, or AAB through their web interface or CI integration.
 
 ### Features
 
-![Emerge Tools X-Ray for iOS](images/emerge-xray-ios.png)
+![Emerge Tools X-Ray for iOS](images/emerge-xray-ios.jpg)
 
 - **X-Ray**: Treemap visualization (like source-map-explorer for binaries)
   - Shows Frameworks (hermes.framework), Mach-O sections (TEXT, DATA), etc.

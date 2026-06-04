@@ -26,7 +26,7 @@ Receive the "Image Resource List" from the Design Specification & Content Outlin
 
   | Filename | Dimensions | Purpose | Type | Status | Generation Description |
   |----------|-----------|---------|------|--------|----------------------|
-  | cover_bg.png | 1920x1080 | Cover background | Background | Pending | Modern tech abstract background, deep blue gradient |
+  | cover_bg.jpg | 1920x1080 | Cover background | Background | Pending | Modern tech abstract background, deep blue gradient |
 
 ### Output
 
@@ -340,13 +340,13 @@ Use the following structure when creating `project/images/image_prompts.md`:
 
 | # | Filename | Type | Dimensions | Status |
 |---|----------|------|-----------|--------|
-| 1 | cover_bg.png | Background | 1920x1080 | Pending |
+| 1 | cover_bg.jpg | Background | 1920x1080 | Pending |
 
 ---
 
 ## Detailed Prompts
 
-### Image 1: cover_bg.png
+### Image 1: cover_bg.jpg
 
 | Attribute | Value |
 |-----------|-------|
@@ -478,7 +478,7 @@ Diagnose the problem category and apply a targeted prompt fix:
 
 | Filename | Type | Dimensions | Status |
 |----------|------|-----------|--------|
-| cover_bg.png | Background | 1920x1080 | Generated |
+| cover_bg.jpg | Background | 1920x1080 | Generated |
 
 **Next step**: Switch to Executor role to begin SVG generation
 ```

@@ -14,7 +14,7 @@
 
 | A — 编辑/杂志 | B — 暗色仪表盘 | C — SaaS 落地页 |
 |---|---|---|
-| ![Editorial](assets/sample-A-editorial.png) | ![Dashboard](assets/sample-B-dashboard.png) | ![SaaS](assets/sample-C-saas.png) |
+| ![Editorial](assets/sample-A-editorial.jpg) | ![Dashboard](assets/sample-B-dashboard.jpg) | ![SaaS](assets/sample-C-saas.jpg) |
 
 ---
 

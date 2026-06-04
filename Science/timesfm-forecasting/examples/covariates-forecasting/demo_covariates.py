@@ -396,7 +396,7 @@ def create_visualization(data: dict) -> None:
             axes[row, col].set_xticks(tick_pos)
 
     plt.tight_layout()
-    output_path = OUTPUT_DIR / "covariates_data.png"
+    output_path = OUTPUT_DIR / "covariates_data.jpg"
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close()
     print(f"\n Saved visualization: {output_path}")
@@ -558,7 +558,7 @@ Key points:
   5. Effect decomposition shows holidays/promotions dominate over price variation
 
 Output files:
-  output/covariates_data.png         -- 2x2 visualization with conclusions
+  output/covariates_data.jpg         -- 2x2 visualization with conclusions
   output/sales_with_covariates.csv   -- 108-row compact dataset
   output/covariates_metadata.json    -- metadata + effect magnitudes
 """)

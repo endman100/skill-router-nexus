@@ -129,7 +129,7 @@ When `normalized_assets.json` exists, follow these rules:
 1. If an original exported asset and an `inline_*` asset clearly correspond to the same visible image, use the **original exported asset** as the canonical template source.
 2. If an `inline_*` asset has no reliable original exported counterpart, it may be kept as a derived template asset.
 3. If an `inline_*` asset appears only as a mask, alpha helper, or other non-semantic support layer inside SVG export output, do not include it in the final template asset set by default.
-4. Final template asset names should be semantic, such as `cover_bg.png` or `brand_emblem.png`, rather than `image3.png` or `inline_abcd1234.png`.
+4. Final template asset names should be semantic, such as `cover_bg.jpg` or `brand_emblem.png`, rather than `image3.png` or `inline_abcd1234.png`.
 
 ### 3. Placeholder Markers
 

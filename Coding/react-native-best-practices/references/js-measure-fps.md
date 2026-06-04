@@ -59,7 +59,7 @@ flashlight measure
 
 > Android only. Provides detailed reports and JSON export.
 
-![Flashlight FlatList vs FlashList Comparison](images/flashlight-flatlist-vs-flashlist.png)
+![Flashlight FlatList vs FlashList Comparison](images/flashlight-flatlist-vs-flashlist.jpg)
 
 Flashlight shows comparative performance data:
 - **Score** (0-100): Overall performance rating (higher is better)

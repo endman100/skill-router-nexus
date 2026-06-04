@@ -36,7 +36,7 @@ Fix TextInput synchronization and flickering issues by using uncontrolled compon
 
 ## Problem Description
 
-![Controlled TextInput Ping-Pong Communication](images/controlled-textinput-pingpong.png)
+![Controlled TextInput Ping-Pong Communication](images/controlled-textinput-pingpong.jpg)
 
 The diagram shows what happens when typing "TEST" with a controlled `TextInput`:
 

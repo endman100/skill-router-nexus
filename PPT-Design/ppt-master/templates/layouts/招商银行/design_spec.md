@@ -73,7 +73,7 @@ Reference slides read before generation: `1, 2, 3, 4, 6, 9, 11, 13, 16, 18`.
 
 ### 1. Cover Page (`01_cover.svg`)
 
-- Uses the imported cover background asset `cover_bg.png`
+- Uses the imported cover background asset `cover_bg.jpg`
 - Centered white typography with restrained divider lines
 - Suitable for title, subtitle, presenter, and date
 
@@ -170,21 +170,21 @@ Reference slides read before generation: `1, 2, 3, 4, 6, 9, 11, 13, 16, 18`.
 
 | Asset | Purpose |
 | --- | --- |
-| `cover_bg.png` | Cover / ending brand background (dark pages) |
-| `logo_white.png` | White brand logo for red and dark pages |
-| `logo_dark.png` | 「招商银行 \| 公司金融」dark logo for light page headers |
+| `cover_bg.jpg` | Cover / ending brand background (dark pages) |
+| `logo_white.jpg` | White brand logo for red and dark pages |
+| `logo_dark.jpg` | 「招商银行 \| 公司金融」dark logo for light page headers |
 
 ### Optional Assets
 
 | Asset | Purpose |
 | --- | --- |
-| `page_header_bg.png` | Full-page header background reference (red accent + logo) |
-| `logo_crm_banner.png` | 「招商银行 \| CRM 4.0」red banner (product-specific, use when applicable) |
-| `ref_content_bg.png` | Content page reference layout (with building illustration, for design reference only) |
+| `page_header_bg.jpg` | Full-page header background reference (red accent + logo) |
+| `logo_crm_banner.jpg` | 「招商银行 \| CRM 4.0」red banner (product-specific, use when applicable) |
+| `ref_content_bg.jpg` | Content page reference layout (with building illustration, for design reference only) |
 
 ### Usage Rule
 
-Core assets are wired into SVG templates. `logo_dark.png` is used on light pages (TOC, content); `logo_white.png` and `cover_bg.png` on dark pages (cover, chapter, ending). Optional assets are available for project-specific customization.
+Core assets are wired into SVG templates. `logo_dark.jpg` is used on light pages (TOC, content); `logo_white.jpg` and `cover_bg.jpg` on dark pages (cover, chapter, ending). Optional assets are available for project-specific customization.
 
 ## XII. Chart Specifications
 

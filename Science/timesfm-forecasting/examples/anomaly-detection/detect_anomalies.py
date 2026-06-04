@@ -10,7 +10,7 @@ Phase 2 (forecast): TimesFM quantile prediction intervals on a 12-month
   synthetic future with 3 injected anomalies.
 
 Outputs:
-  output/anomaly_detection.png  -- 2-panel visualization
+  output/anomaly_detection.jpg  -- 2-panel visualization
   output/anomaly_detection.json -- structured detection records
 """
 
@@ -377,7 +377,7 @@ def plot_results(
     ]
     ax2.legend(handles=legend_patches, fontsize=8, loc="upper right")
 
-    output_path = OUTPUT_DIR / "anomaly_detection.png"
+    output_path = OUTPUT_DIR / "anomaly_detection.jpg"
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close()
     print(f"\n  Saved: {output_path}")

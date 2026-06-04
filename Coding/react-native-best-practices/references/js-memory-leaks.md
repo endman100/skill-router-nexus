@@ -64,7 +64,7 @@ useEffect(() => {
 
 ### 4. Investigate Leaking Objects
 
-![Memory Heap Snapshot](images/memory-heap-snapshot.png)
+![Memory Heap Snapshot](images/memory-heap-snapshot.jpg)
 
 The Memory tab shows:
 - **Timeline** (top): Blue bars = allocations, select time range to filter

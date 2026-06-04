@@ -175,7 +175,7 @@ Selection principle: Font size is based on **content density**, not design style
 
 | Column | Description |
 |--------|-------------|
-| Filename | e.g., `cover_bg.png` |
+| Filename | e.g., `cover_bg.jpg` |
 | Dimensions | e.g., `1280x720` |
 | Ratio | e.g., `1.78` |
 | Layout suggestion | e.g., `Wide landscape (suitable for full-screen/illustration)` |

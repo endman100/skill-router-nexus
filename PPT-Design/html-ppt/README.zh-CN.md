@@ -20,7 +20,7 @@
 可调整大小的磁吸卡片**：当前页预览、下一页预览、逐字稿、计时器。两个窗口
 通过 `BroadcastChannel` 双向同步翻页。
 
-![演讲者模式 · 4 个磁吸卡片](docs/readme/presenter-mode.png)
+![演讲者模式 · 4 个磁吸卡片](docs/readme/presenter-mode.jpg)
 
 **为什么预览是像素级完美的：** 每个卡片是一个 `<iframe>`，加载的是**同一
 份 deck HTML 文件**，只是 URL 多了 `?preview=N` 参数。runtime 检测到这个
@@ -78,13 +78,13 @@ npx skills add https://github.com/lewislulu/html-ppt-skill
 `corporate-clean`、`academic-paper`、`news-broadcast`、`pitch-deck-vc`、
 `magazine-bold`、`engineering-whiteprint`
 
-![36 主题 · 其中 8 个](docs/readme/themes.png)
+![36 主题 · 其中 8 个](docs/readme/themes.jpg)
 
 每个主题都是一份纯 CSS token 文件 —— 只需要换一行 `<link>` 就能给整份 deck
 换皮。在 `templates/theme-showcase.html` 里可以浏览全部（每一页用独立 iframe
 渲染，避免样式互相污染）。
 
-![15 套完整 deck 模板](docs/readme/templates.png)
+![15 套完整 deck 模板](docs/readme/templates.jpg)
 
 ### 15 套完整 deck 模板
 
@@ -113,7 +113,7 @@ npx skills add https://github.com/lewislulu/html-ppt-skill
 每个模板都是自包含的文件夹，用 scoped `.tpl-<name>` CSS，所以多个模板可以
 同时加载不会互相污染。在 `templates/full-decks-index.html` 可以看全套 gallery。
 
-![31 种单页布局](docs/readme/layouts.png)
+![31 种单页布局](docs/readme/layouts.jpg)
 
 ### 31 种单页布局
 
@@ -130,7 +130,7 @@ chart-pie · chart-radar · arch-diagram · process-steps · cta · thanks
 *大 iframe 直接加载 `templates/single-page/<name>.html` 文件，每 2.8 秒
 自动切换到下一个布局。*
 
-![47 个动效 · 27 CSS + 20 Canvas FX](docs/readme/animations.png)
+![47 个动效 · 27 CSS + 20 Canvas FX](docs/readme/animations.jpg)
 
 ### 27 个 CSS 动画 + 20 个 Canvas FX
 

@@ -209,6 +209,6 @@ Templates use `{{PLACEHOLDER}}` format. Common placeholders:
 ## XI. Usage Notes (Recommended)
 
 1. **Template Deployment**: Copy the template to your project directory.
-2. **Asset Replacement**: Replace `大型 logo.png` (592×238) and `右上角 logo.png` (113×50) in the `images` directory.
+2. **Asset Replacement**: Replace `大型 logo.jpg` (592×238) and `右上角 logo.jpg` (113×50) in the `images` directory.
 3. **Content Generation**: Select appropriate page templates based on content needs, and replace content using `{{}}` placeholders.
 4. **SVG Generation**: Generate final SVG files via automation scripts.

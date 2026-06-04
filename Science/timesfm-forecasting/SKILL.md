@@ -711,9 +711,9 @@ cd examples/covariates-forecasting && python demo_covariates.py
 
 | Example | Key output files | Acceptance criteria |
 | ------- | ---------------- | ------------------- |
-| global-temperature | `output/forecast_output.json`, `output/forecast_visualization.png` | `point_forecast` has 12 values; PNG shows context + forecast + PI bands |
-| anomaly-detection | `output/anomaly_detection.json`, `output/anomaly_detection.png` | Sep 2023 flagged CRITICAL (z >= 3.0); >= 2 forecast CRITICAL from injected anomalies |
-| covariates-forecasting | `output/sales_with_covariates.csv`, `output/covariates_data.png` | CSV has 108 rows (3 stores x 36 weeks); stores have **distinct** price arrays |
+| global-temperature | `output/forecast_output.json`, `output/forecast_visualization.jpg` | `point_forecast` has 12 values; PNG shows context + forecast + PI bands |
+| anomaly-detection | `output/anomaly_detection.json`, `output/anomaly_detection.jpg` | Sep 2023 flagged CRITICAL (z >= 3.0); >= 2 forecast CRITICAL from injected anomalies |
+| covariates-forecasting | `output/sales_with_covariates.csv`, `output/covariates_data.jpg` | CSV has 108 rows (3 stores x 36 weeks); stores have **distinct** price arrays |
 
 ## Quality Checklist
 

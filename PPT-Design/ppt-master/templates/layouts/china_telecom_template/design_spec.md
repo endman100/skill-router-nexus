@@ -196,6 +196,6 @@
 
 ## XI. Usage Guide
 
-1. Reuse `logo.png` and `footer_ribbon.png` as fixed brand assets; `slogan_red.png` and `skyline_bg.png` should be used selectively and only on the cover / ending pages.
+1. Reuse `logo.jpg` and `footer_ribbon.jpg` as fixed brand assets; `slogan_red.jpg` and `skyline_bg.jpg` should be used selectively and only on the cover / ending pages.
 2. Keep generated text inside the documented safe areas; only chapter pages use a strong left/right split.
 3. Prefer red emphasis only for structure and key figures; do not over-saturate the content area.

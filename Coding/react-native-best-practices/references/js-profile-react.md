@@ -61,7 +61,7 @@ Identify unnecessary re-renders and performance bottlenecks in React Native apps
 
 ### 4. Analyze the Flame Graph
 
-![React DevTools Flamegraph](images/devtools-flamegraph.png)
+![React DevTools Flamegraph](images/devtools-flamegraph.jpg)
 
 The flame graph shows component render hierarchy with timing:
 

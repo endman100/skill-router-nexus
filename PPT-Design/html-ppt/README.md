@@ -21,7 +21,7 @@ draggable, resizable **magnetic cards**: current slide, next slide preview,
 speaker script (逐字稿), and timer. Two windows stay in sync via
 `BroadcastChannel`.
 
-![Presenter mode with 4 magnetic cards](docs/readme/presenter-mode.png)
+![Presenter mode with 4 magnetic cards](docs/readme/presenter-mode.jpg)
 
 **Why previews are pixel-perfect:** each card is an `<iframe>` that loads the
 same deck HTML with a `?preview=N` query param. The runtime detects this and
@@ -81,13 +81,13 @@ that supports AgentSkills can author presentations by asking things like:
 `corporate-clean`, `academic-paper`, `news-broadcast`, `pitch-deck-vc`,
 `magazine-bold`, `engineering-whiteprint`.
 
-![36 themes · 8 of them](docs/readme/themes.png)
+![36 themes · 8 of them](docs/readme/themes.jpg)
 
 Each is a pure CSS-tokens file — swap one `<link>` to reskin the entire deck.
 Browse them all in `templates/theme-showcase.html` (each slide rendered in an
 isolated iframe so theme ≠ theme is visually guaranteed).
 
-![14 full-deck templates](docs/readme/templates.png)
+![14 full-deck templates](docs/readme/templates.jpg)
 
 ### 15 Full-deck templates
 
@@ -113,7 +113,7 @@ Each is a self-contained folder with scoped `.tpl-<name>` CSS so multiple
 decks can be previewed side-by-side without collisions. Browse the full
 gallery in `templates/full-decks-index.html`.
 
-![31 single-page layouts](docs/readme/layouts.png)
+![31 single-page layouts](docs/readme/layouts.jpg)
 
 ### 31 Single-page layouts
 
@@ -130,7 +130,7 @@ and immediately see it render.
 
 *The big iframe is loading `templates/single-page/<name>.html` directly and cycling through all 31 layouts every 2.8 seconds.*
 
-![47 animations — 27 CSS + 20 canvas FX](docs/readme/animations.png)
+![47 animations — 27 CSS + 20 canvas FX](docs/readme/animations.jpg)
 
 ### 27 CSS animations + 20 Canvas FX
 
