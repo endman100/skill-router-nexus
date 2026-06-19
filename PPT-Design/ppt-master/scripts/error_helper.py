@@ -5,6 +5,7 @@ PPT Master - Error Message Helper
 Provides user-friendly error messages and specific fix suggestions.
 """
 
+import argparse
 from typing import Dict, List, Optional
 
 
@@ -110,12 +111,21 @@ class ErrorHelper:
             ],
             'severity': 'error'
         },
-        'clippath_detected': {
-            'message': 'Forbidden <clipPath> element detected',
+        'clippath_on_non_image': {
+            'message': 'clip-path is only allowed on <image> elements',
             'solutions': [
-                'Remove <clipPath> elements',
-                'PPT does not support SVG clipping paths',
-                'Use basic shape combinations as an alternative to clipping'
+                'Remove clip-path from shapes / groups / text',
+                'Draw the target geometry directly with the matching native element: <circle> / <ellipse> / <rect rx="..."> / <polygon> / <path>. A rect clipped to a circle is just a <circle>.',
+                'clip-path on <image> is conditionally allowed — see references/shared-standards.md §1.2'
+            ],
+            'severity': 'error'
+        },
+        'clippath_def_missing': {
+            'message': 'clip-path references a <clipPath> id that does not exist in <defs>',
+            'solutions': [
+                'Define the referenced <clipPath id="..."> inside <defs>',
+                'The clipPath must contain exactly one shape child (circle / ellipse / rect with rx,ry / path / polygon)',
+                'Reference: references/shared-standards.md §1.2'
             ],
             'severity': 'error'
         },
@@ -252,8 +262,8 @@ class ErrorHelper:
             'message': 'Forbidden web font (@font-face) detected',
             'solutions': [
                 'Remove @font-face declarations',
-                'Use the system font stack',
-                'font-family: system-ui, -apple-system, sans-serif'
+                'End every font-family stack with a PPT-safe pre-installed family',
+                'Example: font-family: "Microsoft YaHei", Arial, sans-serif'
             ],
             'severity': 'error'
         },
@@ -276,12 +286,13 @@ class ErrorHelper:
             'severity': 'error'
         },
         'invalid_font': {
-            'message': 'Non-standard font used',
+            'message': 'Font stack does not end on a PPT-safe family',
             'solutions': [
-                'Use the system UI font stack',
-                'font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
-                'Avoid using specific font names (e.g. Arial, Helvetica)',
-                'Ensure cross-platform compatibility'
+                'End the stack with a cross-platform pre-installed family',
+                'CJK: "Microsoft YaHei", sans-serif  |  SimSun, serif',
+                'Latin: Arial, sans-serif  |  "Times New Roman", serif',
+                'Mono: Consolas, "Courier New", monospace',
+                'See strategist.md §g for the full PPT-safe discipline'
             ],
             'severity': 'warning'
         }
@@ -409,24 +420,45 @@ class ErrorHelper:
             print("-" * 80)
 
 
-def main() -> None:
+def build_parser() -> argparse.ArgumentParser:
+    """Build the command-line parser."""
+    parser = argparse.ArgumentParser(
+        description="Look up PPT Master error messages and suggested fixes.",
+    )
+    parser.add_argument(
+        "error_type",
+        nargs="?",
+        choices=sorted(ErrorHelper.ERROR_SOLUTIONS),
+        help="Error type to explain",
+    )
+    parser.add_argument(
+        "context",
+        nargs="*",
+        metavar="key=value",
+        help="Optional context values used by templates",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
     """Run the CLI entry point for error lookup."""
-    import sys
+    parser = build_parser()
+    args = parser.parse_args(argv)
 
-    if len(sys.argv) > 1:
-        error_type = sys.argv[1]
-        context = {}
-
-        # Parse context parameters
-        for arg in sys.argv[2:]:
-            if '=' in arg:
-                key, value = arg.split('=', 1)
-                context[key] = value
-
-        print(ErrorHelper.format_error_message(error_type, context))
-    else:
+    if not args.error_type:
         ErrorHelper.print_help()
+        return 0
+
+    context = {}
+    for item in args.context:
+        if '=' not in item:
+            parser.error(f"context values must use key=value syntax: {item}")
+        key, value = item.split('=', 1)
+        context[key] = value
+
+    print(ErrorHelper.format_error_message(args.error_type, context))
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

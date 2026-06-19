@@ -121,15 +121,69 @@ def build_fill_xml(
     if fill == 'none':
         return '<a:noFill/>'
 
-    grad_id = resolve_url_id(fill)
-    if grad_id and grad_id in ctx.defs:
-        return build_gradient_fill(ctx.defs[grad_id], opacity)
+    ref_id = resolve_url_id(fill)
+    if ref_id and ref_id in ctx.defs:
+        ref_elem = ctx.defs[ref_id]
+        ref_tag = ref_elem.tag.replace(f'{{{SVG_NS}}}', '')
+        if ref_tag == 'pattern':
+            patt_xml = build_pattern_fill(ref_elem, opacity)
+            if patt_xml:
+                return patt_xml
+            return '<a:noFill/>'
+        return build_gradient_fill(ref_elem, opacity)
 
     color = parse_hex_color(fill)
     if color:
         return build_solid_fill(color, opacity)
 
     return '<a:noFill/>'
+
+
+def build_pattern_fill(
+    pattern_elem: ET.Element,
+    opacity: float | None = None,
+) -> str:
+    """Build <a:pattFill> from an SVG <pattern> emitted by pptx_to_svg.
+
+    Reads the round-trip annotations (data-pptx-pattern / data-pptx-fg /
+    data-pptx-bg) when present. Falls back to inspecting the inner stroke /
+    rect colors when annotations are absent (hand-authored SVG).
+    """
+    prst = pattern_elem.get('data-pptx-pattern') or 'ltUpDiag'
+
+    fg_color = pattern_elem.get('data-pptx-fg')
+    bg_color = pattern_elem.get('data-pptx-bg')
+
+    if not fg_color or not bg_color:
+        # Hand-authored fallback: derive from child elements.
+        for child in pattern_elem:
+            tag = child.tag.replace(f'{{{SVG_NS}}}', '')
+            if tag == 'rect' and not bg_color:
+                bg_color = child.get('fill')
+            elif tag == 'path' and not fg_color:
+                fg_color = child.get('stroke')
+
+    fg_hex = parse_hex_color(fg_color) if fg_color else None
+    bg_hex = parse_hex_color(bg_color) if bg_color else None
+    if not fg_hex:
+        return ''
+
+    alpha_xml = ''
+    if opacity is not None and opacity < 1.0:
+        alpha_xml = f'<a:alpha val="{int(opacity * 100000)}"/>'
+
+    fg_xml = f'<a:srgbClr val="{fg_hex}">{alpha_xml}</a:srgbClr>'
+    if bg_hex:
+        bg_xml = f'<a:srgbClr val="{bg_hex}"/>'
+    else:
+        bg_xml = '<a:srgbClr val="FFFFFF"/>'
+
+    return (
+        f'<a:pattFill prst="{prst}">'
+        f'<a:fgClr>{fg_xml}</a:fgClr>'
+        f'<a:bgClr>{bg_xml}</a:bgClr>'
+        f'</a:pattFill>'
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -409,8 +463,57 @@ def _parse_filter_params(
     }
 
 
+def _infer_shadow_alignment(dx: float, dy: float, threshold: float = 0.5) -> str:
+    """Infer outer shadow alignment from the SVG offset vector.
+
+    DrawingML applies alignment before blur/offset transforms, so we anchor the
+    shadow opposite to the dominant offset direction:
+    - diagonal offsets map to the opposite corner
+    - pure vertical offsets stay centered, matching common PPT shadow presets
+    - pure horizontal offsets anchor to the opposite side
+    """
+    if abs(dx) < threshold and abs(dy) < threshold:
+        return 'ctr'
+    if abs(dx) < threshold:
+        return 'ctr'
+    if abs(dy) < threshold:
+        return 'l' if dx > 0 else 'r'
+    if dx > 0 and dy > 0:
+        return 'tl'
+    if dx < 0 and dy > 0:
+        return 'tr'
+    if dx > 0 and dy < 0:
+        return 'bl'
+    return 'br'
+
+
+def _shadow_dir_angle(dx: float, dy: float) -> int:
+    """Convert an SVG offset vector to DrawingML clockwise angle units.
+
+    OOXML angles are expressed in 60,000ths of a degree, with positive angles
+    rotating clockwise toward the positive Y axis. SVG uses the same screen
+    coordinate orientation (positive Y points downward), so the raw screen-space
+    vector angle can be mapped directly with atan2(dy, dx).
+    """
+    if abs(dx) < 0.001 and abs(dy) < 0.001:
+        return 0
+    angle_deg = math.degrees(math.atan2(dy, dx)) % 360
+    return int(angle_deg * ANGLE_UNIT)
+
+
 def build_shadow_xml(filter_elem: ET.Element) -> str:
-    """Build <a:effectLst> with <a:outerShdw> from SVG filter element."""
+    """Build <a:effectLst> with <a:outerShdw> from SVG filter element.
+
+    SVG-to-DrawingML shadow mapping notes:
+    - SVG feGaussianBlur stdDeviation (σ) maps to DrawingML blurRad using a
+      2.0× scale. Rationale: σ is a standard deviation whose visual radius
+      is ~3σ, while DrawingML blurRad is an outer-spread pixel distance.
+      A 1.0× scale makes PowerPoint render sharp, concentrated shadows
+      ("heavy" visual). 2.0× matches the CSS drop-shadow↔box-shadow
+      convention and produces softer diffusion closer to the SVG preview.
+    - The algn attribute is inferred from the offset direction so that
+      the shadow aligns naturally with the shape edge.
+    """
     if filter_elem is None:
         return ''
 
@@ -422,13 +525,17 @@ def build_shadow_xml(filter_elem: ET.Element) -> str:
     if not p['has_offset']:
         dy = 4.0
 
-    blur_rad = px_to_emu(std_dev * 2)
+    blur_rad = px_to_emu(std_dev * 2.0)
     dist = px_to_emu(math.sqrt(dx * dx + dy * dy))
-    dir_angle = int(((90 + math.degrees(math.atan2(dy, max(dx, 0.001)))) % 360) * ANGLE_UNIT)
-    alpha_val = int(p['opacity'] * 100000)
+    dir_angle = _shadow_dir_angle(dx, dy)
+    # PowerPoint renders outerShdw alpha slightly heavier than SVG's filter
+    # composite (different blending path). Scale by 0.75 to match the SVG
+    # preview after blur has been corrected to 2.0× σ.
+    alpha_val = int(p['opacity'] * 75000)
+    algn = _infer_shadow_alignment(dx, dy)
 
     return f'''<a:effectLst>
-<a:outerShdw blurRad="{blur_rad}" dist="{dist}" dir="{dir_angle}" algn="tl" rotWithShape="0">
+<a:outerShdw blurRad="{blur_rad}" dist="{dist}" dir="{dir_angle}" algn="{algn}" rotWithShape="0">
 <a:srgbClr val="{p['color']}"><a:alpha val="{alpha_val}"/></a:srgbClr>
 </a:outerShdw>
 </a:effectLst>'''
@@ -444,7 +551,7 @@ def build_glow_xml(filter_elem: ET.Element) -> str:
         return ''
 
     p = _parse_filter_params(filter_elem)
-    rad = px_to_emu(p['std_dev'] * 2)
+    rad = px_to_emu(p['std_dev'])
     alpha_val = int(p['opacity'] * 100000)
 
     return f'''<a:effectLst>
@@ -452,6 +559,15 @@ def build_glow_xml(filter_elem: ET.Element) -> str:
 <a:srgbClr val="{p['color']}"><a:alpha val="{alpha_val}"/></a:srgbClr>
 </a:glow>
 </a:effectLst>'''
+
+
+def classify_filter_effect(filter_elem: ET.Element) -> str | None:
+    """Classify an SVG filter into a supported DrawingML effect kind."""
+    if filter_elem is None:
+        return None
+
+    p = _parse_filter_params(filter_elem)
+    return 'shadow' if p['has_offset'] else 'glow'
 
 
 def build_effect_xml(filter_elem: ET.Element) -> str:
@@ -464,10 +580,12 @@ def build_effect_xml(filter_elem: ET.Element) -> str:
     if filter_elem is None:
         return ''
 
-    p = _parse_filter_params(filter_elem)
-    if p['has_offset']:
+    effect_kind = classify_filter_effect(filter_elem)
+    if effect_kind == 'shadow':
         return build_shadow_xml(filter_elem)
-    return build_glow_xml(filter_elem)
+    if effect_kind == 'glow':
+        return build_glow_xml(filter_elem)
+    return ''
 
 
 def get_element_opacity(elem: ET.Element) -> float | None:

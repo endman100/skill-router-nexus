@@ -1,0 +1,16 @@
+.DS_Store
+.pio/
+.pioenvs/
+.piolibdeps/
+__pycache__/
+*.pyc
+*.pyo
+.vscode/
+.idea/
+.env
+.envrc
+node_modules/
+build/
+dist/
+*.log
+*.tmp

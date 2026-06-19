@@ -8,6 +8,13 @@ Configuration keys:
   MINIMAX_MODEL     (optional)
 """
 
+import sys
+
+if __name__ == "__main__":
+    print(__doc__)
+    print("Use via: python3 skills/ppt-master/scripts/image_gen.py \"prompt\" --backend minimax")
+    raise SystemExit(0 if any(arg in {"-h", "--help", "help"} for arg in sys.argv[1:]) else 1)
+
 import base64
 import os
 import time
@@ -29,6 +36,8 @@ from image_backends.backend_common import (
 
 DEFAULT_ENDPOINT = "https://api.minimaxi.com/v1/image_generation"
 DEFAULT_MODEL = "image-01"
+
+# International fallback: set MINIMAX_BASE_URL=https://api.minimax.io if needed
 
 ASPECT_RATIO_SIZE_MAP = {
     "512px": {
@@ -75,10 +84,18 @@ ASPECT_RATIO_SIZE_MAP = {
 
 
 def _resolve_url(base_url: str) -> str:
-    """Resolve the MiniMax image generation endpoint."""
+    """Resolve the MiniMax image generation endpoint.
+
+    Accepts three forms of MINIMAX_BASE_URL:
+      - Full endpoint:  https://api.minimax.io/v1/image_generation  → used as-is
+      - Versioned base: https://api.minimax.io/v1                   → appends /image_generation
+      - Root base:      https://api.minimax.io                      → appends /v1/image_generation
+    """
     base = base_url.rstrip("/")
     if base.endswith("/image_generation"):
         return base
+    if base.endswith("/v1"):
+        return base + "/image_generation"
     return base + "/v1/image_generation"
 
 
@@ -104,16 +121,13 @@ def _extract_image_bytes(payload: dict) -> bytes | None:
     return None
 
 
-def _generate_image(api_key: str, prompt: str, negative_prompt: str = None,
+def _generate_image(api_key: str, prompt: str,
                     aspect_ratio: str = "1:1", image_size: str = "1K",
                     output_dir: str = None, filename: str = None,
                     model: str = DEFAULT_MODEL, base_url: str = DEFAULT_ENDPOINT) -> str:
     """Generate one image with the MiniMax backend."""
     width, height = _resolve_dimensions(aspect_ratio, image_size)
     url = _resolve_url(base_url)
-    final_prompt = prompt
-    if negative_prompt:
-        final_prompt += f"\n\nAvoid the following: {negative_prompt}"
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -121,7 +135,7 @@ def _generate_image(api_key: str, prompt: str, negative_prompt: str = None,
     }
     payload = {
         "model": model,
-        "prompt": final_prompt,
+        "prompt": prompt,
         "width": width,
         "height": height,
         "response_format": "base64",
@@ -130,7 +144,7 @@ def _generate_image(api_key: str, prompt: str, negative_prompt: str = None,
 
     print("[MiniMax Image]")
     print(f"  Model:        {model}")
-    print(f"  Prompt:       {final_prompt[:120]}{'...' if len(final_prompt) > 120 else ''}")
+    print(f"  Prompt:       {prompt[:120]}{'...' if len(prompt) > 120 else ''}")
     print(f"  Aspect Ratio: {aspect_ratio}")
     print(f"  Resolution:   {width}x{height} (from image_size={image_size})")
     print()
@@ -157,14 +171,14 @@ def _generate_image(api_key: str, prompt: str, negative_prompt: str = None,
     return save_image_bytes(image_bytes, path)
 
 
-def generate(prompt: str, negative_prompt: str = None,
+def generate(prompt: str,
              aspect_ratio: str = "1:1", image_size: str = "1K",
              output_dir: str = None, filename: str = None,
              model: str = None, max_retries: int = MAX_RETRIES) -> str:
     """Generate an image with retries using the MiniMax backend."""
     api_key = require_api_key(
         "MINIMAX_API_KEY",
-        message="No API key found. Set MINIMAX_API_KEY in the current environment or the project-root .env.",
+        message="No API key found. Set MINIMAX_API_KEY in the current environment or a .env file.",
     )
     base_url = os.environ.get("MINIMAX_BASE_URL") or DEFAULT_ENDPOINT
     resolved_model = model or os.environ.get("MINIMAX_MODEL") or DEFAULT_MODEL
@@ -176,7 +190,6 @@ def generate(prompt: str, negative_prompt: str = None,
             return _generate_image(
                 api_key=api_key,
                 prompt=prompt,
-                negative_prompt=negative_prompt,
                 aspect_ratio=aspect_ratio,
                 image_size=normalized_size,
                 output_dir=output_dir,
