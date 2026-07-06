@@ -32,7 +32,8 @@ export async function runCodexExec(input: SpawnInput): Promise<CodexRunResult> {
   args.push("-");
 
   let timedOut = false;
-  const child = spawn("codex", args, { stdio: ["pipe", "pipe", "pipe"] });
+  const codexBin = process.env.BAOYU_CODEX_CLI_BIN ?? (process.platform === "win32" ? "codex.cmd" : "codex");
+  const child = spawn(codexBin, args, { stdio: ["pipe", "pipe", "pipe"] });
 
   let stdout = "";
   let stderr = "";
