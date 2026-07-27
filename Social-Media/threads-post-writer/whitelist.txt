@@ -1,0 +1,10 @@
+# Approved technical terms. Longer matches also exempt nested blacklist terms.
+OpenAI
+GPT
+AI
+LLM
+API
+System Card
+benchmark
+Transformer
+token

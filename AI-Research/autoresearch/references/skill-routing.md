@@ -106,7 +106,6 @@ When you encounter a domain-specific task during research, search the skills lib
 |---|---|---|
 | Constitutional AI training | Constitutional AI | `07-safety-alignment/constitutional-ai/` |
 | Content safety classification | LlamaGuard | `07-safety-alignment/llamaguard/` |
-| Guardrail pipelines | NeMo Guardrails | `07-safety-alignment/nemo-guardrails/` |
 | Prompt injection detection | Prompt Guard | `07-safety-alignment/prompt-guard/` |
 
 ### Infrastructure

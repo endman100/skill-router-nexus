@@ -1,0 +1,47 @@
+name: Validate Seedance skill
+
+on:
+  pull_request:
+    paths:
+      - "Video-Generation/seedance-20/**"
+      - ".github/workflows/validate-seedance.yml"
+  push:
+    paths:
+      - "Video-Generation/seedance-20/**"
+      - ".github/workflows/validate-seedance.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Video-Generation/seedance-20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run validators and tests
+        run: |
+          python scripts/validate_skills.py --strict
+          python scripts/content_audit.py --strict
+          python scripts/eval_schema_check.py --strict
+          python scripts/design_audit.py --strict
+          python scripts/source_registry_check.py --strict
+          python scripts/vocab_schema_check.py --strict
+          python scripts/project_state_check.py --strict
+          python scripts/continuity_chain_check.py --strict
+          python scripts/behavior_contract_check.py --strict
+          python scripts/sequence_eval_check.py --strict
+          python scripts/generation_run_check.py --strict
+          python scripts/prompt_lint.py --self-test --strict
+          python scripts/eval_run.py --self-test --strict
+          python scripts/extract_last_frame.py --self-test --strict
+          python -m unittest discover -s tests -v
+          python -m compileall scripts tests

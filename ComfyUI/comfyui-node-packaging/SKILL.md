@@ -111,6 +111,29 @@ requests>=2.28.0
 
 **Important**: Only list dependencies not already included with ComfyUI. ComfyUI ships with: `torch`, `torchvision`, `torchaudio`, `numpy`, `PIL/Pillow`, `scipy`, `safetensors`, `transformers`, `accelerate`.
 
+## Model Path Requirements
+
+If a custom node loads, discovers, downloads, or references any model file or model directory, it must support ComfyUI extra model paths. Do not hard-code a single `ComfyUI/models/...` location as the only supported location.
+
+Required behavior:
+
+- Accept an explicit absolute or relative model path when appropriate.
+- Search the normal ComfyUI model folders through `folder_paths` when the model type has a registered key.
+- Support paths registered by `extra_model_paths.yaml` or `--extra-model-paths-config`.
+- Document the model folder key names the node expects, such as `checkpoints`, `loras`, `clip`, `diffusion_models`, or a custom key like `my_models`.
+- If the node introduces a new model category, register it with `folder_paths.add_model_folder_path(...)` or clearly document the expected `extra_model_paths.yaml` key.
+- Keep Hugging Face IDs, URLs, or default bundled paths as fallbacks only; they must not replace local and extra path support.
+
+For example, a node that uses OCR models should allow a user to place the model in a configured extra path such as:
+
+```yaml
+my_models:
+  base_path: D:/ComfyUIModel
+  ocr: models/ocr/
+```
+
+and then resolve a model folder from that path before falling back to a remote model ID.
+
 ## pyproject.toml
 
 ```toml
