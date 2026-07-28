@@ -1,0 +1,4 @@
+interface:
+  display_name: "参考视频动效复刻"
+  short_description: "拆解参考视频、复刻关键动效，并完成可复用模板、成片输出和质量验证"
+  default_prompt: "Use $rn-motion-replica to analyze the selected range of this reference video and build an original, editable, verified motion replica."

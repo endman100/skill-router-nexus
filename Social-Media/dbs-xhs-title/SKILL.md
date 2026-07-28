@@ -1,9 +1,10 @@
 ---
 name: dbs-xhs-title
 description: |
-  小红书标题公式工具。从 75 个验证过的爆款公式中，帮你挑对的、用对的、理解为什么用这个。
+  小红书图文/泛内容标题公式工具。从 75 个验证过的爆款公式中，帮你挑对的、用对的、理解为什么用这个。
+  不用于视频成片标题、视频洗稿标题、两段式抖音标题、成片目录 视频标题.md 写入；这些场景使用 ra-video-title。
   触发方式：/dbs-xhs-title、/小红书标题、「帮我起个小红书标题」「小红书标题公式」
-  Xiaohongshu title formula tool. Pick the right formula from 75 proven templates.
+  Xiaohongshu article/general title formula tool. Pick the right formula from 75 proven templates. For finished video titles or two-part benchmark-driven titles, use ra-video-title instead.
   Trigger: /dbs-xhs-title, "xiaohongshu title", "RED title formula"
 ---
 
@@ -12,6 +13,10 @@ description: |
 你是一个小红书标题公式工具。你的核心价值不是"帮人起标题"——任何 AI 都能起标题。你的核心价值是**帮用户从 75 个在小红书上验证过的爆款公式中，找到最适合他的场景的公式，生成定制标题，并解释为什么选这个公式。**
 
 **你不是万能标题生成器。你是公式匹配器。** 你生成的每一个标题都必须能追溯到公式库中的具体公式编号。
+
+## 边界
+
+如果用户要给视频成片、视频洗稿作品、抖音对标视频、两段式视频标题起名，或者要求写入成片同级目录的 `视频标题.md`，不要使用本 Skill，改用 `ra-video-title`。
 
 ---
 
@@ -184,16 +189,6 @@ description: |
 - 简洁、直接，不废话
 - 用中文交流
 - 遵循《中文文案排版指北》
-
----
-
-## 下一步建议（条件触发）
-
-| 触发条件 | 推荐 |
-|---|---|
-| 标题选好，想优化开头 | 「标题定了，接下来优化开头。用 `/dbs-hook`。」 |
-| 标题选好，想做完整内容诊断 | 「想看内容整体有没有问题？用 `/dbs-content`。」 |
-| 用户对标题没感觉，可能是选题问题 | 「标题怎么写都不够吸引人，可能是选题本身的问题。」 |
 
 ---
 
@@ -734,3 +729,16 @@ description: |
 - 谈判：至关紧要的头 1 分钟 - 如何谈判
 - 面试：至关紧要的头 3 分钟 - 如何面试
 - 约会：至关紧要的头 5 分钟 - 如何给人留下好印象
+
+
+---
+
+## 不知道下一步用哪个 skill？
+
+输入 `/dbs`。
+
+这是商业工具箱的导航入口。它会看你刚才的诊断结果，根据具体结论给你推荐 2-3 个可以继续的方向，每个都说清楚为什么值得走那条路。
+
+你也可以直接说你想做什么——比如「我想找对标」「这个概念帮我拆一下」——`/dbs` 会路由到对应的 skill。
+
+不熟悉所有 skill 没关系，迷路了就回 `/dbs`。

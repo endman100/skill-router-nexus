@@ -1,0 +1,4 @@
+interface:
+  display_name: "暗色 SaaS 魔术短片"
+  short_description: "暗色空间产品演示短片的风格蓝图和制作约束完整方法流程"
+  default_prompt: "Use $rn-dark-saas-video to create a dark, cinematic SaaS product video in this magic UI style."

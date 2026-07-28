@@ -1,0 +1,4 @@
+interface:
+  display_name: "Black White Text Opener"
+  short_description: "Generate typed black-white video openers"
+  default_prompt: "Use $rn-bw-text-opener to create a black background opener where white text types in character by character with timed typing clicks."

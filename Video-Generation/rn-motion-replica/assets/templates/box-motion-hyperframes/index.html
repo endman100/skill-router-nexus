@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Codex × DeepSeek Box Motion Study</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --ink: #171914;
+        --paper: #f4f0dd;
+        --card: #fffef6;
+        --yellow: #f2c94c;
+        --red: #e95b4e;
+        --muted: #b9b59b;
+        --shadow: #d6d0b9;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--paper);
+      }
+
+      body {
+        color: var(--ink);
+        font-family: "Noto Sans JP", sans-serif;
+      }
+
+      .mono {
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+
+      #master-clip {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background-color: var(--paper);
+        transform-origin: 50% 50%;
+      }
+
+      #scene-config {
+        opacity: 0;
+        z-index: 2;
+      }
+
+      #scene-flow {
+        z-index: 1;
+      }
+
+      .paper-wash {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 12% 18%, rgba(193, 225, 206, 0.42), rgba(193, 225, 206, 0) 31%),
+          radial-gradient(circle at 79% 78%, rgba(209, 199, 231, 0.34), rgba(209, 199, 231, 0) 35%),
+          radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0) 42%),
+          var(--paper);
+      }
+
+      .frame-shell {
+        position: absolute;
+        inset: 34px 42px 46px 34px;
+        border: 5px solid var(--ink);
+        box-shadow: 11px 11px 0 var(--shadow);
+        overflow: hidden;
+      }
+
+      .frame-shell::after {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border: 1px solid rgba(23, 25, 20, 0.12);
+        pointer-events: none;
+      }
+
+      .frame-header {
+        position: absolute;
+        left: 64px;
+        top: 54px;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .header-tab {
+        min-width: 290px;
+        padding: 12px 20px 13px;
+        border: 3px solid var(--ink);
+        background: var(--ink);
+        color: #fffef6;
+        font-size: 23px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        line-height: 1;
+      }
+
+      .header-kicker {
+        color: rgba(23, 25, 20, 0.74);
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+      }
+
+      .corner-signal {
+        position: absolute;
+        right: 68px;
+        top: 58px;
+        z-index: 20;
+        width: 18px;
+        height: 18px;
+        border: 3px solid var(--ink);
+        background: var(--red);
+        box-shadow: 4px 4px 0 rgba(23, 25, 20, 0.18);
+      }
+
+      .corner-meta {
+        position: absolute;
+        right: 100px;
+        top: 60px;
+        z-index: 20;
+        color: rgba(23, 25, 20, 0.74);
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+      }
+
+      .graph-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+      }
+
+      .connector-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        width: 1920px;
+        height: 1080px;
+        overflow: visible;
+        pointer-events: none;
+      }
+
+      .connector {
+        fill: none;
+        stroke: var(--ink);
+        stroke-width: 5;
+        stroke-linecap: square;
+        stroke-linejoin: miter;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .junction {
+        fill: var(--ink);
+        opacity: 0;
+      }
+
+      .node,
+      .mini-card,
+      .stack-card,
+      .preview-card,
+      .evidence-card,
+      .repo-pill,
+      .terminal-card {
+        position: absolute;
+        z-index: 4;
+        border: 4px solid var(--ink);
+        background: var(--card);
+        box-shadow: 8px 8px 0 var(--shadow);
+        transform-origin: 50% 50%;
+        will-change: transform, opacity;
+      }
+
+      .node.yellow,
+      .mini-card.yellow,
+      .stack-card.yellow {
+        background: var(--yellow);
+      }
+
+      .node {
+        width: 276px;
+        min-height: 170px;
+        padding: 24px 24px 20px;
+        border-radius: 8px;
+      }
+
+      .node.compact {
+        width: 224px;
+        min-height: 132px;
+        padding: 18px 20px 16px;
+      }
+
+      .node-icon {
+        display: grid;
+        place-items: center;
+        width: 52px;
+        height: 52px;
+        margin-bottom: 14px;
+        border: 3px solid var(--ink);
+        background: var(--ink);
+        color: var(--card);
+        font-size: 26px;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      .yellow .node-icon {
+        background: var(--card);
+        color: var(--ink);
+      }
+
+      .node-eyebrow,
+      .mini-eyebrow {
+        margin-bottom: 7px;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .node-title {
+        font-size: 31px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+      }
+
+      .node-title span,
+      .preview-title span {
+        display: block;
+      }
+
+      .node-meta {
+        margin-top: 10px;
+        color: rgba(23, 25, 20, 0.76);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.35;
+      }
+
+      .mini-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 166px;
+        min-height: 82px;
+        padding: 14px 18px;
+        border-radius: 5px;
+      }
+
+      .mini-index {
+        display: grid;
+        flex: 0 0 auto;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border: 3px solid var(--ink);
+        background: var(--ink);
+        color: var(--card);
+        font-size: 15px;
+        font-weight: 900;
+      }
+
+      .mini-title {
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1.05;
+      }
+
+      .mini-meta {
+        margin-top: 5px;
+        color: rgba(23, 25, 20, 0.76);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .stack-card {
+        width: 242px;
+        min-height: 76px;
+        padding: 13px 16px;
+        border-radius: 4px;
+      }
+
+      .stack-label {
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .stack-title {
+        margin-top: 5px;
+        font-size: 19px;
+        font-weight: 900;
+      }
+
+      .preview-card {
+        width: 250px;
+        height: 278px;
+        padding: 18px;
+        overflow: hidden;
+        background: #1c2241;
+        color: var(--card);
+      }
+
+      .preview-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .preview-grid span {
+        height: 54px;
+        border: 2px solid rgba(255, 254, 246, 0.7);
+        background: #3755b7;
+      }
+
+      .preview-grid span:nth-child(2) {
+        background: #f2c94c;
+      }
+
+      .preview-grid span:nth-child(3) {
+        background: #e95b4e;
+      }
+
+      .preview-grid span:nth-child(4) {
+        background: #79c8a3;
+      }
+
+      .preview-title {
+        margin-top: 18px;
+        font-size: 29px;
+        font-weight: 900;
+        line-height: 1.05;
+      }
+
+      .preview-meta {
+        position: absolute;
+        right: 16px;
+        bottom: 14px;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+
+      .evidence-card {
+        display: flex;
+        align-items: center;
+        width: 476px;
+        min-height: 120px;
+        padding: 20px 22px;
+        border-radius: 6px;
+      }
+
+      .evidence-mark {
+        flex: 0 0 auto;
+        width: 52px;
+        height: 52px;
+        margin-right: 18px;
+        border: 3px solid var(--ink);
+        background: var(--yellow);
+      }
+
+      .evidence-title {
+        font-size: 21px;
+        font-weight: 900;
+      }
+
+      .evidence-copy {
+        margin-top: 7px;
+        color: rgba(23, 25, 20, 0.76);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        margin-right: 10px;
+        padding: 8px 12px;
+        border: 2px solid var(--ink);
+        background: var(--card);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .chip-dot {
+        width: 10px;
+        height: 10px;
+        background: var(--red);
+      }
+
+      .graph-group {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        transform-origin: 50% 50%;
+      }
+
+      #graph-b {
+        opacity: 0;
+      }
+
+      /* Graph A positions */
+      #a-model { left: 485px; top: 250px; }
+      #a-bridge { left: 730px; top: 508px; }
+      #a-codex { left: 900px; top: 260px; }
+      #a-summary { left: 180px; top: 365px; }
+      #a-preview { left: 1510px; top: 220px; }
+      #a-request-1 { left: 1280px; top: 520px; }
+      #a-request-2 { left: 1280px; top: 630px; }
+      #a-request-3 { left: 1280px; top: 740px; }
+
+      /* Graph B positions */
+      #b-prompt { left: 168px; top: 390px; }
+      #b-route { left: 650px; top: 315px; width: 530px; min-height: 190px; }
+      #b-settings { left: 695px; top: 565px; width: 440px; }
+      #b-result { left: 1330px; top: 360px; }
+      #b-evidence { left: 655px; top: 735px; }
+      #b-adapter-1 { left: 1350px; top: 575px; }
+      #b-adapter-2 { left: 1350px; top: 675px; }
+      #b-adapter-3 { left: 1350px; top: 775px; }
+      #b-utility { left: 315px; top: 720px; }
+      #b-done { left: 1535px; top: 888px; }
+
+      .route-node {
+        display: grid;
+        grid-template-columns: 1fr 70px 1fr;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .route-product {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .route-logo {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        border: 3px solid var(--ink);
+        font-size: 25px;
+        font-weight: 900;
+      }
+
+      .route-arrow {
+        position: relative;
+        height: 4px;
+        background: var(--ink);
+      }
+
+      .route-arrow::after {
+        content: "";
+        position: absolute;
+        right: -2px;
+        top: -7px;
+        width: 14px;
+        height: 14px;
+        border-right: 4px solid var(--ink);
+        border-top: 4px solid var(--ink);
+        transform: rotate(45deg);
+      }
+
+      .route-label {
+        font-size: 24px;
+        font-weight: 900;
+      }
+
+      .route-meta {
+        margin-top: 6px;
+        color: rgba(23, 25, 20, 0.78);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .done-badge {
+        position: absolute;
+        z-index: 6;
+        padding: 12px 20px;
+        border: 4px solid var(--ink);
+        background: var(--red);
+        color: var(--card);
+        box-shadow: 7px 7px 0 var(--ink);
+        font-size: 15px;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+        transform-origin: 50% 50%;
+      }
+
+      /* Configuration scene */
+      .repo-pill {
+        left: 1162px;
+        top: 72px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 470px;
+        min-height: 74px;
+        padding: 13px 18px;
+        border-radius: 38px;
+      }
+
+      .repo-dot {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--ink);
+        color: var(--card);
+        font-size: 16px;
+        font-weight: 900;
+      }
+
+      .repo-title {
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .repo-meta {
+        margin-top: 2px;
+        color: rgba(23, 25, 20, 0.76);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      #c-brief { left: 170px; top: 334px; }
+      #c-install { left: 695px; top: 310px; width: 350px; min-height: 200px; }
+      #c-terminal { left: 670px; top: 590px; }
+      #c-target { left: 1260px; top: 320px; width: 350px; min-height: 210px; }
+      #c-status { left: 1310px; top: 650px; }
+
+      .terminal-card {
+        width: 490px;
+        min-height: 150px;
+        padding: 18px 20px;
+        background: var(--ink);
+        color: #f7f2d8;
+        box-shadow: 9px 9px 0 var(--yellow);
+      }
+
+      .terminal-top {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .terminal-top span {
+        width: 12px;
+        height: 12px;
+        background: var(--red);
+      }
+
+      .terminal-top span:nth-child(2) { background: var(--yellow); }
+      .terminal-top span:nth-child(3) { background: #79c8a3; }
+
+      .terminal-line {
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.5;
+      }
+
+      .footer-meta {
+        position: absolute;
+        left: 76px;
+        bottom: 64px;
+        z-index: 18;
+        color: rgba(23, 25, 20, 0.74);
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.13em;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="35"
+      data-width="1920"
+      data-height="1080"
+      data-fps="30"
+    >
+      <div id="master-clip" class="clip" data-start="0" data-duration="35" data-track-index="0">
+        <section id="scene-flow" class="scene">
+          <div class="paper-wash"></div>
+          <div id="flow-shell" class="frame-shell"></div>
+          <div id="flow-header" class="frame-header">
+            <div class="header-tab">Codex × DeepSeek 动效复刻</div>
+            <div class="header-kicker mono">BOX MOTION / 01</div>
+          </div>
+          <div class="corner-meta mono">LIVE GRAPH</div>
+          <div class="corner-signal"></div>
+
+          <div id="graph-a" class="graph-group">
+            <svg class="connector-layer" viewBox="0 0 1920 1080" aria-hidden="true">
+              <path id="a-line-model-bridge" class="connector" d="M 623 420 L 623 548 L 730 548" />
+              <path id="a-line-model-codex" class="connector" d="M 761 335 L 900 335" />
+              <path id="a-line-summary-model" class="connector" d="M 404 430 L 452 430 L 452 335 L 485 335" />
+              <path id="a-line-codex-requests" class="connector" d="M 1176 345 L 1228 345 L 1228 558 L 1280 558" />
+              <path id="a-line-request-stack" class="connector" d="M 1228 558 L 1228 778 L 1280 778" />
+              <rect id="a-junction" class="junction" x="1218" y="548" width="20" height="20" />
+            </svg>
+
+            <div id="a-model" class="node yellow">
+              <div class="node-icon">D</div>
+              <div class="node-eyebrow mono">MODEL NODE</div>
+              <div class="node-title">DeepSeek</div>
+              <div class="node-meta mono">reasoner / local endpoint</div>
+            </div>
+
+            <div id="a-bridge" class="mini-card">
+              <div class="mini-index mono">CLI</div>
+              <div>
+                <div class="mini-title">Bridge</div>
+                <div class="mini-meta mono">adapter ready</div>
+              </div>
+            </div>
+
+            <div id="a-codex" class="node">
+              <div class="node-icon">C</div>
+              <div class="node-eyebrow mono">AGENT NODE</div>
+              <div class="node-title">Codex</div>
+              <div class="node-meta mono">tasks / tools / render</div>
+            </div>
+
+            <div id="a-summary" class="node compact yellow">
+              <div class="node-eyebrow mono">THIS STUDY</div>
+              <div class="node-title"><span>节点式</span><span>视频动效</span></div>
+              <div class="node-meta mono">cards + paths + state</div>
+            </div>
+
+            <div id="a-preview" class="preview-card">
+              <div class="node-eyebrow mono">MOTION PREVIEW</div>
+              <div class="preview-grid"><span></span><span></span><span></span><span></span></div>
+              <div class="preview-title"><span>35 秒</span><span>流程图样片</span></div>
+              <div class="preview-meta mono">1920 × 1080</div>
+            </div>
+
+            <div id="a-request-1" class="stack-card">
+              <div class="stack-label mono">MAKE 01</div>
+              <div class="stack-title">生成节点</div>
+            </div>
+            <div id="a-request-2" class="stack-card">
+              <div class="stack-label mono">MAKE 02</div>
+              <div class="stack-title">连接状态</div>
+            </div>
+            <div id="a-request-3" class="stack-card yellow">
+              <div class="stack-label mono">MAKE 03</div>
+              <div class="stack-title">输出视频</div>
+            </div>
+          </div>
+
+          <div id="graph-b" class="graph-group">
+            <svg class="connector-layer" viewBox="0 0 1920 1080" aria-hidden="true">
+              <path id="b-line-prompt-route" class="connector" d="M 444 468 L 555 468 L 555 410 L 650 410" />
+              <path id="b-line-route-result" class="connector" d="M 1180 410 L 1260 410 L 1260 438 L 1330 438" />
+              <path id="b-line-route-settings" class="connector" d="M 915 505 L 915 565" />
+              <path id="b-line-settings-evidence" class="connector" d="M 915 647 L 915 735" />
+              <path id="b-line-result-adapters" class="connector" d="M 1442 492 L 1442 575" />
+              <path id="b-line-utility-settings" class="connector" d="M 539 762 L 615 762 L 615 612 L 695 612" />
+              <rect id="b-junction" class="junction" x="905" y="555" width="20" height="20" />
+            </svg>
+
+            <div id="b-prompt" class="node compact yellow">
+              <div class="node-eyebrow mono">01 / PROMPT</div>
+              <div class="node-title"><span>把需求</span><span>变成任务</span></div>
+              <div class="node-meta mono">plain language input</div>
+            </div>
+
+            <div id="b-route" class="node route-node">
+              <div class="route-product">
+                <div class="route-logo">C</div>
+                <div><div class="route-label">Codex</div><div class="route-meta mono">orchestrator</div></div>
+              </div>
+              <div class="route-arrow"></div>
+              <div class="route-product">
+                <div class="route-logo" style="background:#f2c94c">D</div>
+                <div><div class="route-label">DeepSeek</div><div class="route-meta mono">reasoning model</div></div>
+              </div>
+            </div>
+
+            <div id="b-settings" class="mini-card yellow">
+              <div class="mini-index mono">CFG</div>
+              <div>
+                <div class="mini-title">路由参数已锁定</div>
+                <div class="mini-meta mono">model / endpoint / token</div>
+              </div>
+            </div>
+
+            <div id="b-result" class="node compact">
+              <div class="node-eyebrow mono">02 / OUTPUT</div>
+              <div class="node-title">稳定返回</div>
+              <div class="node-meta mono">response + artifacts</div>
+            </div>
+
+            <div id="b-evidence" class="evidence-card">
+              <div class="evidence-mark"></div>
+              <div>
+                <div class="evidence-title">同一条时间线持续扩展</div>
+                <div class="evidence-copy">旧卡退场，新卡接管位置，连线按阅读顺序生长。</div>
+              </div>
+            </div>
+
+            <div id="b-adapter-1" class="stack-card">
+              <div class="stack-label mono">ADAPTER A</div>
+              <div class="stack-title">OpenAI 兼容</div>
+            </div>
+            <div id="b-adapter-2" class="stack-card">
+              <div class="stack-label mono">ADAPTER B</div>
+              <div class="stack-title">本地模型</div>
+            </div>
+            <div id="b-adapter-3" class="stack-card yellow">
+              <div class="stack-label mono">ADAPTER C</div>
+              <div class="stack-title">自定义服务</div>
+            </div>
+
+            <div id="b-utility" class="mini-card">
+              <div class="mini-index mono">FX</div>
+              <div>
+                <div class="mini-title">Box Motion</div>
+                <div class="mini-meta mono">seek-safe timeline</div>
+              </div>
+            </div>
+
+            <div id="b-done" class="done-badge mono">DONE</div>
+          </div>
+
+          <div class="footer-meta mono">MOTION STUDY · ORIGINAL COPY · NO SOURCE FOOTAGE</div>
+        </section>
+
+        <section id="scene-config" class="scene">
+          <div class="paper-wash"></div>
+          <div id="config-shell" class="frame-shell"></div>
+          <div id="config-header" class="frame-header">
+            <div class="header-tab">CC Switch 配置</div>
+            <div class="header-kicker mono">BOX MOTION / 02</div>
+          </div>
+          <div class="corner-meta mono">CONFIG FLOW</div>
+          <div class="corner-signal"></div>
+
+          <div id="c-repo" class="repo-pill">
+            <div class="repo-dot mono">GH</div>
+            <div><div class="repo-title">pluvio9yte / model-switch</div><div class="repo-meta mono">repository · configuration kit</div></div>
+          </div>
+
+          <svg class="connector-layer" viewBox="0 0 1920 1080" aria-hidden="true">
+            <path id="c-line-brief-install" class="connector" d="M 446 410 L 585 410 L 585 410 L 695 410" />
+            <path id="c-line-install-target" class="connector" d="M 1045 410 L 1140 410 L 1140 425 L 1260 425" />
+            <path id="c-line-install-terminal" class="connector" d="M 870 510 L 870 590" />
+            <path id="c-line-target-status" class="connector" d="M 1435 530 L 1435 650" />
+          </svg>
+
+          <div id="c-brief" class="node compact yellow">
+            <div class="node-eyebrow mono">CONFIG BRIEF</div>
+            <div class="node-title">三步接入</div>
+            <div class="node-meta mono">install → route → test</div>
+          </div>
+
+          <div id="c-install" class="node">
+            <div class="node-icon">01</div>
+            <div class="node-eyebrow mono">INSTALL</div>
+            <div class="node-title">安装路由工具</div>
+            <div class="node-meta mono">one command · local first</div>
+          </div>
+
+          <div id="c-terminal" class="terminal-card mono">
+            <div class="terminal-top"><span></span><span></span><span></span></div>
+            <div class="terminal-line">$ codex models add deepseek</div>
+            <div class="terminal-line" style="color:#f2c94c">✓ endpoint connected</div>
+          </div>
+
+          <div id="c-target" class="node yellow">
+            <div class="node-icon">02</div>
+            <div class="node-eyebrow mono">TARGET</div>
+            <div class="node-title">接入 DeepSeek</div>
+            <div class="node-meta mono">reasoner · api compatible</div>
+          </div>
+
+          <div id="c-status" class="mini-card">
+            <div class="mini-index mono">OK</div>
+            <div>
+              <div class="mini-title">请求已通过</div>
+              <div class="mini-meta mono">latency 0.8s · ready</div>
+            </div>
+          </div>
+
+          <div class="footer-meta mono">CONFIGURATION GRAPH · STEP-BY-STEP BOX REVEAL</div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      const connectorLengths = new Map();
+      document.querySelectorAll(".connector").forEach((path) => {
+        const length = path.getTotalLength();
+        connectorLengths.set(path, length);
+        tl.set(path, { strokeDasharray: length, strokeDashoffset: length }, 0);
+      });
+
+      function preparePath(selector) {
+        const path = document.querySelector(selector);
+        const length = connectorLengths.get(path);
+        tl.set(path, { strokeDasharray: length, strokeDashoffset: length }, 0);
+        return path;
+      }
+
+      function drawPath(selector, at, duration = 0.5) {
+        const path = preparePath(selector);
+        tl.to(path, { strokeDashoffset: 0, duration, ease: "power2.out" }, at);
+      }
+
+      function pop(selector, at, duration = 0.52, fromScale = 0.82) {
+        tl.fromTo(
+          selector,
+          { scale: fromScale, opacity: 0, y: 18 },
+          { scale: 1, opacity: 1, y: 0, duration, ease: "power3.out" },
+          at,
+        );
+      }
+
+      function slide(selector, at, x, duration = 0.56) {
+        tl.fromTo(
+          selector,
+          { x, opacity: 0 },
+          { x: 0, opacity: 1, duration, ease: "power3.out" },
+          at,
+        );
+      }
+
+      // Scene 1 entrance and first graph.
+      tl.fromTo("#flow-shell", { scale: 0.985, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.46, ease: "power3.out" }, 0.0);
+      tl.fromTo("#flow-header", { y: -18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "power3.out" }, 0.14);
+      tl.fromTo("#scene-flow .corner-meta, #scene-flow .corner-signal", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power3.out", stagger: 0.08 }, 0.22);
+
+      pop("#a-model", 0.46, 0.58, 0.76);
+      drawPath("#a-line-model-bridge", 1.18, 0.55);
+      pop("#a-bridge", 1.52, 0.48, 0.76);
+      drawPath("#a-line-model-codex", 2.0, 0.42);
+      pop("#a-codex", 2.27, 0.56, 0.8);
+      slide("#a-summary", 4.08, -58, 0.6);
+      drawPath("#a-line-summary-model", 4.58, 0.45);
+      pop("#a-preview", 6.35, 0.62, 0.9);
+
+      drawPath("#a-line-codex-requests", 8.45, 0.58);
+      tl.fromTo("#a-junction", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.18, ease: "power2.out" }, 8.82);
+      pop("#a-request-1", 8.86, 0.45, 0.86);
+      pop("#a-request-2", 9.92, 0.45, 0.86);
+      drawPath("#a-line-request-stack", 10.2, 0.62);
+      pop("#a-request-3", 11.0, 0.46, 0.86);
+      tl.fromTo("#a-request-3", { rotation: -1.2 }, { rotation: 0, duration: 0.5, ease: "power3.out" }, 11.0);
+
+      // Morph the first graph into the routing graph.
+      tl.to("#graph-a", { scale: 0.94, opacity: 0, duration: 0.42, ease: "power2.in" }, 12.92);
+      tl.fromTo("#graph-b", { scale: 0.97, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.56, ease: "power3.out" }, 13.06);
+
+      pop("#b-prompt", 13.14, 0.52, 0.84);
+      drawPath("#b-line-prompt-route", 13.94, 0.58);
+      pop("#b-route", 14.3, 0.58, 0.9);
+      drawPath("#b-line-route-settings", 15.7, 0.42);
+      tl.fromTo("#b-junction", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.18, ease: "power2.out" }, 15.96);
+      pop("#b-settings", 16.0, 0.5, 0.86);
+      drawPath("#b-line-route-result", 16.64, 0.48);
+      pop("#b-result", 16.98, 0.52, 0.84);
+      drawPath("#b-line-settings-evidence", 18.0, 0.54);
+      pop("#b-evidence", 18.38, 0.56, 0.9);
+      drawPath("#b-line-result-adapters", 20.28, 0.52);
+      pop("#b-adapter-1", 20.72, 0.44, 0.86);
+      pop("#b-adapter-2", 22.46, 0.44, 0.86);
+      pop("#b-adapter-3", 24.2, 0.44, 0.86);
+      drawPath("#b-line-utility-settings", 25.62, 0.56);
+      pop("#b-utility", 26.0, 0.5, 0.84);
+      pop("#b-done", 28.24, 0.48, 0.76);
+      tl.to("#b-done", { scale: 1.06, duration: 0.18, ease: "power2.out" }, 29.06);
+      tl.to("#b-done", { scale: 1, duration: 0.3, ease: "power2.out" }, 29.24);
+
+      // Scene transition: one consistent horizontal push.
+      const transitionAt = 31.18;
+      tl.to("#scene-flow", { x: -1920, duration: 0.48, ease: "power3.inOut" }, transitionAt);
+      tl.fromTo("#scene-config", { x: 1920, opacity: 1 }, { x: 0, opacity: 1, duration: 0.48, ease: "power3.inOut" }, transitionAt);
+
+      // Scene 2 entrances.
+      tl.fromTo("#config-header", { y: -18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.36, ease: "power3.out" }, 31.5);
+      tl.fromTo("#scene-config .corner-meta, #scene-config .corner-signal", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.28, ease: "power3.out", stagger: 0.06 }, 31.58);
+      slide("#c-repo", 31.58, 52, 0.42);
+      pop("#c-brief", 31.78, 0.4, 0.84);
+      drawPath("#c-line-brief-install", 32.08, 0.38);
+      pop("#c-install", 32.28, 0.44, 0.84);
+      drawPath("#c-line-install-terminal", 32.68, 0.35);
+      pop("#c-terminal", 32.86, 0.42, 0.9);
+      drawPath("#c-line-install-target", 33.18, 0.38);
+      pop("#c-target", 33.38, 0.44, 0.84);
+      drawPath("#c-line-target-status", 33.78, 0.36);
+      pop("#c-status", 34.0, 0.44, 0.84);
+      tl.fromTo("#c-status .mini-index", { backgroundColor: "#171914" }, { backgroundColor: "#e95b4e", duration: 0.34, ease: "power2.out" }, 34.52);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
