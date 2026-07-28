@@ -1,0 +1,4 @@
+interface:
+  display_name: "幾何科普影片規劃"
+  short_description: "Evidence-backed geometric explainer video workflow"
+  default_prompt: "Use $plan-geometric-explainer-video to turn my sourced technical script into a geometric motion-graphics storyboard."
