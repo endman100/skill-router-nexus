@@ -1,64 +1,49 @@
 # Motion grammar
 
-The target uses a fixed camera. Motion normally clarifies a relation or state rather than moving the whole frame for energy.
+Keep the camera fixed by default. Move elements to explain a relation, hierarchy, or state change rather than to add constant activity.
 
-## Core sequencing syntax
+## Core sequence
 
-R16 is the observed target sequence:
-
-1. `Establish`: headline and inactive scaffold become readable.
-2. `Focus`: orange marks the node, card, or path currently discussed.
+1. `Establish`: make the headline and inactive scaffold readable.
+2. `Focus`: highlight the node, card, or path currently discussed.
 3. `Mutate`: preserve geometry and change the relevant state.
 4. `Explain`: append a guard, warning, result, row, or verdict.
-5. `Exit`: replace or fade the SceneStage while fixed chrome/captions remain.
+5. `Exit`: replace or fade the scene stage while chrome and captions remain independent.
 
-![Establish and focus](../assets/reference/motion/04_pipeline_nodes.png)
+## Motion families
 
-![Mutate along an existing relation](../assets/reference/motion/05_error_propagation.png)
+| Family | Properties to change | Preferred sequence |
+|---|---|---|
+| title + underline | opacity, translateY, underline scaleX | title → underline |
+| process activation | border, fill, glow, connector state | scaffold → nodes in reading order |
+| error propagation | node and connector semantic color | fault → downstream path |
+| loose tiles to grid | x, y, rotation, opacity, scale | elements → alignment → labels |
+| progressive comparison | child opacity and horizontal position | claim → sides → result |
+| guard insertion | badge opacity, scale, translateY | both sides → guard |
+| dependency draw | SVG path length or opacity | nodes → connectors |
+| mapping rows | row opacity and translateY | append without moving prior rows |
+| verdict overlay | scene dimming, callout opacity and scale | completed scene → verdict |
+| chapter replacement | outgoing group opacity, incoming group opacity and translateY | exit → brief reset → enter |
 
-![Append the final explanation](../assets/reference/motion/12_tdd_cheat.png)
+## Default timing ranges
 
-## Observed motion families
+Use these as starting points and adjust to speech pace:
 
-| Family | Properties that visibly change | Sequence evidence | Rule |
-|---|---|---|---|
-| title + underline | opacity; underline width/scaleX from left | E001 | R18 |
-| process activation | border/fill/glow/connector state; positions stay fixed | E002 | R06, R07 |
-| error propagation | node and connector palette changes downstream | E003 | R07, R10 |
-| scatter to grid | x, y, rotation, scale/opacity settle to shared grid | E004 | R08 |
-| progressive compare | scene children enter in claim/left/right/result order | E006 | R09 |
-| guard insertion | relationship badge enters after both sides | E007 | R16 |
-| dependency draw | connector visibility/path length changes behind fixed cards | E009 | R18 |
-| secondary panel insertion | opacity and horizontal position; possible surface brightening | E011 | R12, R18 |
-| mapping rows | children append downward without reflowing existing rows | E012, E019 | R16 |
-| verdict overlay | comparison dim opacity; callout opacity/scale/vertical offset | E013 | R09, R16 |
-| CTA replacement | old group exits; pill enters; child actions stagger | E014 | R18 |
+| Change | Typical duration |
+|---|---:|
+| short fade or color interpolation | 0.12–0.30 s |
+| label or badge entrance | 0.25–0.50 s |
+| card entrance | 0.35–0.70 s |
+| line draw or ordered activation | 0.20–0.45 s per item |
+| grid convergence | 0.70–1.40 s |
+| scene replacement | 0.35–0.80 s |
 
-## Target-specific timing calibration
+Trigger the start from the canonical narration cue. Keep the final state visible long enough to be read before the next conceptual change.
 
-Only the reconstructed V00 interval 01:49–02:16 has exact implementation values. Keep these under a segment-local namespace such as `calibrated109to136`, as required by R17:
+## State-change rules
 
-- Scene root enter: 30 frames at 60 fps, opacity plus `translateY: 16→0`.
-- Framework-card exit: 36 frames, opacity plus `translateY: 0→-20`.
-- Active-node color transition: 18 frames.
-- Error cascade: about 12 frames of stagger per downstream node.
-- Tile convergence: 90-frame spring; replica config `damping:18, stiffness:150`.
-- Badge/label entrance: 24–30-frame short spring with no long overshoot.
-- Replica captions: 4-frame fade; other target cues can appear closer to immediate replacement.
-
-These values are implementation calibration, not recovered global authoring settings.
-
-## Scene transition behavior
-
-- The common soft transition removes the outgoing SceneStage, briefly exposes a near-empty dark stage, then introduces the next group.
-- Large illustrations, abstract chapter heroes, and the CTA replace the scene group; they are not morphs from the previous diagram.
-- Chrome and captions remain in their own coordinate system (R11).
-- Hard cuts are uncommon in the target analysis, but frame-difference spikes can also be caused by a bright panel insertion; do not classify a cut using a score alone.
-
-![Scene replacement into an illustration](../assets/reference/motion/15_house_reveal.png)
-
-![Headline replacement into CTA](../assets/reference/motion/26_outro.png)
-
-## What remains inference
-
-R18 permits deterministic short fades, translations, state interpolation, line draw, and settling springs because those directions are visible. Four-frame strips cannot uniquely recover the original cubic-bezier, every keyframe, font file, or whether a complex illustration was raster, vector, or precomposed. Label those implementation choices as approximations.
+- Preserve positions while changing inactive, active, error, success, or dimmed states.
+- Keep connectors behind cards and animate them in the reading direction.
+- Stagger repeated items only when the narration enumerates or propagates across them.
+- Avoid long overshoot, bounce, and decorative looping in information-dense scenes.
+- Replace the scene group for chapter changes; do not force a morph between unrelated geometries.

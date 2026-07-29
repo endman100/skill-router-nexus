@@ -14,8 +14,8 @@ export const colors = {
 } as const;
 
 export const fonts = {
-  sans: 'Replica Noto Sans TC, Microsoft JhengHei, sans-serif',
-  mono: 'Replica Cascadia Code, Cascadia Code, Consolas, monospace',
+  sans: 'Noto Sans TC, Microsoft JhengHei, sans-serif',
+  mono: 'Cascadia Code, Consolas, monospace',
 } as const;
 
 export const layout = {

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "provider": "comfyui-fish-audio-s2-pro",
+  "voice_id": "taiwan-highschool-female-07-fast",
+  "model": "s2-pro-fp8",
+  "comfyui": {
+    "host": "127.0.0.1",
+    "port": 1120,
+    "node": "FishS2VoiceCloneTTS"
+  },
+  "reference_mode": "full-lossless-wav",
+  "assets": {
+    "cloning_wav": {
+      "path": "assets/reference-audio/taiwan-highschool-female-07-fast-lossless.wav",
+      "bytes": 5374030,
+      "sha256": "aa64b493e22a2b82a6f068f3bf22d64c0eec7f8423351e91be61ed88c8cfe9e3"
+    }
+  },
+  "reference_audio_input": "default_fish_s2_taiwan_highschool_female_07_full.wav",
+  "reference_audio_duration_seconds": 60.929160997732424,
+  "reference_audio_format": {
+    "container": "wav",
+    "codec": "pcm_s16le",
+    "sample_rate": 44100,
+    "channels": 1,
+    "sample_width_bytes": 2
+  },
+  "reference_text": "今天我們要快速建立一套 API 故障排查流程。第一個步驟，先打開監控儀表板，確認錯誤率、回應時間和請求量是否同時變化。如果只有單一服務異常，就檢查最近的部署紀錄、環境變數和套件版本。第二個步驟，使用追蹤識別碼串起應用程式、資料庫與外部服務的日誌，找出延遲真正發生的位置。不要只看平均值，還要比較百分之九十五和百分之九十九延遲，因為少量慢請求也會影響使用者。第三個步驟，固定資料量、併發數、快取狀態和網路環境。每次只修改一個參數，重新測試並記錄差異。如果結果沒有改善，就立即回復變更，避免把新風險帶進正式環境。最後，確認錯誤率和延遲恢復正常，再把有效修正加入回歸測試。快速排查不是靠猜測，而是用完整資料，一步一步縮小問題範圍。",
+  "generation": {
+    "language": "zh",
+    "device": "cuda",
+    "precision": "float16",
+    "attention": "sdpa",
+    "max_new_tokens": 1024,
+    "chunk_length": 400,
+    "temperature": 0.85,
+    "top_p": 0.86,
+    "repetition_penalty": 1.1,
+    "seed_base": 7007,
+    "sentence_pause_tag": "[short pause]"
+  },
+  "mastering": {
+    "sample_rate": 44100,
+    "channels": 1,
+    "integrated_loudness_lufs": -16,
+    "true_peak_db": -1.5
+  },
+  "fallback_allowed": false
+}

@@ -8,8 +8,6 @@ import {
 import {steps} from '../data/storyboard';
 import {colors, fonts} from '../design/tokens';
 
-// Source calibration: V00 activation 00:01:55.10–00:01:57.40 and error cascade 00:02:01.70–00:02:04.00.
-
 const NODE_WIDTH = 118;
 const NODE_HEIGHT = 118;
 const NODE_GAP = 82;
@@ -57,7 +55,7 @@ const ErrorTag: React.FC<{absoluteFrame: number}> = ({absoluteFrame}) => {
           transform: `translateY(${(1 - reveal) * 13}px) scale(${0.96 + reveal * 0.04})`,
         }}
       >
-        前面一步歪了
+        步驟發生偏差
       </div>
       <div
         style={{
@@ -232,7 +230,7 @@ export const StepPipeline: React.FC<{timelineOffset: number}> = ({timelineOffset
         >
           ↻
         </span>
-        <span>整條重跑</span>
+        <span>重新執行流程</span>
       </div>
 
       <div
@@ -256,7 +254,7 @@ export const StepPipeline: React.FC<{timelineOffset: number}> = ({timelineOffset
           transform: `translateY(${(1 - finalTag) * 14}px)`,
         }}
       >
-        錯一步，特別難救
+        及早修正，降低影響
       </div>
     </div>
   );

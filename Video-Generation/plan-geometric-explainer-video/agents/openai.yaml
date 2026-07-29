@@ -1,4 +1,4 @@
 interface:
-  display_name: "幾何科普影片規劃"
-  short_description: "Evidence-backed geometric explainer video workflow"
-  default_prompt: "Use $plan-geometric-explainer-video to turn my sourced technical script into a geometric motion-graphics storyboard."
+  display_name: "幾何科普影片製作"
+  short_description: "用旁白語意與時間戳驅動 Remotion 幾何科普動畫"
+  default_prompt: "Use $plan-geometric-explainer-video to turn my narration and final audio into a synchronized geometric explainer video."

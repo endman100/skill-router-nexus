@@ -2,8 +2,6 @@ import {Sequence, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {captions, type CaptionCue} from '../data/storyboard';
 import {colors, fonts, layout} from '../design/tokens';
 
-// Source calibration: V00 bottom caption track; exact 27 s replica covers 00:01:49–00:02:16.
-
 const CaptionBar: React.FC<{
   cue: CaptionCue;
   durationInFrames: number;

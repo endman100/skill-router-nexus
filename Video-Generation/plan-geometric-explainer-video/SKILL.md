@@ -1,43 +1,40 @@
 ---
 name: plan-geometric-explainer-video
-description: Plan, storyboard, and implement source-backed 16:9 geometric motion-graphics explainers in Remotion from technical or science narration. Use when asked to reproduce, adapt, or extend the current Gary Chen AI-explainer visual system; convert abstract concepts into cards, flows, comparisons, hierarchies, state changes, or modular diagrams; or audit whether a proposed scene matches the supplied reference videos. Require a video URL, timecode, and bundled reference image for every visual rule, and do not invent an uncited style convention.
+description: Plan, storyboard, and implement source-independent 16:9 geometric motion-graphics explainers in Remotion from technical, educational, or science narration. Use when converting abstract ideas into cards, flows, comparisons, hierarchies, state changes, modular diagrams, subtitles, and narration-driven animation cues. Work only from the current task's script, final audio, timing data, and supplied production assets; do not require or retrace external videos, creators, channels, URLs, timecodes, or provenance corpora.
 ---
 
 # Plan Geometric Explainer Video
 
-Use the bundled Gary Chen corpus to turn narration into a restrained geometric scene system. Treat the source videos as evidence, not as loose inspiration.
+Turn narration into a restrained geometric scene system, then implement it as deterministic Remotion animation.
 
-## Enforce the evidence boundary
+## Keep the workflow source-independent
 
-1. Read `references/source-ledger.md` and `references/reference-atlas.md` before making visual decisions.
-2. Cite at least one rule ID and one evidence ID in every storyboard row.
-3. Use a `recurring` rule as a channel convention only when the evidence index cites at least two different videos.
-4. Use a `target-specific` rule only when reproducing the target video or when the user explicitly accepts that local pattern.
-5. Label an implementation extrapolation as `inference`; state what is unobservable, such as the original easing curve, font file, or authoring software.
-6. If no bundled evidence matches the intended meaning, request another reference or label the choice as a new direction. Do not silently add a visual grammar.
+1. Use only the script, final narration audio, timing artifacts, brand rules, and production assets supplied for the current task.
+2. Do not browse for, reopen, identify, or retrace an earlier video, creator, channel, timestamp, or design corpus.
+3. Treat links mentioned in prior conversation as historical context, not required inputs.
+4. Do not create evidence IDs, provenance ledgers, comparison atlases, or citations for the visual grammar.
+5. If the current request explicitly asks to analyze a new reference, use a dedicated reference-analysis workflow outside this skill. Return here only after the user approves a source-independent design specification.
 
-Run the evidence validator whenever the corpus or rules change:
+Run the portability gate after editing this skill or copying its assets:
 
 ```bash
-python scripts/validate_evidence.py
+python scripts/validate_portability.py
 ```
 
-![Full-video sampling atlas](assets/reference/target/full-sheet-01.jpg)
+## Load only the needed guides
 
-## Load only the needed references
-
-- Read `references/story-to-geometry.md` to map narration functions to observed diagram families.
-- Read `references/visual-grammar.md` to select the current-series layout, typography, color roles, density, and subtitle treatment.
-- Read `references/motion-grammar.md` to plan entry, emphasis, state change, and exit timing from paired source frames.
-- Read `references/remotion-implementation.md` before writing Remotion code.
-- Read `references/reference-atlas.md` when choosing images to show beside a storyboard or implementation plan.
-- Query `references/evidence-index.json` when a rule needs machine-readable provenance.
+- Read `references/story-to-geometry.md` before choosing a diagram family.
+- Read `references/visual-grammar.md` when defining layout, type, color, density, and caption treatment.
+- Read `references/motion-grammar.md` when defining entrances, state changes, emphasis, and exits.
+- Read `references/remotion-implementation.md` before writing or changing Remotion code.
+- Read `references/voice-production.md` whenever narration must be generated or replaced.
+- Reuse the generic components under `assets/remotion-primitives/` when they fit the scene.
 
 ## Follow the production workflow
 
 ### 1. Lock the content spine
 
-Require a narration script, transcript, or chapter outline. Split it into meaning beats, not arbitrary time slices. Assign each beat one primary job:
+Require a narration script, transcript, or chapter outline. Split it into meaning beats and assign each beat one primary job:
 
 - identify or define;
 - enumerate;
@@ -45,90 +42,96 @@ Require a narration script, transcript, or chapter outline. Split it into meanin
 - compare;
 - show hierarchy or containment;
 - show state change, failure, or recovery;
-- demonstrate with real UI or source material;
+- demonstrate with a supplied UI or asset;
 - summarize or conclude.
 
 Do not select shapes until the beat has one primary job.
 
-### 2. Select an observed diagram family
+### 2. Establish the canonical clock
 
-Use `references/story-to-geometry.md`. Prefer one dominant structure per shot. Reuse the same geometry while changing state when the narration describes progression; cut to another structure when the conceptual model changes.
+When final narration audio exists, use it as the only production clock.
 
-For each selection, record:
+- When narration must be generated, use the default Fish Audio S2 Pro voice profile in `references/voice-production.md` unless the user explicitly selects another voice.
+- Align the exact display script to word or phrase timestamps from the final audio.
+- Preserve the original script for captions; use ASR only to obtain timing.
+- Store one canonical caption timeline and derive scene cues from it.
+- Trigger semantic animation with named cue timestamps, not estimated character counts or duplicated frame literals.
+- Permit duration estimates only in an explicitly labeled scratch preview.
+
+### 3. Map story beats to geometry
+
+Use `references/story-to-geometry.md`. Prefer one dominant structure per scene. Keep geometry stable while the narration describes a state change; replace the scene when the conceptual model changes.
+
+Record each scene as:
 
 ```text
-scene_id | narration/time | semantic job | diagram family | rule_ids |
-evidence_ids | reference image | certainty | adaptation notes
+scene_id | narration range | semantic job | diagram family | cue keys |
+neutral state | triggered changes | final hold | exit | production notes
 ```
 
-![Observed process-state sequence](assets/reference/motion/04_pipeline_nodes.png)
-
-### 3. Build the storyboard in evidence order
+### 4. Build the storyboard around named cues
 
 For every scene, specify:
 
 1. the neutral starting frame;
 2. the first readable state;
-3. each narration-triggered change;
+3. every cue-triggered change;
 4. the final held state;
-5. the cut or transition out;
-6. the exact reference frame or sequence used.
+5. the exit or transition;
+6. any required user-supplied image or UI asset.
 
-Do not write vague motion such as “make it dynamic.” Name the property that changes: opacity, position, scale, connector length, border color, fill color, progress width, or group arrangement.
+Name the changing property: opacity, position, scale, connector length, border color, fill color, progress width, or group arrangement. Do not write vague directions such as “make it dynamic.”
 
-### 4. Establish tokens from the selected evidence set
+### 5. Establish visual tokens
 
-Use only values documented in `references/visual-grammar.md`. Keep measured or sampled values separate from visual approximations. Do not mix the earlier neon finance-era palette into the current flat AI-explainer system unless the user explicitly requests that earlier era.
+Start from `references/visual-grammar.md`, then apply user brand constraints. Keep semantic color roles stable across scenes. Measure long text before fixing card dimensions.
 
-### 5. Implement deterministically in Remotion
+### 6. Implement deterministically in Remotion
 
-- Drive every animation from `useCurrentFrame()` and `useVideoConfig()`.
-- Express authored time in seconds, then multiply by `fps`.
-- Use `<Sequence>` or `<Series>` for scene timing and premount every sequence.
-- Use `interpolate()` for controlled state changes and `spring()` only where a source-frame sequence supports a settling entrance.
+- Drive authored animation from `useCurrentFrame()` and `useVideoConfig()`.
+- Express timing in seconds or named cues, then convert to frames with the composition FPS.
+- Use `<Sequence>` or `<Series>` for scene timing and premount media-heavy sequences.
+- Use `interpolate()` for controlled state changes and `spring()` for short settling entrances.
 - Do not use CSS animations or CSS transitions.
-- Load local fonts before rendering and measure long text before placing it in fixed cards.
-- Use `<Img>` with `staticFile()` for local images.
-- Keep subtitles on their own track so they do not alter diagram layout.
-- Add source comments beside evidence-mapped components, for example `// E014, 00:01:55.10–00:01:57.40`.
+- Keep one top-level final narration audio track beginning at frame zero.
+- Keep captions independent from diagram layout.
+- Load local fonts before rendering and use `<Img>` with `staticFile()` for local images.
 
-Use the verified component example under `assets/remotion-primitives/` as implementation evidence for the target segment, not as proof of an unobserved channel-wide rule.
+### 7. Review with stills before rendering
 
-### 6. Review with stills before rendering
-
-Render at least three stills per scene: entry, midpoint, and final hold. Compare them with the cited reference image for:
+Render entry, midpoint, and final-hold stills for every scene. Check:
 
 - alignment and safe margins;
 - information density;
-- text hierarchy and line length;
+- text hierarchy, wrapping, and overflow;
 - primitive count and grouping;
-- color role rather than superficial color matching;
-- whether the intended state change is visible without narration.
+- semantic color states;
+- whether the intended state change is understandable without narration;
+- whether cue-triggered changes occur after the matching spoken phrase begins.
 
-### 7. Verify the final video
+### 8. Verify the final video
 
-Require all of the following before declaring completion:
+Require all of the following before delivery:
 
-- every scene has evidence IDs;
-- `python scripts/validate_evidence.py` passes;
-- no text, nodes, or captions overflow at representative stills;
-- the Remotion render exits successfully;
-- FFmpeg decodes the complete video with no errors;
-- the final report distinguishes direct observation from implementation inference.
+- `python scripts/validate_portability.py` passes;
+- every semantic animation start resolves from the canonical cue timeline;
+- caption alignment and overlap checks pass;
+- representative stills contain no clipped or overflowing content;
+- the Remotion typecheck and render exit successfully;
+- the final video and audio both start at zero;
+- video duration covers the final narration duration;
+- FFmpeg decodes the complete output without errors.
 
 ## Return this deliverable set
 
 Produce:
 
-1. a source-backed storyboard table;
-2. a visual token sheet with evidence IDs;
-3. a scene/component map for Remotion;
-4. representative reference images beside each diagram family;
-5. a list of target-specific and inferred choices;
-6. the render and a still-based comparison sheet when implementation is requested.
+1. a semantic storyboard;
+2. a visual token sheet;
+3. a cue-to-animation map;
+4. canonical caption and animation timing artifacts;
+5. a Remotion scene/component map;
+6. representative stills;
+7. the rendered video and validation report when implementation is requested.
 
-Never deliver a text-only design plan when the request asks to match this visual system. Include the cited bundled images or user-provided reference frames in the handoff.
-
-## Maintain the corpus
-
-Use `scripts/extract_reference_frames.py` to add exact source frames from a timestamp manifest. Add the new source, evidence item, and affected rule to `references/evidence-index.json`, update the atlas, then rerun the validator. Preserve attribution and keep reference frames separate from production artwork.
+Do not include a source ledger, reference atlas, creator analysis, URL list, timestamp citations, or comparison frames in the handoff.

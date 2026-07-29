@@ -1,8 +1,6 @@
 import {interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {colors, fonts} from '../design/tokens';
 
-// Source calibration: V00 scattered tiles converge at 00:02:07.80–00:02:10.20; values are segment-local.
-
 const modules = [
   {column: 0, row: 0, accent: colors.orange, offsetX: 240, offsetY: 300, rotate: -18},
   {column: 1, row: 0, accent: colors.purple, offsetX: 25, offsetY: 300, rotate: 20},
@@ -14,8 +12,8 @@ const modules = [
 
 const labels = [
   {text: '小', accent: colors.orange, left: 652, width: 128, revealAt: 1250},
-  {text: '好改', accent: colors.purple, left: 810, width: 167, revealAt: 1270},
-  {text: '自由拼裝', accent: colors.green, left: 1007, width: 229, revealAt: 1296},
+  {text: '可替換', accent: colors.purple, left: 810, width: 167, revealAt: 1270},
+  {text: '可組合', accent: colors.green, left: 1007, width: 229, revealAt: 1296},
 ] as const;
 
 export const ModuleGrid: React.FC<{timelineOffset: number}> = ({timelineOffset}) => {
@@ -152,9 +150,9 @@ export const ModuleGrid: React.FC<{timelineOffset: number}> = ({timelineOffset})
           whiteSpace: 'nowrap',
         }}
       >
-        <span>小 × 模組化</span>
+        <span>小元件 × 明確介面</span>
         <span style={{color: colors.dim}}>＝</span>
-        <span style={{color: colors.orange}}>一切設計的底層邏輯</span>
+        <span style={{color: colors.orange}}>可維護系統</span>
       </div>
     </div>
   );

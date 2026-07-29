@@ -1,0 +1,4 @@
+interface:
+  display_name: "Technical Remotion 聲畫同步影片"
+  short_description: "用 Fish S2 與 Qwen 驅動字幕和 Remotion 動畫"
+  default_prompt: "Use $skill-technical-remotion 將我的定稿旁白製作成聲畫同步的 Remotion 科普影片。"

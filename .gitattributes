@@ -1,2 +1,23 @@
-# Auto detect text files and perform LF normalization
+# Normalize source text while keeping media assets byte-for-byte.
 * text=auto
+
+*.md text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+
+*.wav binary
+*.mp3 binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.mp4 binary
+*.mov binary
+*.webm binary

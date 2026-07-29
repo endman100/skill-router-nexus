@@ -1,8 +1,6 @@
 import {spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {colors, fonts} from '../design/tokens';
 
-// Source calibration: V00 framework cards at 00:01:49–00:01:55; values are segment-local.
-
 export type FrameworkCardProps = {
   label: string;
   title: string;

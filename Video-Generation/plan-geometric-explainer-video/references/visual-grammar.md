@@ -1,92 +1,61 @@
 # Visual grammar
 
-This reference separates cross-video conventions from target-local measurements. Use the evidence index to inspect every cited frame.
+Use this as a neutral dark-theme default. Override it when the user supplies brand rules.
 
-## Current-series baseline
-
-Use the current AI-explainer baseline when the user asks for a match to V00:
-
-- dark, information-first canvas (R01);
-- bold white sans hierarchy and a separate bottom caption capsule (R02);
-- flat dark-gray cards, thin borders, generous negative space, and orange structural accents (R04);
-- segmented top progress rail and left chapter marker (R05);
-- cards, nodes, arrows, comparison, or containment chosen by meaning (R03).
-
-![V00 full-video sample sheet](../assets/reference/target/full-sheet-01.jpg)
-
-![Recent adjacent channel sample](../assets/reference/channel/XTCP1qoa3cc_contact_sheet.jpg)
-
-## Fixed layer hierarchy in V00
-
-R11 is target-specific. The observed 16:9 hierarchy is:
+## Layer hierarchy
 
 ```text
 SurfaceCanvas
-├─ VideoChrome: segmented progress rail + left phase label
-├─ SceneStage: headline + diagram/panels/illustration + annotation
-└─ CaptionTrack: bottom center, highest z-index
+├─ VideoChrome: progress rail + chapter marker
+├─ SceneStage: headline + diagram/panel/illustration + annotation
+└─ CaptionTrack: independent bottom layer, highest z-index
 ```
-
-The target's common 720p measurements are observations, not universal channel tokens:
-
-| Region | Approximate 720p measure | Confidence and source |
-|---|---:|---|
-| left narrative safe margin | 67 px | high; E002 |
-| top progress rail | y=0, about 2–3 px high | high; E015 |
-| left phase label | x≈28, y≈17 | high; target motion report |
-| left kicker origin | x≈67, y≈69 | high; E002 |
-| left hero title origin | x≈67, y≈133 | high; E002 |
-| SceneStage | about x=67–1213, y=70–580 | high; target motion report |
-| caption bottom | 40 px | exact only for the calibrated segment |
-
-For 1920×1080 reproduction, the calibrated target segment uses a 1.5× conversion. R17 requires remeasurement for any other scene.
 
 ## Layout families
 
 1. Left narrative: kicker, large headline, then diagram.
-2. Centered hero: one title and one object/illustration at the visual center.
+2. Centered hero: one title and one object at the visual center.
 3. Two-column comparison: panels separated by a gap, badge, arrow, or `VS` relation.
-4. Horizontal process: equal nodes along one baseline; connectors behind nodes.
+4. Horizontal process: equal nodes along one baseline with connectors behind them.
 
-Use one family as the dominant scaffold. Do not combine a dense grid, a network, a two-column comparison, and a full UI screenshot in the same shot unless a cited source frame does so.
+Use one dominant family per scene. Avoid combining a dense grid, network, comparison, and full UI panel in one shot.
+
+## Default 1920×1080 safe regions
+
+| Region | Default |
+|---|---:|
+| left/right safe margin | 100 px |
+| top safe margin below chrome | 90 px |
+| scene-stage bottom | 880 px |
+| caption bottom | 60 px |
+| caption maximum width | 1660 px |
+
+Remeasure when aspect ratio, title length, caption size, or supplied UI assets change.
 
 ## Color roles
 
-The target-local measured values below come from compressed frames and the calibrated replica. The semantic roles are more reliable than exact hex values (R10, R17).
-
-| Token | Approximate value | Observed role |
+| Token | Default value | Role |
 |---|---|---|
-| `surface.canvas` | `#1e1e1e` | fixed background |
-| `surface.panel` | `#292929` | cards/windows |
-| `border.subtle` | `#3a3a3a` | inactive borders/connectors |
+| `surface.canvas` | `#1e1e1e` | background |
+| `surface.panel` | `#292929` | cards and windows |
+| `border.subtle` | `#3a3a3a` | inactive borders and connectors |
 | `text.primary` | `#f5f5f5` | titles, labels, captions |
 | `text.muted` | `#b8b8b8` | kicker and secondary explanation |
-| `accent.primary` | `#f6a21a` | current focus, navigation, path, underline |
-| `semantic.danger` | `#ff5158` | error, drift, coupling, harmful outcome |
-| `semantic.success` | `#2dcc71` | pass, completion, locality, containment |
-| `series.purple` | `#7845e7` | nominal category, not success/failure |
+| `accent.primary` | `#f6a21a` | current focus, path, underline |
+| `semantic.danger` | `#ff5158` | error, drift, harmful outcome |
+| `semantic.success` | `#2dcc71` | pass, completion, containment |
+| `series.purple` | `#7845e7` | neutral category distinction |
 
-Blue, teal, and magenta also appear as nominal category colors. Their exact compressed-frame hex values are not source-project tokens.
+Treat semantic roles as more important than exact hex values. Never use danger/success colors as decoration when no matching state exists.
 
-![Focus-to-error semantic color change](../assets/reference/motion/05_error_propagation.png)
+## Typography and captions
 
-## Typography and subtitles
-
-- Claims and Chinese headlines: heavy sans, often with one phrase recolored.
-- Skill names, filenames, code, terminal text, and node identifiers: monospace.
-- Bottom captions: white bold sans, single line in the observed target frames, black rounded capsule, independent of diagram layout (R02, R11).
-- The calibrated implementation uses Noto Sans TC and Cascadia Code because they visually match; the original font files remain unobservable (R18).
-
-Measure text before assigning a fixed card width. Do not reduce a core claim to unreadably small type merely to preserve a copied box dimension.
+- Use a heavy sans face for claims and Chinese headlines.
+- Use monospace for filenames, code, terminal text, and node identifiers.
+- Keep captions in a dark rounded capsule independent from diagram geometry.
+- Prefer one or two short caption lines; group text by phrase rather than single characters.
+- Measure text before assigning fixed card widths. Do not shrink a core claim until it becomes unreadable.
 
 ## Density and assets
 
-The current series uses more negative space than the early finance sample. One diagram should answer one semantic question. Real UI is occasional (R12); illustration is an occasional metaphor/reset (R13). If a presenter PiP is requested, older samples keep it small and subordinate (R14).
-
-## Explicit exclusions
-
-R15 separates the current AI baseline from the early finance era. Do not mix the early neon HUD, glowing grid, several competing saturated colors, valuation multiples, or red/green performance cards into a V00-style technical explainer unless the user explicitly asks for that era/topic.
-
-![Early finance-era contrast sample](../assets/reference/channel/-AHFhntQ07k_contact_sheet.jpg)
-
-The exclusion is a sample-backed production boundary, not a claim that the creator can never reuse an older motif.
+Use generous negative space. One diagram should answer one semantic question. Include real UI only when the user supplies it and the narration discusses implementation. Use illustration as a metaphor or chapter reset, not as background decoration.

@@ -1,7 +1,5 @@
 import {colors, fonts} from '../design/tokens';
 
-// Source calibration: V00, persistent chrome; visible at 00:01:55.10–00:01:57.40.
-
 export const ChapterHeader: React.FC = () => {
   return (
     <>
@@ -46,7 +44,7 @@ export const ChapterHeader: React.FC = () => {
         }}
       >
         <span style={{color: colors.orange}}>02 / 06</span>
-        <span style={{color: '#adadad'}}>AI 拷問與規格書</span>
+        <span style={{color: '#adadad'}}>概念與流程</span>
       </div>
     </>
   );
