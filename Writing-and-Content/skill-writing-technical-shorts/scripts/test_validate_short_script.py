@@ -20,6 +20,7 @@ class ValidateShortScriptTests(unittest.TestCase):
         topic: str = "Test",
         target: int | None = None,
         tolerance: float = 0.1,
+        use_default_range: bool = False,
     ) -> tuple[subprocess.CompletedProcess[str], dict[str, object]]:
         visible_count = len(re.sub(r"\s+", "", text))
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -31,15 +32,30 @@ class ValidateShortScriptTests(unittest.TestCase):
                 str(source),
                 "--topic",
                 topic,
-                "--target",
-                str(target if target is not None else visible_count),
-                "--tolerance",
-                str(tolerance),
-                "--json",
             ]
+            if not use_default_range:
+                command.extend(
+                    [
+                        "--target",
+                        str(target if target is not None else visible_count),
+                        "--tolerance",
+                        str(tolerance),
+                    ]
+                )
+            command.append("--json")
             result = subprocess.run(command, capture_output=True, text=True)
         payload = json.loads(result.stdout) if result.stdout else {}
         return result, payload
+
+    def script_with_visible_count(self, count: int) -> str:
+        prefix = (
+            "什麼是 Test？\n\n"
+            "相較前代，舊版一次只能處理一張圖，新版可同時參考多張圖，"
+            "不過輸出仍可能有誤。"
+        )
+        prefix_count = len(re.sub(r"\s+", "", prefix))
+        self.assertGreaterEqual(count, prefix_count)
+        return prefix + ("文" * (count - prefix_count))
 
     def test_accepts_valid_script(self) -> None:
         text = (
@@ -97,6 +113,47 @@ class ValidateShortScriptTests(unittest.TestCase):
         _, payload = self.run_validator(text, target=720, tolerance=0.1)
 
         self.assertEqual(payload["allowed_range"], [648, 792])
+
+    def test_default_range_accepts_1000_characters(self) -> None:
+        text = self.script_with_visible_count(1000)
+
+        result, payload = self.run_validator(text, use_default_range=True)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(payload["valid"])
+        self.assertEqual(payload["allowed_range"], [650, 1000])
+
+    def test_default_range_rejects_more_than_1000_characters(self) -> None:
+        text = self.script_with_visible_count(1001)
+
+        result, payload = self.run_validator(text, use_default_range=True)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(any("1000" in error for error in payload["errors"]))
+
+    def test_rejects_binary_contrast_shell(self) -> None:
+        text = "什麼是 Test？\n\n它不是只提高速度，而是改變整套工作流程。"
+
+        result, payload = self.run_validator(text)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(any("二元對比句殼" in error for error in payload["errors"]))
+
+    def test_rejects_fake_insight_marker(self) -> None:
+        text = "什麼是 Test？\n\n相較舊方法，它降低等待時間。更重要的是，它仍有上限。"
+
+        result, payload = self.run_validator(text)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(any("假洞察提示詞" in error for error in payload["errors"]))
+
+    def test_rejects_clickbait_template(self) -> None:
+        text = "什麼是 Test？\n\n想像一下，相較前代它已降低延遲，不過仍有上限。"
+
+        result, payload = self.run_validator(text)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(any("模板化或聳動語句" in error for error in payload["errors"]))
 
     def test_rejects_nonstandard_vram_terms(self) -> None:
         text = "什麼是 Test？\n\n相較舊方法，它能降低顯存需求，但仍有上限。"

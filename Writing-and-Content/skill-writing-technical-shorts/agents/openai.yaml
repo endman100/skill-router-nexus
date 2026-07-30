@@ -1,4 +1,4 @@
 interface:
   display_name: "技術 Short 文案"
-  short_description: "撰寫約 720 字、清楚易懂的繁中技術 Short 口播稿"
-  default_prompt: "Use $skill-writing-technical-shorts to introduce a technology in a concise Traditional Chinese Short script."
+  short_description: "撰寫 650–1000 字、比較前後版本且避免 AI 句殼的繁中技術 Short"
+  default_prompt: "Use $skill-writing-technical-shorts to introduce a technology in a Traditional Chinese Short script, emphasizing concrete differences from the previous version."
