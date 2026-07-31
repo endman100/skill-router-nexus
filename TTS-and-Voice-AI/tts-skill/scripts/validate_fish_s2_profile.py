@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the portable explicit Fish Audio S2 alternative profile and WAV."""
+"""Validate the portable default Fish Audio S2 profile and WAV."""
 
 from __future__ import annotations
 
@@ -84,7 +84,7 @@ def main() -> int:
             print(f"[FAIL] {failure}")
         return 1
 
-    print("[PASS] portable explicit Fish S2 alternative profile")
+    print("[PASS] portable default Fish Audio S2 profile")
     print("[PASS] canonical 60-second lossless WAV metadata and hash")
     print("[PASS] production pause authority: narration.json[].pause_after_ms")
     print("[PASS] profile sentence/page/tail gaps retained as non-production authoring defaults")

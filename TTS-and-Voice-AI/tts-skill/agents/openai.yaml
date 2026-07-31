@@ -1,4 +1,4 @@
 interface:
-  display_name: "Qwen3-TTS 本地語音克隆"
-  short_description: "以核准參考語音及可稽核彈性停頓產生 Qwen3-TTS 無損旁白"
-  default_prompt: "使用 $tts-skill 與預設 Qwen3-TTS VoiceClone profile 生成本地無損旁白；保留 narration.json 的必要停頓，並只透過 pacing-overrides.json 選擇性追加有理由的停頓。"
+  display_name: "Fish Audio S2 Pro 本地語音克隆"
+  short_description: "以核准的台灣女聲參考與可稽核停頓產生 Fish Audio 無損旁白"
+  default_prompt: "使用 $tts-skill 與預設 Fish Audio S2 Pro 語音生成本地無損旁白；保留 narration.json 的必要停頓，並只透過 pacing-overrides.json 選擇性追加有理由的停頓。"

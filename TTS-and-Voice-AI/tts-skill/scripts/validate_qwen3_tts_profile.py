@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the portable default Qwen3-TTS voice-clone profile and reference audio."""
+"""Validate the portable explicit Qwen3-TTS alternative profile and reference audio."""
 
 from __future__ import annotations
 
@@ -192,7 +192,7 @@ def main() -> int:
             print(f"[FAIL] {failure}")
         return 1
 
-    print("[PASS] portable Qwen3-TTS voice-clone profile")
+    print("[PASS] portable explicit Qwen3-TTS alternative profile")
     print("[PASS] canonical 17.28-second full-prompt FLAC metadata and hash")
     print("[PASS] Qwen3-TTS 1.7B Base / FB_Qwen3TTSVoiceClone recipe")
     print("[PASS] production pause authority: narration.json[].pause_after_ms")

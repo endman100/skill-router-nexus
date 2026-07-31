@@ -12,7 +12,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_PROFILE = ROOT / "references" / "qwen3-default-voice.json"
+DEFAULT_PROFILE = ROOT / "references" / "fish-s2-default-voice.json"
 NARRATION_KEYS = ["text", "pause_after_ms"]
 
 
