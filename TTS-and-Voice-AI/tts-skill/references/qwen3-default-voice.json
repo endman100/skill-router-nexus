@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "provider": "comfyui-qwen3-tts-voiceclone",
+  "voice_id": "qwen3-voice-design-06-playful-club-fullprompt-t070",
+  "model": "Qwen3-TTS-12Hz-1.7B-Base",
+  "comfyui": {
+    "host": "127.0.0.1",
+    "port": 1120,
+    "node": "FB_Qwen3TTSVoiceClone"
+  },
+  "reference_mode": "full-prompt-audio",
+  "assets": {
+    "cloning_audio": {
+      "path": "assets/reference-audio/qwen3-voice-design-06-playful-club-raw.flac",
+      "bytes": 529191,
+      "sha256": "1be8561b88c77124fc22d3362b8661f986a63bbb5cdf13499709b774ae3f6dc9"
+    }
+  },
+  "reference_audio_input": "codex_voice_design_06-playful-club-raw.flac",
+  "reference_audio_duration_seconds": 17.28,
+  "reference_audio_format": {
+    "container": "flac",
+    "codec": "flac",
+    "sample_rate": 24000,
+    "channels": 1
+  },
+  "reference_text": "嗨，我是今天的校園科技小主播。放學之後，我最喜歡和同學一起研究有趣的新工具。遇到不懂的地方，我會先整理問題，再一步一步找到答案。接下來，就讓我用清楚、自然又有活力的方式，陪你認識人工智慧。",
+  "generation": {
+    "model_choice": "1.7B",
+    "language": "Chinese",
+    "device": "cuda",
+    "precision": "bf16",
+    "attention": "sdpa",
+    "max_new_tokens": 2048,
+    "temperature": 0.7,
+    "top_p": 0.75,
+    "top_k": 20,
+    "repetition_penalty": 1.05,
+    "x_vector_only": false,
+    "seed_base": 47243,
+    "candidate_seeds": [47243, 52901, 88617],
+    "segment_unit": "pause-unit",
+    "keep_model_loaded": true,
+    "custom_model_path": ""
+  },
+  "pause_policy": {
+    "implementation": "pcm-silence-after-segment-render",
+    "production_pause_authority": "narration.json[].pause_after_ms",
+    "production_extra_pause_policy": "optional-pacing-overrides-nonnegative-only",
+    "production_gap_defaults_allowed": false,
+    "lead_in_seconds": 0.18,
+    "sentence_gap_seconds": 0.28,
+    "page_gap_seconds": 0.75,
+    "tail_padding_seconds": 0.45,
+    "page_gap_visual_allocation": {
+      "completed_page_hold_seconds": 0.25,
+      "transition_seconds": 0.3,
+      "next_page_preroll_seconds": 0.2
+    }
+  },
+  "mastering": {
+    "sample_rate": 44100,
+    "channels": 1,
+    "integrated_loudness_lufs": -16,
+    "true_peak_db": -1.5
+  },
+  "fallback_allowed": false
+}

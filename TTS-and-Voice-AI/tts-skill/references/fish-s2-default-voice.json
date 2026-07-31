@@ -37,7 +37,21 @@
     "top_p": 0.86,
     "repetition_penalty": 1.1,
     "seed_base": 7007,
-    "sentence_pause_tag": "[short pause]"
+    "segment_unit": "pause-unit"
+  },
+  "pause_policy": {
+    "implementation": "pcm-silence-after-segment-render",
+    "production_pause_authority": "narration.json[].pause_after_ms",
+    "production_gap_defaults_allowed": false,
+    "lead_in_seconds": 0.18,
+    "sentence_gap_seconds": 0.28,
+    "page_gap_seconds": 0.75,
+    "tail_padding_seconds": 0.45,
+    "page_gap_visual_allocation": {
+      "completed_page_hold_seconds": 0.25,
+      "transition_seconds": 0.3,
+      "next_page_preroll_seconds": 0.2
+    }
   },
   "mastering": {
     "sample_rate": 44100,
