@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "provider": "comfyui-bluemagpie-tts",
+  "voice_id": "bluemagpie-clone-take07-30s-take05-seed1150797764",
+  "model": "OpenFormosa/BlueMagpie-TTS",
+  "comfyui": {
+    "host": "127.0.0.1",
+    "port": 1120,
+    "loader_node": "BlueMagpieModelLoader",
+    "node": "BlueMagpieTTS",
+    "save_node": "SaveAudio"
+  },
+  "reference_mode": "derived-reference-audio-path",
+  "assets": {
+    "source_audio": {
+      "path": "assets/reference-audio/bluemagpie-clone-take07-30s-take05-seed1150797764.flac",
+      "bytes": 1363964,
+      "sha256": "95c3ce8207437409fa7672ebdb1d3843363a72e6affc9ce2d75448a2ff9dda21"
+    },
+    "cloning_audio": {
+      "path": "assets/reference-audio/bluemagpie-clone-take07-30s-take05-seed1150797764-ref-4p222125-12p196063.flac",
+      "bytes": 403231,
+      "sha256": "6962b5c5e67fa80b17de38cb838815432d37a621e4910ca5ab080695e191a298"
+    }
+  },
+  "source_audio_duration_seconds": 28.32,
+  "source_audio_format": {
+    "container": "flac",
+    "codec": "flac",
+    "sample_rate": 48000,
+    "channels": 1
+  },
+  "reference_audio_duration_seconds": 7.973938,
+  "reference_audio_format": {
+    "container": "flac",
+    "codec": "flac",
+    "sample_rate": 48000,
+    "channels": 1
+  },
+  "reference_derivation": {
+    "source_asset": "source_audio",
+    "start_seconds": 4.222125,
+    "end_seconds": 12.196063,
+    "duration_seconds": 7.973938,
+    "method": "ffmpeg lossless FLAC trim, mono 48 kHz, metadata stripped"
+  },
+  "reference_provenance": {
+    "selected_source_filename": "BlueMagpie_clone_take07_30s_take_05_seed_1150797764_00001.flac",
+    "source_filename_prefix": "BlueMagpie_Clone_Take07_30s_Auditions/BlueMagpie_clone_take07_30s_take_05_seed_1150797764",
+    "generator_node": "BlueMagpieTTS",
+    "model": "OpenFormosa/BlueMagpie-TTS",
+    "seed": 1150797764,
+    "cfg_value": 2.0,
+    "inference_timesteps": 40,
+    "text": "嗨，你好，歡迎來到今天的語音測試。我會用自然、清楚，而且帶點親切感的方式，陪你聊聊人工智慧如何走進日常生活。從整理資料、協助創作，到即時翻譯和語音互動，這些工具正在改變工作與學習的方法。不過，真正重要的不是技術多厲害，而是它能不能理解人的需求，提供可靠又舒服的使用體驗。接下來請留意語速、停頓，以及 AI 和 ComfyUI 的中英文切換，再選出你最喜歡的版本。"
+  },
+  "generation": {
+    "speaker": "female_voice",
+    "reference_overrides_speaker": true,
+    "cfg_value": 2.0,
+    "inference_timesteps": 10,
+    "max_len": 2000,
+    "retry_badcase": true,
+    "candidate_attempts": 3,
+    "candidate_cfg_values": [1.8, 2.0, 2.2],
+    "segment_unit": "pause-unit",
+    "output_sample_rate": 48000,
+    "record_seed_when_supported": true
+  },
+  "pause_policy": {
+    "implementation": "pcm-silence-after-segment-render",
+    "production_pause_authority": "narration.json[].pause_after_ms",
+    "production_extra_pause_policy": "optional-pacing-overrides-nonnegative-only",
+    "production_gap_defaults_allowed": false,
+    "lead_in_seconds": 0.18,
+    "sentence_gap_seconds": 0.28,
+    "page_gap_seconds": 0.75,
+    "tail_padding_seconds": 0.45,
+    "page_gap_visual_allocation": {
+      "completed_page_hold_seconds": 0.25,
+      "transition_seconds": 0.3,
+      "next_page_preroll_seconds": 0.2
+    }
+  },
+  "mastering": {
+    "sample_rate": 44100,
+    "channels": 1,
+    "integrated_loudness_lufs": -16,
+    "true_peak_db": -1.5
+  },
+  "fallback_allowed": false
+}

@@ -54,9 +54,9 @@ Run `scripts/prepare_minimal_narration.py validate` before materializing metadat
 | `pacing-overrides.json` | optional one-based unit index, non-negative editorial addition, reason, and maximum addition policy |
 | `scenes.json` | contiguous scene/page ranges and visual labels, separate from canonical wording |
 | `pronunciation-overrides.json` | optional TTS-only aliases keyed by one-based narration-unit index |
-| `voice.config.json` | provider, model, voice ID, reference paths and hashes, reference transcript, synthesis settings, pause policy |
-| `voice_manifest.json` | sentence seeds, prompt IDs, segment hashes and durations, pause policy, final WAV hash, fallback status |
-| `candidate_selection_manifest.json` | all sentence candidates, Qwen3 transcripts, pronunciation comparison, mean token log-probability, selected winner |
+| `voice.config.json` | provider, model, voice ID, exact source path/hash, runtime derivative path/hash and trim bounds, synthesis settings, pause policy |
+| `voice_manifest.json` | prompt/node IDs, supported seeds, segment hashes and durations, pause policy, final WAV hash, fallback status |
+| `candidate_selection_manifest.json` | all sentence candidates, BlueMagpie generation info, Qwen3 transcripts, pronunciation comparison, mean token log-probability, selected winner |
 | `final-narration.wav` | lossless mastered narration used by both Qwen and Remotion |
 | `pause-timing.json` | sentence/page IDs, segment ranges, physical silence ranges, page-gap visual allocation, final WAV hash |
 | `asr-listen-check.json` | model, audio hash, completeness and truncation checks, pronunciation notes |
@@ -81,8 +81,8 @@ Run `scripts/prepare_minimal_narration.py validate` before materializing metadat
 1. Validate that `narration.json` has exactly two keys per item, has no internal deliberate pause boundary, and reconstructs the approved script.
 2. Validate `scenes.json` covers every one-based narration-unit index exactly once and `pronunciation-overrides.json` refers only to valid units.
 3. Materialize stable production IDs and scene metadata without changing the canonical file.
-4. Generate one lossless WAV per pause unit. When quality selection is enabled, generate three candidates per unit. Run `Qwen/Qwen3-ASR-1.7B`, reject candidates that fail normalized-pronunciation equivalence, then rank survivors by Qwen mean token log-probability. Never use Whisper for this gate.
-5. Run `tts-skill/scripts/assemble_pcm_narration.py` with the minimal narration, selected-WAV manifest, and optional `pacing-overrides.json`. Add every required integer `pause_after_ms` plus the recorded non-negative editorial addition as real PCM silence. Store required, extra, effective, and reason fields for every unit. Page-gap and tail minima are already encoded in their applicable items; never infer a missing pause or add either gap twice. Allocate a page-ending addition only to the completed-page hold.
+4. Verify the exact 28.32-second user-selected BlueMagpie source and its declared 4.222125–12.196063-second lossless derivative, then generate one output per pause unit with only that derivative as `reference_audio_path`. Convert selected outputs to mono 16-bit PCM WAV at 44.1 kHz. When quality selection is enabled, generate three independent candidates per unit: vary accepted seeds when the live schema supports them, otherwise use the approved CFG values `1.8`, `2.0`, and `2.2` so ComfyUI cannot return one cached candidate three times. Record prompt/node IDs, CFG, hashes, generation info, and a seed only when the server accepts it. Run `Qwen/Qwen3-ASR-1.7B`, reject candidates that fail normalized-pronunciation equivalence, then rank survivors by Qwen mean token log-probability. Never use Whisper for this gate.
+5. Run `../../TTS-and-Voice-AI/tts-skill/scripts/assemble_pcm_narration.py --profile references/bluemagpie-default-voice.json` with the minimal narration, selected-WAV manifest, and optional `pacing-overrides.json`. The explicit local profile is mandatory; do not inherit the global Fish Audio profile. Add every required integer `pause_after_ms` plus the recorded non-negative editorial addition as real PCM silence. Store required, extra, effective, and reason fields for every unit. Page-gap and tail minima are already encoded in their applicable items; never infer a missing pause or add either gap twice. Allocate a page-ending addition only to the completed-page hold.
 6. Hash the assembled final WAV and store the same hash in `pause-timing.json` before Qwen processing.
 7. Run unprompted Qwen3 ASR as a listen check; do not treat its transcript as approved copy.
 8. Run Qwen ForcedAligner against the exact display script.
@@ -140,7 +140,7 @@ Deliver at minimum:
 - final audio, raw alignment, derived timing, and delivered WAV hashes agree;
 - `narration.json` contains only `text` and `pause_after_ms`, contains one item per deliberate pause, and reconstructs the approved script;
 - `pause-timing.json` matches the final WAV hash and records every required `pause_after_ms`, non-negative addition, effective silence, and reason exactly once, including page-gap and final-tail minima;
-- every selected pause-unit candidate passes normalized-pronunciation equivalence and wins by Qwen confidence among passing candidates;
+- the source/reference hashes and declared PCM derivation pass, every selected pause-unit candidate passes normalized-pronunciation equivalence, and it wins by Qwen confidence among three genuinely distinct passing attempts;
 - audio and video streams begin at `0.000` seconds;
 - video duration covers the full narration and only deliberate tail padding remains;
 - Short output is 1080×1920 at 30 fps unless the user explicitly specifies another orientation; non-Short output follows the requested delivery format;

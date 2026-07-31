@@ -1,4 +1,4 @@
 interface:
   display_name: "Technical Remotion 聲畫同步影片"
   short_description: "穩定直式 Short、官方預覽、Qwen 對齊與彈性停頓的 Remotion 流程"
-  default_prompt: "Use $skill-technical-remotion 將我的定稿旁白製作成 9:16、固定視覺錨點、每句都有語意動畫、可引用有來源標示的官方預覽，並以必要停頓加選擇性人工停頓組裝 Qwen3-TTS 的 Remotion 技術 Short。"
+  default_prompt: "Use $skill-technical-remotion 將我的定稿旁白製作成 9:16、固定視覺錨點、每句都有語意動畫、可引用有來源標示的官方預覽，並以必要停頓加選擇性人工停頓組裝 BlueMagpie-TTS take-05 參考語音的 Remotion 技術 Short。"

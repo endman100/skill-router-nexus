@@ -18,8 +18,9 @@ REPO_ROOT = ROOT.parents[1]
 SKILL = ROOT / "SKILL.md"
 REFERENCE = ROOT / "references" / "production-contract.md"
 TTS_ROOT = REPO_ROOT / "TTS-and-Voice-AI" / "tts-skill"
-VOICE_PROFILE = TTS_ROOT / "references" / "qwen3-default-voice.json"
+VOICE_PROFILE = ROOT / "references" / "bluemagpie-default-voice.json"
 ASSEMBLER = TTS_ROOT / "scripts" / "assemble_pcm_narration.py"
+BLUEMAGPIE_GENERATOR = ROOT / "scripts" / "generate_bluemagpie_tts.py"
 PREPARE_NARRATION = ROOT / "scripts" / "prepare_minimal_narration.py"
 MATERIALIZE_NARRATION = ROOT / "scripts" / "materialize_narration_manifest.py"
 BUILD_MOTION_REVIEW = ROOT / "scripts" / "build_motion_review.py"
@@ -443,14 +444,14 @@ def main() -> int:
     )
     require("skill-writing-technical-shorts" in skill, "Short article routing is missing", failures)
     require("REQUIRED CONDITIONAL SUB-SKILL" in skill, "Short routing is not conditional/explicit", failures)
-    require("tts-skill" in skill, "Qwen3-TTS sub-skill routing is missing", failures)
+    require("tts-skill" in skill, "BlueMagpie-TTS sub-skill routing is missing", failures)
     require("remotion-video-creation" in skill, "Short Remotion implementation sub-skill routing is missing", failures)
     require("plan-geometric-explainer-video" in skill, "landscape planning sub-skill routing is missing", failures)
     require("Do not route a Short through its 16:9 output contract" in skill, "Short/landscape routing conflict is unresolved", failures)
     require("verification-before-completion" in skill, "completion verification routing is missing", failures)
     require("Qwen/Qwen3-ASR-1.7B" in skill, "Qwen3 candidate/listen ASR is missing", failures)
     require("do not use Whisper" in skill, "Whisper prohibition is missing", failures)
-    require("generate three candidates per pause unit" in skill, "three-candidate generation is missing", failures)
+    require("generate three independent candidates per pause unit" in skill, "three-candidate generation is missing", failures)
     require("normalized Pinyin syllable sequences" in skill, "pronunciation-equivalence gate is missing", failures)
     require("mean token log-probability" in skill, "Qwen confidence ranking is missing", failures)
     require("Qwen/Qwen3-ForcedAligner-0.6B" in skill, "Qwen forced alignment is missing", failures)
@@ -458,6 +459,7 @@ def main() -> int:
     require("used_fallback=false" in skill, "fallback prohibition is missing", failures)
     require("Do not infer semantic timings" in skill, "estimated timing prohibition is missing", failures)
     require("assemble_pcm_narration.py" in skill and ASSEMBLER.exists(), "PCM narration assembler routing is missing", failures)
+    require("generate_bluemagpie_tts.py" in skill and BLUEMAGPIE_GENERATOR.exists(), "BlueMagpie API generator routing is missing", failures)
     require("exactly `text` then `pause_after_ms`" in skill, "strict two-field narration schema is missing", failures)
     require("`，；：。！？`" in skill, "deliberate Traditional Chinese pause boundaries are missing", failures)
     require("enumeration mark `、`" in skill, "enumeration-mark policy is missing", failures)
@@ -519,8 +521,8 @@ def main() -> int:
     require("Do not alternate left/right entrances" in skill and "low-damping bounce" in skill, "stable-anchor motion prohibitions are missing", failures)
     require("production-contract.md" in skill and REFERENCE.exists(), "production contract reference is missing", failures)
     require(
-        "../../TTS-and-Voice-AI/tts-skill/references/qwen3-default-voice.json" in skill and VOICE_PROFILE.exists(),
-        "shared TTS voice profile is missing",
+        "references/bluemagpie-default-voice.json" in skill and VOICE_PROFILE.exists(),
+        "skill-local BlueMagpie voice profile is missing",
         failures,
     )
 
@@ -573,37 +575,47 @@ def main() -> int:
     if VOICE_PROFILE.exists():
         profile = json.loads(VOICE_PROFILE.read_text(encoding="utf-8"))
         require(
-            profile.get("provider") == "comfyui-qwen3-tts-voiceclone",
-            "bundled Qwen3-TTS provider is incorrect",
+            profile.get("provider") == "comfyui-bluemagpie-tts",
+            "bundled BlueMagpie-TTS provider is incorrect",
             failures,
         )
         require(
             profile.get("voice_id")
-            == "qwen3-voice-design-06-playful-club-fullprompt-t070",
+            == "bluemagpie-clone-take07-30s-take05-seed1150797764",
             "bundled voice ID is incorrect",
             failures,
         )
         require(
-            profile.get("model") == "Qwen3-TTS-12Hz-1.7B-Base",
-            "bundled Qwen3-TTS model is incorrect",
+            profile.get("model") == "OpenFormosa/BlueMagpie-TTS",
+            "bundled BlueMagpie-TTS model is incorrect",
+            failures,
+        )
+        comfyui = profile.get("comfyui", {})
+        require(
+            comfyui.get("loader_node") == "BlueMagpieModelLoader",
+            "bundled BlueMagpie loader node is incorrect",
             failures,
         )
         require(
-            profile.get("comfyui", {}).get("node") == "FB_Qwen3TTSVoiceClone",
-            "bundled Qwen3-TTS node is incorrect",
+            comfyui.get("node") == "BlueMagpieTTS",
+            "bundled BlueMagpie TTS node is incorrect",
             failures,
         )
         require(
-            profile.get("reference_mode") == "full-prompt-audio",
-            "full-prompt reference mode is not selected",
+            profile.get("reference_mode") == "derived-reference-audio-path",
+            "BlueMagpie derived reference-audio-path mode is not selected",
             failures,
         )
         assets = profile.get("assets", {})
-        require(set(assets) == {"cloning_audio"}, "voice profile must declare only cloning_audio", failures)
+        require(
+            set(assets) == {"source_audio", "cloning_audio"},
+            "voice profile must declare source_audio and cloning_audio",
+            failures,
+        )
 
         record = assets.get("cloning_audio", {})
         relative_path = record.get("path", "")
-        asset = TTS_ROOT / relative_path
+        asset = ROOT / relative_path
         require(bool(relative_path) and not Path(relative_path).is_absolute(), "cloning_audio path must be relative", failures)
         require(asset.is_file(), "cloning_audio file is missing", failures)
         if asset.is_file():
@@ -614,47 +626,89 @@ def main() -> int:
             expected = profile.get("reference_audio_format", {})
             require(info["codec"] == expected.get("codec") == "flac", "cloning audio must be FLAC", failures)
             require(info["channels"] == expected.get("channels") == 1, "cloning audio must be mono", failures)
-            require(info["sample_rate"] == expected.get("sample_rate") == 24000, "cloning audio must be 24 kHz", failures)
+            require(info["sample_rate"] == expected.get("sample_rate") == 48000, "cloning audio must be 48 kHz", failures)
             require(
                 abs(float(info["duration_seconds"]) - profile.get("reference_audio_duration_seconds", 0)) < 0.001,
                 "cloning audio duration mismatch",
                 failures,
             )
 
-        audio_dir = TTS_ROOT / "assets" / "reference-audio"
+        source_record = assets.get("source_audio", {})
+        source_relative = source_record.get("path", "")
+        source_asset = ROOT / source_relative
+        require(
+            bool(source_relative) and not Path(source_relative).is_absolute(),
+            "source_audio path must be relative",
+            failures,
+        )
+        require(source_asset.is_file(), "source_audio file is missing", failures)
+        if source_asset.is_file():
+            digest = hashlib.sha256(source_asset.read_bytes()).hexdigest()
+            require(digest == source_record.get("sha256"), "source_audio SHA-256 mismatch", failures)
+            require(source_asset.stat().st_size == source_record.get("bytes"), "source_audio byte count mismatch", failures)
+            source_info = probe_audio(source_asset)
+            expected_source = profile.get("source_audio_format", {})
+            require(source_info["codec"] == expected_source.get("codec") == "flac", "source audio must be FLAC", failures)
+            require(source_info["channels"] == expected_source.get("channels") == 1, "source audio must be mono", failures)
+            require(source_info["sample_rate"] == expected_source.get("sample_rate") == 48000, "source audio must be 48 kHz", failures)
+            require(
+                abs(float(source_info["duration_seconds"]) - profile.get("source_audio_duration_seconds", 0)) < 0.001,
+                "source audio duration mismatch",
+                failures,
+            )
+
+        derivation = profile.get("reference_derivation", {})
+        require(derivation.get("source_asset") == "source_audio", "BlueMagpie derivation source is incorrect", failures)
+        require(
+            derivation.get("start_seconds") == 4.222125
+            and derivation.get("end_seconds") == 12.196063
+            and abs(float(derivation.get("duration_seconds", 0)) - 7.973938) < 0.000001,
+            "BlueMagpie derivation bounds are incorrect",
+            failures,
+        )
+
+        audio_dir = ROOT / "assets" / "reference-audio"
         bundled_files = sorted(path.name for path in audio_dir.iterdir() if path.is_file())
         require(
-            "qwen3-voice-design-06-playful-club-raw.flac" in bundled_files,
-            "canonical Qwen3 reference audio is not bundled",
+            "bluemagpie-clone-take07-30s-take05-seed1150797764.flac" in bundled_files,
+            "canonical BlueMagpie source audio is not bundled",
+            failures,
+        )
+        require(
+            "bluemagpie-clone-take07-30s-take05-seed1150797764-ref-4p222125-12p196063.flac"
+            in bundled_files,
+            "BlueMagpie runtime reference derivative is not bundled",
             failures,
         )
         require(not any(path.suffix.lower() == ".mp3" for path in audio_dir.iterdir()), "MP3 reference must not be bundled", failures)
-        require(not any("clip" in path.name.lower() for path in audio_dir.iterdir()), "shortened reference clip must not be bundled", failures)
-        reference_text = profile.get("reference_text", "")
+        provenance = profile.get("reference_provenance", {})
         require(
-            reference_text.startswith("嗨，我是今天的校園科技小主播。")
-            and reference_text.endswith("陪你認識人工智慧。"),
-            "full Qwen3 reference transcript is missing",
+            provenance.get("selected_source_filename")
+            == "BlueMagpie_clone_take07_30s_take_05_seed_1150797764_00001.flac",
+            "selected BlueMagpie source filename is incorrect",
+            failures,
+        )
+        require(provenance.get("seed") == 1150797764, "selected BlueMagpie source seed is incorrect", failures)
+        generation = profile.get("generation", {})
+        require(generation.get("reference_overrides_speaker") is True, "BlueMagpie reference must override the speaker", failures)
+        require(generation.get("cfg_value") == 2.0, "BlueMagpie CFG is incorrect", failures)
+        require(generation.get("inference_timesteps") == 10, "BlueMagpie inference steps are incorrect", failures)
+        require(
+            generation.get("candidate_attempts") == 3,
+            "BlueMagpie candidate attempt count is incorrect",
             failures,
         )
         require(
-            profile.get("reference_audio_input")
-            == "codex_voice_design_06-playful-club-raw.flac",
-            "ComfyUI reference input filename is incorrect",
+            generation.get("candidate_cfg_values") == [1.8, 2.0, 2.2],
+            "BlueMagpie candidate CFG values are incorrect",
             failures,
         )
-        require(profile.get("generation", {}).get("model_choice") == "1.7B", "Qwen3 model choice is incorrect", failures)
-        require(profile.get("generation", {}).get("x_vector_only") is False, "full-prompt conditioning must remain enabled", failures)
-        require(
-            profile.get("generation", {}).get("candidate_seeds") == [47243, 52901, 88617],
-            "Qwen3 candidate seeds are incorrect",
-            failures,
-        )
-        require(profile.get("generation", {}).get("segment_unit") == "pause-unit", "TTS segment unit must be pause-unit", failures)
+        require(generation.get("segment_unit") == "pause-unit", "TTS segment unit must be pause-unit", failures)
+        require(generation.get("output_sample_rate") == 48000, "BlueMagpie output rate is incorrect", failures)
         require(
             profile.get("pause_policy", {}).get("production_extra_pause_policy")
             == "optional-pacing-overrides-nonnegative-only",
-            "Qwen3 production extra-pause policy is incorrect",
+            "BlueMagpie production extra-pause policy is incorrect",
             failures,
         )
         require(profile.get("fallback_allowed") is False, "TTS fallback must be forbidden", failures)
@@ -666,7 +720,8 @@ def main() -> int:
 
     print("[PASS] skill-technical-remotion contract")
     print(f"[PASS] required artifacts: {len(required_artifacts)}")
-    print("[PASS] shared Qwen3-TTS reference: complete 17.28-second lossless full-prompt FLAC")
+    print("[PASS] shared BlueMagpie-TTS source: exact 28.32-second mono 48 kHz take-05 FLAC")
+    print("[PASS] shared BlueMagpie-TTS runtime reference: exact 7.973938-second PCM derivative")
     print("[PASS] narration schema: exact text + pause_after_ms with source reconstruction")
     print("[PASS] editorial pacing: required minima plus selective recorded additions")
     print("[PASS] visual timing: canonical Qwen cues plus 0.30-0.60s anticipatory cues")
@@ -678,7 +733,7 @@ def main() -> int:
     print("[PASS] transition QC: 0.5s black detection plus local 10 fps diagnosis")
     print("[PASS] delivery copy: SHA-256 must match the verified source render")
     print("[PASS] official previews: no quota, narrated relevance, bounded visibility, provenance")
-    print("[PASS] candidate selection: three candidates, pronunciation gate, Qwen confidence")
+    print("[PASS] candidate selection: three BlueMagpie candidates, pronunciation gate, Qwen confidence")
     print("[PASS] Short writing is conditionally delegated; production remains audio-first")
     return 0
 
