@@ -83,6 +83,7 @@ metadata:
 | 57 | `Reverse-Engineering/` | Reverse Engineering | 此分類涵蓋二進位、行動應用、前端 JavaScript、自訂虛擬機、跨版本差分、反編譯器與動態分析等逆向工程 skill。適用於理解編譯、混淆、封裝或虛擬化目標的內部行為，以及在合法授權範圍內將分析結果延伸至漏洞驗證。 |
 | 58 | `Diagramming-and-Visualization/` | Diagramming & Visualization | 此分類涵蓋流程圖、架構圖、序列圖、狀態圖、ER 圖、資料流圖及其他技術視覺化的生成、驗證與渲染。適用於需要將系統、流程或關係轉換為 Mermaid、Graphviz、PlantUML 或 SVG 的場景。 |
 | 59 | `Writing-Craft/` | Writing Craft | 此分類涵蓋文章素材探索、段落結構塑形、敘事節拍編排與其他寫作工藝方法。適用於需要從零散素材發展文章、建立閱讀旅程、或改善長文結構與節奏的場景。 |
+| 60 | `Creative-Video-Generation/` | Creative Video Generation | 此分類涵蓋以特定美術風格、敘事結構與生成模型為核心的創意影片工作流，包括產品廣告、3D 動畫短片、紙藝定格、品牌宣傳、音樂字幕、遊戲開場與手繪實拍融合。適用於需要從創意規劃、素材確認、分鏡到生成與驗收的一體化影片製作場景。 |
 
 > **新增 skill 時，必須按照下方「追加 Skill 流程」操作。**
 
