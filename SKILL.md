@@ -82,6 +82,7 @@ metadata:
 | 56 | `Metaphysics-and-Spirituality/` | Metaphysics & Spirituality | 此分類涵蓋中華傳統命理術數與宗教靈性相關的 AI Skill，包括四柱八字排盤與命理分析、奇門遁甲判斷與擇時、紫微斗數本命盤解讀、姻緣測算（八字合婚、生肖配對、紫微夫妻宮、桃花運勢）、以及基於佛教經典文獻的漢傳祖師教學角色生成與對話。適用於需要進行傳統命理排盤計算、術數分析、姻緣配對、佛學經典查詢、或建置傳統文化 AI 應用的場景。 |
 | 57 | `Reverse-Engineering/` | Reverse Engineering | 此分類涵蓋二進位、行動應用、前端 JavaScript、自訂虛擬機、跨版本差分、反編譯器與動態分析等逆向工程 skill。適用於理解編譯、混淆、封裝或虛擬化目標的內部行為，以及在合法授權範圍內將分析結果延伸至漏洞驗證。 |
 | 58 | `Diagramming-and-Visualization/` | Diagramming & Visualization | 此分類涵蓋流程圖、架構圖、序列圖、狀態圖、ER 圖、資料流圖及其他技術視覺化的生成、驗證與渲染。適用於需要將系統、流程或關係轉換為 Mermaid、Graphviz、PlantUML 或 SVG 的場景。 |
+| 59 | `Writing-Craft/` | Writing Craft | 此分類涵蓋文章素材探索、段落結構塑形、敘事節拍編排與其他寫作工藝方法。適用於需要從零散素材發展文章、建立閱讀旅程、或改善長文結構與節奏的場景。 |
 
 > **新增 skill 時，必須按照下方「追加 Skill 流程」操作。**
 
