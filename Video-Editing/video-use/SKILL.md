@@ -24,7 +24,7 @@ These are the things where deviation produces silent failures or broken output. 
 3. **30ms audio fades at every segment boundary** (`afade=t=in:st=0:d=0.03,afade=t=out:st={dur-0.03}:d=0.03`). Otherwise audible pops at every cut.
 4. **Overlays use `setpts=PTS-STARTPTS+T/TB`** to shift the overlay's frame 0 to its window start. Otherwise you see the middle of the animation during the overlay window.
 5. **Master SRT uses output-timeline offsets**: `output_time = word.start - segment_start + segment_offset`. Otherwise captions misalign after segment concat.
-6. **Never cut inside a word.** Snap every cut edge to a word boundary from the Volcengine transcript.
+6. **Never cut inside a word.** Snap every cut edge to a word boundary from the ASR Router transcript.
 7. **Pad every cut edge.** Working window: 30–200ms. ASR timestamps can drift — padding absorbs the drift. Tighter for fast-paced, looser for cinematic.
 8. **Word-level verbatim ASR only.** Never SRT/phrase mode (loses sub-second gap data). Never normalized fillers (loses editorial signal).
 9. **Cache transcripts per source.** Never re-transcribe unless the source file itself changed.
@@ -45,7 +45,7 @@ The skill lives in `video-use/`. User footage lives wherever they put it. All se
     ├── project.md               ← memory; appended every session
     ├── takes_packed.md          ← phrase-level transcripts, the LLM's primary reading view
     ├── edl.json                 ← cut decisions
-    ├── transcripts/<name>.json  ← cached normalized Volcengine word timestamps
+    ├── transcripts/<name>.json  ← cached normalized ASR Router word timestamps
     ├── animations/slot_<id>/    ← per-animation source + render + reasoning
     ├── clips_graded/            ← per-segment extracts with grade + fades
     ├── master.srt               ← output-timeline subtitles
@@ -59,7 +59,8 @@ The skill lives in `video-use/`. User footage lives wherever they put it. All se
 
 First-time install lives in `install.md` (clone, deps, ffmpeg, skill registration, API key). Don't re-run it every session; on cold start just verify:
 
-- `VOLCENGINE_API_KEY` resolves from the workspace root `.env` or environment. Default resource ID is `volc.seedasr.auc`; override with `VOLCENGINE_RESOURCE_ID` only when required.
+- `asr-router` is discoverable by the Agent. Provider credentials, availability,
+  and resource selection are owned by that skill.
 - `ffmpeg` + `ffprobe` on PATH.
 - Python deps installed in the external environment linked at
   `<skill_dir>/.venv`; do not create a real virtualenv inside the synced skill tree.
@@ -74,8 +75,10 @@ rendering dependencies resolve consistently.
 
 ## Helpers
 
-- **`transcribe.py <video>`** — single-file Volcengine word-timestamp call. `--num-speakers N` optional. Cached.
-- **`transcribe_batch.py <videos_dir>`** — 4-worker parallel transcription. Use for multi-take.
+- **`transcribe.py <video> --asr-result <result.json>`** — validate and cache one
+  normalized Router result; it performs no recognition.
+- **`transcribe_batch.py <videos_dir> --asr-results-dir <dir>`** — validate and
+  cache one precomputed normalized Router result per video stem.
 - **`pack_transcripts.py --edit-dir <dir>`** — `transcripts/*.json` → `takes_packed.md` (phrase-level, break on silence ≥ 0.5s).
 - **`timeline_view.py <video> <start> <end>`** — filmstrip + waveform PNG. On-demand visual drill-down. **Not a scan tool** — use it at decision points, not constantly.
 - **`render.py <edl.json> -o <out>`** — per-segment extract → concat → overlays (PTS-shifted) → subtitles LAST. `--preview` for 720p fast. `--build-subtitles` to generate master.srt inline.
@@ -85,7 +88,10 @@ For animations, create `<edit>/animations/slot_<id>/` with `Bash` and spawn a su
 
 ## The process
 
-1. **Inventory.** `ffprobe` every source. `transcribe_batch.py` on the directory. `pack_transcripts.py` to produce `takes_packed.md`. Sample one or two `timeline_view`s for a visual first impression.
+1. **Inventory.** `ffprobe` every source. For each uncached source, have the
+   Agent invoke `asr-router` with `profile=word_timestamps`; then import the
+   normalized results with `transcribe_batch.py` and run `pack_transcripts.py`.
+   Sample one or two `timeline_view`s for a visual first impression.
 2. **Pre-scan for problems.** One pass over `takes_packed.md` to note verbal slips, obvious mis-speaks, or phrasings to avoid. Plain list, feed into the editor brief.
 3. **Converse.** Describe what you see in plain English. Ask questions *shaped by the material*. Collect: content type, target length/aspect, aesthetic/brand direction, pacing feel, must-preserve moments, must-cut moments, animation and grade preferences, subtitle needs. Do not use a fixed checklist — the right questions are different every time.
 4. **Propose strategy.** 4–8 sentences: shape, take choices, cut direction, animation plan, grade direction, subtitle style, length estimate. **Wait for confirmation.**
@@ -313,7 +319,8 @@ Things that consistently fail regardless of style:
 - **Hierarchical pre-computed codec formats** with USABILITY / tone tags / shot layers. Over-engineering. Derive from the transcript at decision time.
 - **Hand-tuned moment-scoring functions.** The LLM picks better than any heuristic you'll write.
 - **Whisper SRT / phrase-level output.** Loses sub-second gap data. Always word-level verbatim.
-- **Running Whisper locally on CPU.** Slow and it normalizes fillers. Use the configured Volcengine word-timestamp service.
+- **Bypassing ASR Router with phrase-only output.** This workflow requires
+  word-level verbatim timestamps and must use a router method that supplies them.
 - **Burning subtitles into base before compositing overlays.** Overlays hide them. (Hard Rule 1.)
 - **Single-pass filtergraph when you have overlays.** Double re-encodes. Use per-segment extract → concat.
 - **Linear animation easing.** Looks robotic. Always cubic.

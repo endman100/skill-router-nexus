@@ -5,7 +5,7 @@
 # video-use
 
 This is the content-system variant of **video-use**: conversational editing with
-Volcengine Doubao ASR word timestamps.
+word timestamps supplied by the canonical **ASR Router** skill.
 
 Drop raw footage in a folder, chat with Claude Code, get `final.mp4` back. Works for any content — talking heads, montages, tutorials, travel, interviews — without presets or menus.
 
@@ -26,12 +26,12 @@ Try video-use in [Browser Use Cloud](https://cloud.browser-use.com/v4?utm_campai
 From this workspace, ask Claude Code or Codex:
 
 ```text
-Read .claude/skills/video-use/install.md, connect the workspace Volcengine key,
+Read .claude/skills/video-use/install.md, connect Speech-Recognition/asr-router,
 sync the three skill mirrors, and run the readiness checks. Do not replace this
 workspace variant with an unmodified upstream checkout.
 ```
 
-It uses Volcengine Recording File Recognition 2.0 (`volc.seedasr.auc`) for word timestamps.
+It requests word timestamps from ASR Router; provider setup lives only there.
 
 Then point your agent at a folder of raw takes:
 
@@ -64,7 +64,7 @@ ln -sfn <HOME>/.venvs/video-use .venv
 brew install ffmpeg             # required
 brew install yt-dlp             # optional, for downloading online sources
 
-# 3. Keep VOLCENGINE_API_KEY in the workspace root .env
+# 3. Install/configure Speech-Recognition/asr-router; provider setup lives there
 ```
 
 ## How it works
@@ -75,7 +75,7 @@ The LLM never watches the video. It **reads** it — through two layers that tog
   <img src="static/timeline-view.svg" alt="timeline_view composite — filmstrip + speaker track + waveform + word labels + silence-gap cut candidates" width="100%">
 </p>
 
-**Layer 1 — Audio transcript (always loaded).** One Volcengine ASR call per source gives word-level timestamps. All takes pack into a compact `takes_packed.md` — the LLM's primary reading view.
+**Layer 1 — Audio transcript (always loaded).** One ASR Router request per source gives word-level timestamps. All takes pack into a compact `takes_packed.md` — the LLM's primary reading view.
 
 ```
 ## C0103  (duration: 43.0s, 8 phrases)

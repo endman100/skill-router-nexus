@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 /**
- * 从火山引擎结果生成字级别字幕
+ * 从 ASR Router normalized result 生成字级别字幕
  *
- * 用法: node generate_subtitles.js <volcengine_v3_result.json> [delete_segments.json]
+ * 用法: node generate_subtitles.js <asr-result.json> [delete_segments.json]
  * 输出: subtitles_words.json
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const resultFile = process.argv[2] || 'volcengine_v3_result.json';
+const resultFile = process.argv[2] || 'asr-result.json';
 const deleteFile = process.argv[3];
 const outDir = process.argv[4] || '.';
 
@@ -20,31 +20,25 @@ if (!fs.existsSync(resultFile)) {
 
 const result = JSON.parse(fs.readFileSync(resultFile, 'utf8'));
 
-// 兼容 v1（顶层 utterances）和 v3（result.utterances）两种格式
-const utterances = result.result ? result.result.utterances : result.utterances;
-
-if (!utterances || utterances.length === 0) {
-  console.error('❌ 未找到 utterances，响应格式可能不符合预期');
+if (!result.schema_version || !Array.isArray(result.words)) {
+  console.error('❌ 输入不是 ASR Router normalized result');
   console.error('响应顶层字段:', Object.keys(result));
   process.exit(1);
 }
 
-// 提取所有字
-// 注意：火山 flash 引擎会在中英文边界塞入 text=' ' 且 start_time/end_time=-1 的"分隔符词"，
-// 必须过滤掉，否则 lastEnd 会被污染成负数，导致 gap 计算出几十秒的假静音段
+// 只消费 Router 契约中的真实 word；spacing 由本业务脚本重新计算。
 const allWords = [];
-for (const utterance of utterances) {
-  if (utterance.words) {
-    for (const word of utterance.words) {
-      if (word.start_time < 0 || word.end_time < 0) continue;
-      if (!word.text || !word.text.trim()) continue;
-      allWords.push({
-        text: word.text,
-        start: word.start_time / 1000,
-        end: word.end_time / 1000
-      });
-    }
-  }
+for (const word of result.words) {
+  const text = String(word.text || '').trim();
+  const start = Number(word.start);
+  const end = Number(word.end);
+  if (word.type === 'spacing' || !text || !Number.isFinite(start) || !Number.isFinite(end)) continue;
+  if (start < 0 || end < start) continue;
+  allWords.push({ text, start, end });
+}
+if (allWords.length === 0) {
+  console.error('❌ Router 结果没有可用的真实 word timestamps');
+  process.exit(1);
 }
 
 console.log('原始字数:', allWords.length);

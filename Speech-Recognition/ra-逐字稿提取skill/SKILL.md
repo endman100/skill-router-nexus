@@ -1,6 +1,6 @@
 ---
 name: ra-逐字稿提取skill
-description: 视频内容逐字稿提取专用 skill。Use when the user provides a 抖音 or 小红书 URL and asks for逐字稿、视频转文字、听写视频或提取口播内容。Only extract transcript content; do not use this skill as the production subtitle clock, and do not summarize, rewrite, translate, title, or start production. Uses qushuiyin plus Paraformer ASR.
+description: 视频内容逐字稿提取专用 skill。Use when the user provides a 抖音 or 小红书 URL and asks for逐字稿、视频转文字、听写视频或提取口播内容。Resolve media with qushuiyin, delegate recognition to asr-router, and keep extraction-only privacy and output rules here.
 ---
 
 # ra-逐字稿提取skill
@@ -12,7 +12,8 @@ Extract a faithful Markdown transcript from a 抖音 or 小红书 video URL.
 This skill is intentionally narrow and lightweight:
 
 - resolve the video URL with qushuiyin
-- send the resolved media URL to 阿里云百炼 Paraformer
+- delegate the resolved media URL to `asr-router` with
+  `preferred_provider=paraformer` and `fallback_allowed=false`
 - write a Markdown transcript to `01-内容生产/视频工作台/.internal/洗稿/`（源隐私区——提取件默认按他人内容对待，源标题不得落入公开目录）
 - print the complete transcript in the conversation
 
@@ -48,28 +49,39 @@ Use `"$ZT_HOME/scripts/transcript.py"` for every operation.
    python3 "$ZT_HOME/scripts/transcript.py" --doctor
    ```
 
-2. Extract transcript:
+2. Resolve the media URL and save the resolver artifact:
 
    ```bash
-   python3 "$ZT_HOME/scripts/transcript.py" "<抖音或小红书视频URL>"
+   python3 "$ZT_HOME/scripts/transcript.py" "<抖音或小红书视频URL>" \
+     --resolve-only --resolve-output <work>/resolved-media.json
    ```
 
-3. If the URL is not 抖音/小红书, or if qushuiyin/Paraformer fails, stop and report the exact error. Do not try another extraction pipeline inside this skill.
+3. Read `video_url` from that artifact. The Agent invokes `asr-router` with
+   `source=<video_url>`, `preferred_provider=paraformer`,
+   `fallback_allowed=false`, `profile=transcript`, and `privacy=allow_api`.
+
+4. Consume the Router normalized result and generate Markdown:
+
+   ```bash
+   python3 "$ZT_HOME/scripts/transcript.py" "<抖音或小红书视频URL>" \
+     --resolved-input <work>/resolved-media.json \
+     --asr-result <work>/asr-result.json
+   ```
+
+5. If the URL is unsupported, or qushuiyin/ASR Router fails, stop and report the
+   exact error. Do not execute a provider adapter or try another extraction
+   pipeline inside this skill.
 
 ## Required Config
 
-Keys are read from the project root `.env` first:
+Only Qushuiyin configuration stays here. ASR credentials, provider options, and
+invocation are canonical in `asr-router/references/paraformer-api.md`; this skill
+only supplies Router constraints and consumes its normalized result:
 
 ```bash
 QUSHUIYIN_API_BASE=https://api.guijianpan.com
 QUSHUIYIN_API_KEY=...
-DASHSCOPE_API_KEY=...
-PARAFORMER_MODEL=paraformer-v2
-PARAFORMER_POLL_INTERVAL_SECONDS=3
-PARAFORMER_TIMEOUT_SECONDS=240
 ```
-
-`PARAFORMER_API_KEY` may be used instead of `DASHSCOPE_API_KEY`.
 
 ## Hard Rules
 
@@ -84,7 +96,9 @@ PARAFORMER_TIMEOUT_SECONDS=240
 ```bash
 python3 "$ZT_HOME/scripts/transcript.py" "<url>" \
   --title "<optional title>" \
-  --output-dir "<optional output dir>"
+  --output-dir "<optional output dir>" \
+  --resolved-input "<resolved-media.json>" \
+  --asr-result "<asr-result.json>"
 ```
 
 Use `--no-save` only when the user explicitly does not want a `.md` file.

@@ -113,7 +113,7 @@ script):
     under `视频工作台/`.
     the 策划稿 frontmatter `status` is the only handoff signal, and the user
     handles 录制 and 剪映融合 stages personally. Codex owns three stages:
-    (a) `status: 待粗剪` — default to `ra-local-talking-head-cut`: Seed ASR
+    (a) `status: 待粗剪` — default to `ra-local-talking-head-cut`: ASR Router
     word timestamps, terminology/uncertainty review, and a source-timeline
     pre-cut SRT. Stop for explicit user approval; no EDL or render is allowed
     before approval. Then perform semantic cleanup, adaptive pauses,

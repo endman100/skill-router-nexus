@@ -1,7 +1,6 @@
 ---
 name: openai-whisper
-description: Local speech-to-text with the Whisper CLI (no API key).
-homepage: https://openai.com/research/whisper
+description: Compatibility entry for local Whisper speech-to-text. Delegate every ASR invocation to asr-router; keep this skill only for existing callers.
 metadata:
   {
     "openclaw":
@@ -22,17 +21,10 @@ metadata:
   }
 ---
 
-# Whisper (CLI)
+# Whisper compatibility entry
 
-Use `whisper` to transcribe audio locally.
+Invoke `asr-router` with `preferred_provider=whisper`. Read its
+`references/whisper-local.md` and use the router's schema and fallback rules.
 
-Quick start
-
-- `whisper /path/audio.mp3 --model medium --output_format txt --output_dir .`
-- `whisper /path/audio.m4a --task translate --output_format srt`
-
-Notes
-
-- Models download to `~/.cache/whisper` on first run.
-- `--model` defaults to `turbo` on this install.
-- Use smaller models for speed, larger for accuracy.
+This file intentionally contains no Whisper invocation details. The canonical
+method lives in `Speech-Recognition/asr-router`.

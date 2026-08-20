@@ -18,7 +18,7 @@ pos: 口播素材准备入口；默认完成粗剪 + 剪后字幕校对
 
 # 剪口播 v3
 
-> 火山引擎转录 + AI 口误识别 + 网页审核 + 剪后重转写 + AI 字幕校对
+> ASR Router 转录 + AI 口误识别 + 网页审核 + 剪后重转写 + AI 字幕校对
 
 ## 快速使用
 
@@ -38,7 +38,7 @@ subtitles.srt        # 基于剪后视频重新转写并 AI 校对后的字幕
 assets/              # 可选截图、评论图、结果页
 ```
 
-审核页只负责让用户确认“删哪里”并剪出新视频。字幕不能沿用原始视频字幕，也不能把火山转写初稿直接当最终字幕；Agent 必须基于剪后视频重新转写，并做 AI 校对后，才能写入 `subtitles.srt`。
+审核页只负责让用户确认“删哪里”并剪出新视频。字幕不能沿用原始视频字幕，也不能把 Router 转写初稿直接当最终字幕；Agent 必须基于剪后视频重新转写，并做 AI 校对后，才能写入 `subtitles.srt`。
 
 ## 输出目录结构
 
@@ -48,7 +48,7 @@ output/
     ├── 剪口播/
     │   ├── 1_转录/
     │   │   ├── audio.mp3
-    │   │   ├── volcengine_result.json
+    │   │   ├── asr-result.json
     │   │   └── subtitles_words.json
     │   ├── 2_分析/
     │   │   ├── readable.txt
@@ -60,7 +60,7 @@ output/
     └── 字幕/
         ├── 1_转录/
         │   ├── audio.mp3
-        │   └── volcengine_result.json
+        │   └── asr-result.json
         ├── subtitles_with_time.json
         └── 3_输出/
             ├── video.raw.srt
@@ -76,9 +76,9 @@ output/
     ↓
 1. 提取音频 (ffmpeg)
     ↓
-2. 调用火山引擎录音文件识别 2.0（Seed ASR v3）
+2. 调用 ASR Router 的 word-timestamp profile
     ↓
-3. 生成 volcengine_result.json
+3. 保存 Router normalized result 为 asr-result.json
     ↓
 4. 生成字级别字幕 (subtitles_words.json)
     ↓
@@ -94,7 +94,7 @@ output/
     ↓
 9. Agent 监听剪后视频生成完成
     ↓
-10. 基于剪后视频重新提取音频，发火山转写，生成 video.raw.srt
+10. 基于剪后视频重新提取音频，经 ASR Router 转写，生成 video.raw.srt
     ↓
 11. Agent 对照原稿/正文做 AI 校对，写 video.srt
     ↓
@@ -104,7 +104,7 @@ output/
 剪后字幕硬规则：
 
 - 必须基于剪后视频重新转写，不能用原始视频字幕反推。
-- 火山转写只是初稿，输出到 `video.raw.srt`。
+- ASR 转写只是初稿，输出到 `video.raw.srt`。
 - `video.srt` / `subtitles.srt` 只能是 Agent AI 校对后的最终字幕。
 - 校对时对照用户给的口播稿、正文、专名和上下文，修正术语、同音误识别、断句；不能添加视频里没说的话。
 
@@ -132,40 +132,26 @@ cd 1_转录
 # 1. 提取音频（文件名有冒号需加 file: 前缀）
 ffmpeg -i "file:$VIDEO_PATH" -vn -acodec libmp3lame -y audio.mp3
 
-# 2. 调用火山引擎录音文件识别 2.0（默认 resource_id=volc.seedasr.auc）
-SKILL_DIR="/Volumes/成峰/代码/剪辑Agent/.claude/skills/剪口播"
-"$SKILL_DIR/scripts/volcengine_transcribe.sh" audio.mp3
-# 输出: volcengine_result.json
+# 2. 调用 ASR Router；请求 profile=word_timestamps、privacy=allow_api
+# 由 Router 按 schema 选择 provider，并返回 normalized result + raw artifact
 ```
 
-转录脚本默认使用火山 v3 Seed ASR 2.0：
-
-```text
-POST /api/v3/auc/bigmodel/submit
-POST /api/v3/auc/bigmodel/query
-X-Api-Resource-Id: volc.seedasr.auc
-```
-
-如果要临时回退或对比其他资源，可用环境变量覆盖：
-
-```bash
-VOLCENGINE_ASR_RESOURCE_ID=volc.bigasr.auc "$SKILL_DIR/scripts/volcengine_transcribe.sh" audio.mp3
-```
+模型、API、resource ID 与 fallback 规则统一读取
+`asr-router/references/schema.md` 和 `seed-asr-api.md`；本 skill 不再保存
+供应商调用方法。
 
 ### 步骤 4: 生成字级时间轴
 
 ```bash
-node "$SKILL_DIR/scripts/generate_subtitles.js" volcengine_result.json
+node "$SKILL_DIR/scripts/generate_subtitles.js" asr-result.json
 # 输出: subtitles_words.json
 
 cd ..
 ```
 
-时间戳规则：
-
-- `generate_subtitles.js` 必须兼容 `result.utterances`（v3）和旧版 `utterances`。
-- v3 结果里的无效时间戳 token（常见为空格，`start_time/end_time = -1`）必须过滤，否则会制造假静音。
-- 2026-06-25 的 180 秒样本评估：Seed ASR 2.0 相对校对字幕时间窗的词级边界偏移中位数约 80ms，P90 约 240ms，最大约 620ms；可作为默认剪口播时间轴，但长句仍需按词级时间戳重新切成字幕行。
+时间戳规则：`generate_subtitles.js` 只读取 Router 契约的 `words`，忽略
+`type=spacing` 与无效区间，再按真实词级时间戳切成字幕行。供应商原始
+格式与时间戳换算只在 `asr-router` 维护。
 
 ### 步骤 5: 分析口误（脚本+AI）
 
@@ -240,7 +226,7 @@ console.log('≥0.2s静音数量:', selected.length);
 
 #### 5.4b 头尾裁剪（转录盲区，必做）
 
-> 🚨 火山只转语音，**结尾的未转录杂音/收尾动作不在字幕里，所有检测器都看不见**。必须比对视频时长补出来。见 `用户习惯/3-静音段处理.md`。
+> 🚨 ASR 只覆盖识别到的语音，**结尾的未转录杂音/收尾动作不在字幕里，所有检测器都看不见**。必须比对视频时长补出来。见 `用户习惯/3-静音段处理.md`。
 
 ```bash
 VDUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "file:$VIDEO_PATH")
@@ -398,15 +384,17 @@ node "$SKILL_DIR/scripts/watch_cut_done.js" "output/YYYY-MM-DD_视频名/剪口�
 ### 步骤 9: 基于剪后视频重新转写
 
 ```bash
-"$SKILL_DIR/scripts/generate_srt_for_video.sh" "剪后视频.mp4" "output/YYYY-MM-DD_视频名/字幕"
+# Agent 先对剪后视频调用 asr-router，取得 normalized result，再运行：
+"$SKILL_DIR/scripts/generate_srt_for_video.sh" "剪后视频.mp4" \
+  "output/YYYY-MM-DD_视频名/字幕" <Router输出>/asr-result.json
 ```
 
 字幕必须基于剪后视频重新转写，不能用原始视频字幕反推。
 
-这一步只产出火山转写初稿：
+这一步只产出 ASR 转写初稿：
 
 ```text
-output/YYYY-MM-DD_视频名/字幕/1_转录/volcengine_result.json
+output/YYYY-MM-DD_视频名/字幕/1_转录/asr-result.json
 output/YYYY-MM-DD_视频名/字幕/subtitles_with_time.json
 output/YYYY-MM-DD_视频名/字幕/3_输出/video.raw.srt
 ```
@@ -505,34 +493,9 @@ assets/         = 可选素材
 
 ---
 
-## 配置
+## ASR 委派
 
-### 火山引擎 API Key
-
-如果用户没有火山语音识别 API Key，先让用户打开火山控制台开通“录音文件识别 2.0”并创建 API Key：
-
-```text
-https://console.volcengine.com/speech/new/setting/activate?projectName=default
-```
-
-当前默认模型资源：
-
-```text
-录音文件识别 2.0 / Seed ASR
-resource_id = volc.seedasr.auc
-```
-
-拿到 Key 后，再写入 Skills 根目录的 `.env`：
-
-```bash
-cd /Volumes/成峰/代码/剪辑Agent/.claude/skills
-cp .env.example .env
-# 编辑 .env 填入 VOLCENGINE_API_KEY=xxx
-```
-
-如果是通过 npm 安装，Skills 根目录通常是：
-
-```bash
-~/.claude/skills/chengfeng-videocut-skills
-~/.codex/skills/chengfeng-videocut-skills
-```
+Agent 必须调用 `asr-router`；本 skill 不定位或执行任何 provider adapter。
+所有模型顺序、API 标注、凭证、资源、请求方法与 fallback 规则以 Router
+为唯一来源。本 skill 只消费 normalized result，并保留剪辑、审核、字幕
+校对及其业务输出格式。

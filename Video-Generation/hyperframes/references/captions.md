@@ -2,11 +2,9 @@
 
 ## Language Rule (Non-Negotiable)
 
-**Never use `.en` models unless the user explicitly states the audio is English.** `.en` models TRANSLATE non-English audio into English instead of transcribing it.
-
-1. User says the language → `--model small --language <code>` (no `.en`)
-2. User says English → `--model small.en`
-3. Language unknown → `--model small` (no `.en`, no `--language`) — auto-detects
+Pass an explicitly stated source language to ASR Router. When the language is
+unknown, leave `language=null`; do not guess or request translation. Provider
+and model-specific language flags live only in the selected Router guide.
 
 ---
 
@@ -21,7 +19,8 @@ Analyze spoken content to determine caption style. If user specifies a style, us
 ]
 ```
 
-For transcription commands, whisper models, external APIs, see [transcript-guide.md](transcript-guide.md).
+For recognition, see the ASR Router delegation in
+[transcript-guide.md](transcript-guide.md).
 
 ## Style Detection (When No Style Specified)
 

@@ -1,6 +1,6 @@
 ---
 name: ra-audio-to-subtitles
-description: Generate production subtitle artifacts from the final narration audio or final merged video using Volcengine Doubao ASR word timestamps. Use for local IndexTTS2 videos, Xiaohei page videos, talking-head delivery subtitles, SRT/VTT export, or whenever subtitle timing must match the final audio. Do not use script-length interpolation for final deliverables.
+description: Generate production subtitle artifacts from final narration audio or final merged video. Delegate recognition to asr-router, then align approved display text to real word timestamps for SRT/VTT and caption QC.
 ---
 
 # 真实时间戳字幕
@@ -13,17 +13,19 @@ fixed delays.
 
 1. Finish and concatenate narration first. If the user recorded or merged a
    video, use that final merged media instead.
-2. Run `scripts/generate_subtitles.py` against the final media and the exact
-   narration script.
-3. Inspect phrase segmentation. Keep English product/model tokens intact,
+2. Invoke `asr-router` with `profile=word_timestamps` against the final media.
+   Require its normalized result before continuing.
+3. Run `scripts/generate_subtitles.py` against the final media, exact narration
+   script, and the router result.
+4. Inspect phrase segmentation. Keep English product/model tokens intact,
    merge isolated one-word fragments, and place connectors such as `比如说`,
    `但是`, and `只是` with the phrase they introduce.
-4. Render captions from `captions.json`; export `captions.srt` for Bilibili,
+5. Render captions from `captions.json`; export `captions.srt` for Bilibili,
    YouTube, editing software, and archive.
-5. Require `caption-qc.json` to report `status: pass` before final render or
+6. Require `caption-qc.json` to report `status: pass` before final render or
    delivery. The gate includes alignment, overlap, fragments, connector splits,
    caption duration, and reading speed.
-6. If ASR fails or alignment coverage is below the gate, stop. A character-
+7. If ASR fails or alignment coverage is below the gate, stop. A character-
    count estimate may be used only for an explicitly labeled scratch preview.
 
 ## Commands
@@ -34,6 +36,7 @@ Project with `narration_segments.json`:
 python3 .claude/skills/ra-audio-to-subtitles/scripts/generate_subtitles.py \
   <project>/media/final-voiceover.mp3 \
   --script <project>/narration_segments.json \
+  --asr-result <project>/media/asr-result.json \
   --out-dir <project>/media/captions
 ```
 
@@ -43,6 +46,7 @@ Recorded or merged video with a Markdown handoff containing `- 口播：` lines:
 python3 .claude/skills/ra-audio-to-subtitles/scripts/generate_subtitles.py \
   <project>/merged.mp4 \
   --script <project>/handoff.md \
+  --asr-result <project>/media/asr-result.json \
   --out-dir <project>/media/captions
 ```
 
@@ -52,11 +56,11 @@ Health check:
 python3 .claude/skills/ra-audio-to-subtitles/scripts/generate_subtitles.py --doctor
 ```
 
-Offline regression test with an existing Volcengine response:
+Offline regression test with an existing ASR Router response:
 
 ```bash
 python3 .claude/skills/ra-audio-to-subtitles/scripts/generate_subtitles.py \
-  <audio> --script <script> --asr-result <volcengine-result.json> \
+  <audio> --script <script> --asr-result <asr-router-result.json> \
   --out-dir <output>
 ```
 
@@ -64,7 +68,7 @@ python3 .claude/skills/ra-audio-to-subtitles/scripts/generate_subtitles.py \
 
 The output directory must contain:
 
-- `asr-result.json`: raw Volcengine response
+- `asr-result.json`: preserved ASR Router normalized response
 - `captions_words.json`: word/character timestamps and detected gaps
 - `captions.json`: phrase captions consumed by HyperFrames or Remotion
 - `captions.srt` and `captions.vtt`: portable subtitle files
@@ -90,9 +94,7 @@ integrating another renderer or delivery checker.
   as a review warning.
 - Keep one canonical caption timeline. Scene changes, keyword reveals, and
   component cues should look up caption text or timestamps from that timeline.
-- `VOLCENGINE_API_KEY` comes from the workspace root `.env` or the environment.
-  Never print or copy it into an artifact.
-- Default resource ID is `volc.seedasr.auc`; override only with
-  `VOLCENGINE_RESOURCE_ID` when the account uses a different enabled resource.
+- Provider credentials, invocation, privacy, and fallback belong to
+  `asr-router`; this skill consumes only its result.
 - Final delivery requires alignment coverage at least 0.90 unless a stricter
   project contract is set. Lower coverage is a failure, not a warning.

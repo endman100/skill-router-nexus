@@ -123,7 +123,8 @@ The lighter HF subcommands you CAN still run from your own shell
 (they don't need to spawn Chrome):
 
 - `npx hyperframes lint "$COMP"` — validate composition before dispatch
-- `npx hyperframes transcribe <audio>` — generate captions
+- `npx hyperframes transcribe <existing-transcript>` — import captions; use
+  `asr-router` when audio recognition is required
 - `npx hyperframes tts <text>` — generate narration
 
 Reserve the daemon dispatch for `render`/`inspect`/`preview` (anything

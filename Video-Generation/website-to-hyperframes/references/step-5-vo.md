@@ -16,11 +16,9 @@ Generate the full script as `narration.wav` (or `.mp3`) in the project directory
 
 ## Transcribe for word-level timestamps
 
-```bash
-npx hyperframes transcribe narration.wav
-```
-
-Produces `transcript.json` with `[{ text, start, end }]` for every word. These timestamps are the source of truth for all beat durations.
+Invoke `Speech-Recognition/asr-router` with `profile=word_timestamps` for
+`narration.wav`, then import its normalized `words` result as `transcript.json`.
+These timestamps are the source of truth for all beat durations.
 
 ## Map timestamps to beats
 

@@ -13,8 +13,9 @@ directory.
 
 1. Probe the source. Preserve width, height, and frame rate unless the user
    explicitly requests a delivery conversion.
-2. Transcribe with the installed `video-use/helpers/transcribe.py` using
-   `volc.seedasr.auc` and word timestamps. Reuse its cached normalized JSON.
+2. Invoke `asr-router` with `profile=word_timestamps`; reuse its cached
+   normalized JSON. The installed `video-use/helpers/transcribe.py` remains a
+   compatibility wrapper and must not own provider invocation.
 3. Run `scripts/prepare_transcript.py` with
    `references/default-glossary.json`. It must create `review.md`,
    `precut-review.srt`, `corrected-script.md`, `uncertain-terms.md`, and

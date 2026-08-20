@@ -1,11 +1,11 @@
 ---
 name: AI剪口播
-description: 口播视频转录和口误识别。生成审查稿和删除任务清单。触发词：剪口播、处理视频、识别口误
+description: 口播视频口误识别、审查稿和删除任务清单。需要语音转录时委派给 asr-router；本 skill 保留分析、审核、剪辑和字幕格式化流程。
 ---
 
 # 剪口播 
 
-> 火山引擎转录 + AI 口误识别 + 网页审核 / 字幕格式化
+> ASR Router 转录 + AI 口误识别 + 网页审核 / 字幕格式化
 
 ## 模式
 
@@ -17,7 +17,7 @@ description: 口播视频转录和口误识别。生成审查稿和删除任务�
 **模式 A（剪口播）：**
 ```
 output/YYYY-MM-DD_HH-MM_视频名/剪口播/
-├── 1_转录/   audio.mp3 · volcengine_v3_result.json · subtitles_words.json
+├── 1_转录/   audio.mp3 · asr-result.json · subtitles_words.json
 ├── 2_分析/   analysis.txt · sentence_map.json · speech_errors.json · auto_selected.json
 └── 3_审核/   review.html · audio.mp3 · data.json · silence_periods.json
                 <视频名>_cut.fcpxml   ← 网页点击「导出 FCPXML」后生成在此目录
@@ -27,7 +27,7 @@ output/YYYY-MM-DD_HH-MM_视频名/剪口播/
 **模式 B（转字幕）：**
 ```
 output/YYYY-MM-DD_HH-MM_视频名/剪口播/
-├── 1_转录/   audio.mp3 · volcengine_v3_result.json · subtitles_words.json · raw_text.txt
+├── 1_转录/   audio.mp3 · asr-result.json · subtitles_words.json · raw_text.txt
 └── 2_纠错/   corrected.txt · uncertain.md（可选）
 视频所在目录/
 └── subtitles_formatted.md   ← 最终输出
@@ -36,7 +36,7 @@ output/YYYY-MM-DD_HH-MM_视频名/剪口播/
 ## 流程总览
 
 ```
--1. 首次引导（仅第一次：环境自检 + 配置火山引擎）
+-1. 首次引导（仅第一次：环境自检 + 配置 ASR Router）
 0. 确认视频路径 + 选择模式
 1-4. run_transcribe.sh（自动，两模式共用）
 
@@ -66,12 +66,11 @@ output/YYYY-MM-DD_HH-MM_视频名/剪口播/
 > ```bash
 > SKILL_DIR="<本 skill 的安装目录>"   # 例：Claude Code 默认 ~/.claude/skills/AI剪口播
 > ```
-> API Key 的查找顺序见 [scripts/lib/load_api_key.sh](scripts/lib/load_api_key.sh)：
-> 环境变量 `VOLCENGINE_API_KEY` → `$SKILL_DIR/.env` →（兼容旧约定）上一级 `.env`。
+> ASR 方法、凭证和资源选择统一由 Agent 调用 `asr-router` 管理。
 
 ### 步骤 -1: 首次引导（只在第一次跑）
 
-> **目的**：第一次用本 Skill 的人通常没装依赖、没配火山引擎 key。先做一次自检并手把手引导，配好后写标记文件，**以后永久跳过，不再打扰**。
+> **目的**：第一次使用时检查业务依赖与 ASR Router；通过后写标记文件。
 
 **闸门**：先看标记文件是否存在（`SKILL_DIR` = 本 skill 安装目录，见上方「路径约定」）。
 ```bash
@@ -85,20 +84,13 @@ SKILL_DIR="<本 skill 的安装目录>"
 node "$SKILL_DIR/scripts/doctor.js"
 ```
 
-`doctor.js` 做三层检查并输出人话报告：① 系统依赖（ffmpeg/node/python3/curl）② `VOLCENGINE_API_KEY`（环境变量或 `.env`，查找顺序见 `scripts/lib/load_api_key.sh`）③ 联网实测 key 与极速版/标准版两个资源是否开通。**全绿时它自己写 `.setup_done` 并退出 0**；有缺项退出 1。
+`doctor.js` 只检查本 skill 的 ffmpeg 与 Node 业务依赖。ASR 可用性由
+Agent 在调用 `asr-router` 时检查。全绿时写 `.setup_done` 并退出 0。
 
 **AI 按报告分情况引导用户**（不要让用户自己看懂报告）：
 1. **缺系统依赖** → 把报告里对应平台的安装命令复制给用户（脚本已按 Win/Mac 给好），让其装完。
-2. **缺 / 占位 API Key** → 按以下流程引导用户（火山引擎·豆包语音服务，共 40h 免费额度）：
-   1. 登录控制台 https://console.volcengine.com/speech/new/overview
-   2. 左侧「语音识别」→ 开通「录音文件识别 1.0」，**标准版 + 极速版都开**（各 20h、共 ≈40h，独立抵扣）
-   3. 左侧「API Key 管理」→ 复制 API Key
-   4. 写入 `$SKILL_DIR/.env`（推荐，跟着 skill 走；也可 `export VOLCENGINE_API_KEY=...`）：
-   ```bash
-   echo "VOLCENGINE_API_KEY=粘贴你的key" >> "$SKILL_DIR/.env"
-   ```
-3. **某个资源未开通**（报告会精确指出是极速版还是标准版）→ 引导去控制台开通对应「录音文件识别 1.0」资源；默认 auto 轮流需两个都开（各 20h 免费、共 ≈40h），只想用一个就转录时加 `--flash` / `--v3-standard`。
-4. 用户修完 → **重跑 `node "$SKILL_DIR/scripts/doctor.js"`**，直到全绿（自动写 `.setup_done`），再进入步骤 0。
+2. **Router 报告供应商不可用** → 按 Router 选中的子方法文档配置。
+3. 用户修完 → 重跑对应检查，直到业务依赖与 Router 都可用。
 
 > 全程不要替用户去控制台点按钮或粘贴他的私有 key 到别处；只给清晰可复制的命令和链接。
 
@@ -117,24 +109,20 @@ node "$SKILL_DIR/scripts/doctor.js"
 
 用户确认后再继续，不自动开始。
 
-### 步骤 1-4: 一键转录流水线（无需 AI）
+### 步骤 1-4: Router 转录 + 业务格式化
 
 ```bash
 SKILL_DIR="<本 skill 的安装目录>"   # 见上方「路径约定」
 VIDEO_PATH="/path/to/视频.mp4"
 BASE_DIR="$HOME/Desktop/output/$(date +%Y-%m-%d_%H-%M)_$(basename "$VIDEO_PATH" | sed 's/\.[^.]*$//')/剪口播"
 
-bash "$SKILL_DIR/scripts/run_transcribe.sh" "$VIDEO_PATH" "$BASE_DIR"
-# 输出: BASE_DIR/1_转录/{audio.mp3, volcengine_v3_result.json, subtitles_words.json}
-#
-# 默认引擎: auto 轮流（flash 极速版 auc_turbo ↔ 标准版 auc 交替）
-#   - 每次转录自动切换引擎，分摊两份各 20h 免费额度 ≈ 共 40h
-#   - 单 X-Api-Key 认证，base64 直传，不依赖外部图床
-#   - 需在控制台同时开通极速版(auc_turbo)与标准版(auc)两个资源
-#   - 限制: 音频 ≤ 2h、≤ 100MB
-# 可选引擎（只开了一个资源、或想固定用某个时加）:
-#   --flash        只用极速版（一次直出、最快）
-#   --v3-standard  只用标准版（异步 submit/query 轮询）
+# 1. Agent 调用 asr-router：
+#    source=$VIDEO_PATH, profile=word_timestamps,
+#    privacy=local_only 或 allow_api, output_dir=<临时 Router 输出目录>
+# 2. 将 Router normalized result 交给本 skill：
+bash "$SKILL_DIR/scripts/run_transcribe.sh" "$VIDEO_PATH" "$BASE_DIR" \
+  --asr-result <临时 Router 输出目录>/asr-result.json
+# 输出: BASE_DIR/1_转录/{audio.mp3, asr-result.json, subtitles_words.json}
 ```
 
 ### 步骤 5: 生成分析文件 + 口误识别
@@ -315,15 +303,9 @@ node "$SKILL_DIR/scripts/extract_text.js" \
 
 ---
 
-## 配置
+## ASR 委派
 
-火山引擎 API Key 通过 `VOLCENGINE_API_KEY` 提供，查找顺序见 [scripts/lib/load_api_key.sh](scripts/lib/load_api_key.sh)：
-环境变量 → `$VOLCENGINE_ENV_FILE` → `$SKILL_DIR/.env` →（兼容旧约定）skill 上一级的 `.env`。推荐写在 `$SKILL_DIR/.env`：
-```
-VOLCENGINE_API_KEY=your_api_key_here
-```
-
-去[新版控制台](https://console.volcengine.com/speech/new/overview)生成 **一个** API Key 即可——所有引擎共用这同一个 `VOLCENGINE_API_KEY`（均为新版控制台单 `X-Api-Key` 认证）。
-
-默认 `auto` 轮流模式会交替用极速版和标准版，**需同时开通两个资源**：「录音文件识别 - 极速版」（`volc.bigasr.auc_turbo`）+「录音文件识别 - 标准版」（`volc.bigasr.auc`）。两者各有 20h 免费额度、各自独立抵扣，轮流即可吃满 ≈40h。若只想/只开通了其中一个资源，加 `--flash` 或 `--v3-standard` 固定使用。
+所有模型顺序、API 标注、凭证、资源 ID、请求方法和 fallback 规则都以
+`asr-router` 为唯一来源。本 skill 不锁定 provider，也不执行任何 ASR
+adapter；只消费 Router 的 `asr-result.json` 与字级时间戳。
 

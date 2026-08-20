@@ -1,11 +1,10 @@
 ---
 name: venice-video
 description: |
-  Video generation and transcription workflows via the Venice.ai API.
+  Video generation workflows via the Venice.ai API. Delegate speech recognition and transcription to asr-router.
 triggers:
   - "venice video"
   - "venice video gen"
-  - "venice transcribe"
 od:
   mode: video
   category: video-generation
@@ -18,7 +17,11 @@ od:
 
 ## What it does
 
-Video generation and transcription workflows via the Venice.ai API.
+Video generation workflows via the Venice.ai API.
+
+For speech recognition or transcription, invoke `asr-router`. Venice is not a
+registered ASR provider because this repository has no executable Venice
+transcription method; let the Router choose from its installed methods.
 
 ## Source
 

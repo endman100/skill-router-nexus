@@ -66,8 +66,10 @@ In compositions:
 
 ```bash
 npx hyperframes tts script.txt --voice af_heart --output narration.wav
-npx hyperframes transcribe narration.wav  # → transcript.json with word-level timestamps
 ```
+
+Then invoke `Speech-Recognition/asr-router` with `profile=word_timestamps` and
+import its normalized `words` result as `transcript.json`.
 
 ## Requirements
 

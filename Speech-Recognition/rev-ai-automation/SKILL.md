@@ -1,11 +1,15 @@
 ---
 name: rev-ai-automation
-description: "Automate Rev AI tasks via Rube MCP (Composio). Always search tools first for current schemas."
+description: "Automate non-ASR Rev AI tasks via Rube MCP (Composio). For speech recognition or transcription, delegate to asr-router."
 requires:
   mcp: [rube]
 ---
 
 # Rev AI Automation via Rube MCP
+
+For transcription or speech recognition, invoke `asr-router` and read
+`references/rev-ai-api.md` there. Keep this skill for other Rev AI toolkit
+operations; do not duplicate ASR routing or invocation here.
 
 Automate Rev AI operations through Composio's Rev AI toolkit via Rube MCP.
 

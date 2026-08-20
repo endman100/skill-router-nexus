@@ -1,22 +1,21 @@
 ---
 name: video-use-install
-description: Install the content-system video-use variant with Volcengine word timestamps.
+description: Install the content-system video-use variant with ASR Router word timestamps.
 ---
 
 # video-use install
 
 This workspace uses a local variant of `browser-use/video-use`. Editing logic,
 EDL rendering, cut-boundary checks, and timeline views remain upstream-compatible;
-the transcription provider is Volcengine Doubao ASR.
+speech recognition delegates to the installed `asr-router` skill.
 
 ## Requirements
 
 1. The complete skill directory, including `helpers/`, is discoverable by the agent.
 2. `ffmpeg` and `ffprobe` are on `PATH`.
 3. Python dependencies from `pyproject.toml` are installed.
-4. `VOLCENGINE_API_KEY` resolves from the workspace root `.env` or environment.
-5. The default ASR resource is `volc.seedasr.auc`; use
-   `VOLCENGINE_RESOURCE_ID` only when the account requires another resource.
+4. `asr-router` is discoverable by the Agent.
+5. Configure provider credentials according to the selected router method.
 
 ## Install and registration
 
@@ -52,12 +51,15 @@ engines are installed lazily inside the individual animation slot.
 ffprobe -version | head -1
 ```
 
-The doctor must report `ready: true`, `volcengine_api_key: true`, and resource
-ID `volc.seedasr.auc`. A real transcription test should use a short genuine
-speech clip; synthetic silence is not a valid ASR check.
+The helper doctor confirms only that video-use consumes Router results rather
+than executing a provider. Check the selected ASR method through `asr-router`
+itself. A real recognition test should use a short genuine speech clip;
+synthetic silence is not a valid ASR check.
 
 ## Daily use
 
 Read `SKILL.md` and all helper descriptions. Put raw footage in its project
-folder; all outputs stay under `<videos_dir>/edit/`. Transcripts are cached per
-source and must not be regenerated unless the source changes.
+folder; all outputs stay under `<videos_dir>/edit/`. The Agent invokes
+`asr-router` for each uncached source, then imports the normalized result with
+`helpers/transcribe.py --asr-result`. Transcripts must not be regenerated unless
+the source changes.

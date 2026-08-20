@@ -4,7 +4,7 @@ set -euo pipefail
 usage() {
   cat >&2 <<'EOF'
 Usage:
-  transcribe.sh <audio-file> [--model whisper-1] [--out /path/to/out.txt] [--language en] [--prompt "hint"] [--json]
+  openai_whisper_api.sh <audio-file> [--model whisper-1] [--out /path/to/out.txt] [--language en] [--prompt "hint"] [--json]
 EOF
   exit 2
 }
@@ -75,7 +75,7 @@ mkdir -p "$(dirname "$out")"
 api_base="${OPENAI_BASE_URL:-https://api.openai.com/v1}"
 api_base="${api_base%/}"
 
-curl -sS "${api_base}/audio/transcriptions" \
+curl --fail-with-body -sS "${api_base}/audio/transcriptions" \
   -H "Authorization: Bearer $OPENAI_API_KEY" \
   -H "Accept: application/json" \
   -F "file=@${in}" \

@@ -1,19 +1,16 @@
 ---
 name: transcribe-captions
-description: Transcribing audio to generate captions in Remotion
+description: Importing ASR Router word timestamps to generate captions in Remotion
 metadata:
   tags: captions, transcribe, whisper, audio, speech-to-text
 ---
 
-# Transcribing audio
+# Supplying recognized words
 
-Remotion provides several built-in options for transcribing audio to generate captions:
+Do not select or invoke an ASR model from this rule. Request
+`profile=word_timestamps` from `Speech-Recognition/asr-router`, then convert its
+normalized `words` array to Remotion captions.
 
-- `@remotion/install-whisper-cpp` - Transcribe locally on a server using Whisper.cpp. Fast and free, but requires server infrastructure.
-  <https://remotion.dev/docs/install-whisper-cpp>
-
-- `@remotion/whisper-web` - Transcribe in the browser using WebAssembly. No server needed and free, but slower due to WASM overhead.
-  <https://remotion.dev/docs/whisper-web>
-
-- `@remotion/openai-whisper` - Use OpenAI Whisper API for cloud-based transcription. Fast and no server needed, but requires payment.
-  <https://remotion.dev/docs/openai-whisper/openai-whisper-api-to-captions>
+Keep caption grouping, rendering, and visual timing inside the Remotion
+workflow. Provider order, local/API choice, credentials, endpoint details, and
+recognition fallback live only in ASR Router.

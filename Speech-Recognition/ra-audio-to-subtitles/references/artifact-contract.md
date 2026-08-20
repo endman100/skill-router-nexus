@@ -14,7 +14,7 @@ text.
 `captions.json` is a list consumed by renderers:
 
 ```json
-{"start":1.24,"end":3.68,"text":"这是一句字幕。","source":"volcengine-word-timestamps"}
+{"start":1.24,"end":3.68,"text":"这是一句字幕。","source":"asr-router-word-timestamps"}
 ```
 
 Renderers must use `start` and `end` directly. They must not recalculate timing
@@ -23,7 +23,7 @@ from string length, scene duration, or audio segment duration.
 `caption-qc.json` contains:
 
 - `status`: `pass` or `fail`
-- `timing_source`: must be `volcengine-word-timestamps`
+- `timing_source`: must be `asr-router-word-timestamps`
 - `alignment_coverage`: matched original-script characters divided by total
   normalized script characters
 - `script_characters`, `matched_characters`, `asr_characters`

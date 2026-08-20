@@ -1,11 +1,15 @@
 ---
 name: gladia-automation
-description: "Automate Gladia tasks via Rube MCP (Composio). Always search tools first for current schemas."
+description: "Automate non-ASR Gladia tasks via Rube MCP (Composio). For speech recognition or transcription, delegate to asr-router."
 requires:
   mcp: [rube]
 ---
 
 # Gladia Automation via Rube MCP
+
+For transcription or speech recognition, invoke `asr-router` and read
+`references/gladia-api.md` there. Keep this skill for other Gladia toolkit
+operations; do not duplicate ASR routing or invocation here.
 
 Automate Gladia operations through Composio's Gladia toolkit via Rube MCP.
 

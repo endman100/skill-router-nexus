@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * 从火山引擎结果生成字级别字幕
+ * 从 ASR Router normalized result 生成字级别字幕
  *
- * 用法: node generate_subtitles.js <volcengine_result.json> [delete_segments.json]
+ * 用法: node generate_subtitles.js <asr_result.json> [delete_segments.json]
  * 输出: subtitles_words.json
  */
 
 const fs = require('fs');
 
-const resultFile = process.argv[2] || 'volcengine_result.json';
+const resultFile = process.argv[2] || 'asr-result.json';
 const deleteFile = process.argv[3];
 
 if (!fs.existsSync(resultFile)) {
@@ -18,38 +18,32 @@ if (!fs.existsSync(resultFile)) {
 
 const result = JSON.parse(fs.readFileSync(resultFile, 'utf8'));
 
-const utterances = result.utterances || result.result?.utterances || [];
-
-if (!Array.isArray(utterances) || utterances.length === 0) {
-  console.error('❌ 转录结果里没有 utterances');
+if (!result.schema_version || !Array.isArray(result.words)) {
+  console.error('❌ 输入不是 ASR Router normalized result');
   process.exit(1);
 }
 
-// 提取所有字/词。v3 Seed ASR 2.0 会返回少量空格 token，时间戳为 -1；这些不能进入剪辑时间轴。
+// 只消费 Router 契约中的真实 word；spacing 由本业务脚本重新计算。
 const allWords = [];
 let skippedInvalidWords = 0;
-for (const utterance of utterances) {
-  if (utterance.words) {
-    for (const word of utterance.words) {
-      const text = String(word.text || '').trim();
-      const startTime = Number(word.start_time);
-      const endTime = Number(word.end_time);
-      if (!text || startTime < 0 || endTime < 0) {
-        skippedInvalidWords += 1;
-        continue;
-      }
-      allWords.push({
-        text,
-        start: startTime / 1000,
-        end: endTime / 1000
-      });
-    }
+for (const word of result.words) {
+  const text = String(word.text || '').trim();
+  const start = Number(word.start);
+  const end = Number(word.end);
+  if (word.type === 'spacing' || !text || !Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < start) {
+    skippedInvalidWords += 1;
+    continue;
   }
+  allWords.push({ text, start, end });
 }
 
 console.log('原始字数:', allWords.length);
 if (skippedInvalidWords > 0) {
   console.log('已过滤无效时间戳 token:', skippedInvalidWords);
+}
+if (allWords.length === 0) {
+  console.error('❌ Router 结果没有可用的真实 word timestamps');
+  process.exit(1);
 }
 
 // 如果有删除片段，映射时间

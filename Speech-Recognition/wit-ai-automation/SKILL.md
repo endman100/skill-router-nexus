@@ -1,11 +1,15 @@
 ---
 name: wit-ai-automation
-description: "Automate Wit AI tasks via Rube MCP (Composio). Always search tools first for current schemas."
+description: "Automate non-ASR Wit.ai tasks via Rube MCP (Composio). For speech recognition or transcription, delegate to asr-router."
 requires:
   mcp: [rube]
 ---
 
 # Wit AI Automation via Rube MCP
+
+For transcription or speech recognition, invoke `asr-router` and read
+`references/wit-ai-api.md` there. Keep this skill for other Wit.ai toolkit
+operations; do not duplicate ASR routing or invocation here.
 
 Automate Wit AI operations through Composio's Wit AI toolkit via Rube MCP.
 

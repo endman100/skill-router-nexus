@@ -29,7 +29,10 @@ npx hyperframes init my-video --non-interactive       # skip prompts (CI/agents)
 
 Templates: `blank`, `warm-grain`, `play-mode`, `swiss-grid`, `vignelli`, `decision-tree`, `kinetic-type`, `product-promo`, `nyt-graph`.
 
-`init` creates the right file structure, copies media, transcribes audio with Whisper, and installs AI coding skills. Use it instead of creating files by hand.
+`init` creates the project structure and installs its coding helpers. When media
+needs recognition, scaffold without asking HyperFrames to transcribe, invoke
+`asr-router` through the Agent, then import the normalized result. HyperFrames
+must not become a second ASR execution path.
 
 ## Linting
 
@@ -78,12 +81,13 @@ npx hyperframes render --docker                       # byte-identical
 
 ## Transcription
 
+For audio or video recognition, delegate to `Speech-Recognition/asr-router`.
+Use this CLI section only to import or normalize an existing transcript:
+
 ```bash
-npx hyperframes transcribe audio.mp3
-npx hyperframes transcribe video.mp4 --model medium.en --language en
 npx hyperframes transcribe subtitles.srt   # import existing
 npx hyperframes transcribe subtitles.vtt
-npx hyperframes transcribe openai-response.json
+npx hyperframes transcribe asr-router-result.json
 ```
 
 ## Text-to-Speech

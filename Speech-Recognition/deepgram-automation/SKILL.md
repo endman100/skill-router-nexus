@@ -1,11 +1,15 @@
 ---
 name: deepgram-automation
-description: "Automate Deepgram tasks via Rube MCP (Composio). Always search tools first for current schemas."
+description: "Automate non-ASR Deepgram tasks via Rube MCP (Composio). For speech recognition or transcription, delegate to asr-router."
 requires:
   mcp: [rube]
 ---
 
 # Deepgram Automation via Rube MCP
+
+For transcription or speech recognition, invoke `asr-router` and read
+`references/deepgram-api.md` there. Keep this skill for other Deepgram toolkit
+operations; do not duplicate ASR routing or invocation here.
 
 Automate Deepgram operations through Composio's Deepgram toolkit via Rube MCP.
 

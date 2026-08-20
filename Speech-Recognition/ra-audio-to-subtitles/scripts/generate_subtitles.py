@@ -1,76 +1,24 @@
 #!/usr/bin/env python3
-"""Generate subtitle artifacts from final media using Volcengine word timestamps."""
+"""Generate subtitle artifacts from an ASR Router word-timestamp result."""
 
 from __future__ import annotations
 
 import argparse
-import base64
 import difflib
 import json
-import os
 import re
 import shutil
 import subprocess
 import sys
-import tempfile
-import time
-import uuid
 from pathlib import Path
 from typing import Any
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
 
-SUBMIT_URL = "https://openspeech.bytedance.com/api/v3/auc/bigmodel/submit"
-QUERY_URL = "https://openspeech.bytedance.com/api/v3/auc/bigmodel/query"
-DEFAULT_RESOURCE_ID = "volc.seedasr.auc"
-AUDIO_EXTS = {".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg", ".opus"}
 CAPTION_CONNECTORS = (
     "比如说", "第一个", "第二个", "第三个", "首先", "其次", "然后",
     "而且", "但是", "只是", "所以", "如果", "其实", "就是", "这个", "某个",
 )
-
-
-def parse_env_file(path: Path) -> dict[str, str]:
-    values: dict[str, str] = {}
-    if not path.is_file():
-        return values
-    for raw in path.read_text(encoding="utf-8", errors="ignore").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip().strip('"').strip("'")
-        if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
-            values[key] = value
-    return values
-
-
-def env_candidates(explicit: str | None) -> list[Path]:
-    found: list[Path] = []
-    if explicit:
-        found.append(Path(explicit).expanduser())
-    for origin in (Path.cwd(), Path(__file__).resolve()):
-        current = origin if origin.is_dir() else origin.parent
-        for parent in (current, *current.parents):
-            candidate = parent / ".env"
-            if candidate not in found:
-                found.append(candidate)
-    return found
-
-
-def load_config(explicit_env: str | None) -> tuple[dict[str, str], Path | None]:
-    config = dict(os.environ)
-    used: Path | None = None
-    for candidate in env_candidates(explicit_env):
-        values = parse_env_file(candidate)
-        if values:
-            for key, value in values.items():
-                config.setdefault(key, value)
-            if "VOLCENGINE_API_KEY" in values and used is None:
-                used = candidate
-    return config, used
+TIMING_SOURCE = "asr-router-word-timestamps"
 
 
 def normalize_chars(text: str) -> list[str]:
@@ -263,120 +211,24 @@ def media_duration(path: Path) -> float | None:
         return None
 
 
-def prepare_audio(media: Path, temp_dir: Path) -> Path:
-    if media.suffix.lower() in AUDIO_EXTS and media.suffix.lower() in {".mp3", ".wav"}:
-        return media
-    output = temp_dir / "final-audio.mp3"
-    try:
-        subprocess.run(
-            ["ffmpeg", "-v", "error", "-y", "-i", str(media), "-vn", "-ac", "1", "-ar", "16000", "-b:a", "64k", str(output)],
-            check=True,
-        )
-    except FileNotFoundError as exc:
-        raise RuntimeError("ffmpeg is required to extract final audio") from exc
-    except subprocess.CalledProcessError as exc:
-        raise RuntimeError(f"ffmpeg could not extract audio from {media}") from exc
-    return output
-
-
-def api_request(url: str, payload: dict[str, Any], headers: dict[str, str]) -> tuple[dict[str, Any], dict[str, str]]:
-    request = Request(
-        url,
-        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-        headers=headers,
-        method="POST",
-    )
-    try:
-        with urlopen(request, timeout=180) as response:
-            body = response.read().decode("utf-8", errors="replace")
-            return (json.loads(body) if body else {}), {key.lower(): value for key, value in response.headers.items()}
-    except HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"Volcengine HTTP {exc.code}: {body[:500]}") from exc
-    except URLError as exc:
-        raise RuntimeError(f"Volcengine request failed: {exc.reason}") from exc
-
-
-def transcribe(audio: Path, api_key: str, resource_id: str, poll_interval: int, timeout: int) -> dict[str, Any]:
-    audio_bytes = audio.read_bytes()
-    if len(audio_bytes) > 48 * 1024 * 1024:
-        raise RuntimeError("Final audio is larger than 48 MB; compress it before direct ASR upload")
-    request_id = str(uuid.uuid4())
-    audio_format = audio.suffix.lower().lstrip(".") or "mp3"
-    payload = {
-        "user": {"uid": "ra-audio-to-subtitles"},
-        "audio": {"data": base64.b64encode(audio_bytes).decode("ascii"), "format": audio_format},
-        "request": {
-            "model_name": "bigmodel",
-            "enable_itn": True,
-            "enable_punc": True,
-            "enable_ddc": False,
-            "show_utterances": True,
-            "enable_speaker_info": False,
-        },
-    }
-    common = {
-        "X-Api-Key": api_key,
-        "X-Api-Resource-Id": resource_id,
-        "X-Api-Request-Id": request_id,
-        "Content-Type": "application/json",
-    }
-    _, submit_headers = api_request(SUBMIT_URL, payload, {**common, "X-Api-Sequence": "-1"})
-    status = submit_headers.get("x-api-status-code", "")
-    if status != "20000000":
-        raise RuntimeError(f"Volcengine submit failed: status={status or 'missing'} message={submit_headers.get('x-api-message', '')}")
-    log_id = submit_headers.get("x-tt-logid")
-    query_headers = dict(common)
-    if log_id:
-        query_headers["X-Tt-Logid"] = log_id
-
-    deadline = time.monotonic() + timeout
-    while time.monotonic() <= deadline:
-        time.sleep(poll_interval)
-        result, response_headers = api_request(QUERY_URL, {}, query_headers)
-        status = response_headers.get("x-api-status-code", "")
-        if status == "20000000":
-            return result
-        if status in {"20000001", "20000002", ""}:
-            continue
-        if status == "20000003":
-            raise RuntimeError("Volcengine treated the final audio as silent")
-        raise RuntimeError(f"Volcengine query failed: status={status} message={response_headers.get('x-api-message', '')}")
-    raise RuntimeError(f"Volcengine ASR timed out after {timeout}s")
-
-
-def milliseconds(value: Any) -> float:
-    number = float(value)
-    return number / 1000.0
-
-
 def extract_word_units(result: dict[str, Any]) -> list[dict[str, Any]]:
-    root = result.get("result", result)
-    utterances = root.get("utterances") if isinstance(root, dict) else None
-    if not isinstance(utterances, list):
-        raise RuntimeError("Volcengine response has no result.utterances")
-    words: list[dict[str, Any]] = []
-    for utterance in utterances:
-        if not isinstance(utterance, dict):
-            continue
-        for word in utterance.get("words") or []:
-            if not isinstance(word, dict):
+    normalized_words = result.get("words")
+    if isinstance(normalized_words, list):
+        words = []
+        for word in normalized_words:
+            if not isinstance(word, dict) or word.get("type") == "spacing":
                 continue
             text = str(word.get("text", "")).strip()
-            start_raw = word.get("start_time")
-            end_raw = word.get("end_time")
-            if not text or start_raw is None or end_raw is None:
+            start = word.get("start")
+            end = word.get("end")
+            if not text or start is None or end is None:
                 continue
-            if float(start_raw) < 0 or float(end_raw) < 0:
+            if float(start) < 0 or float(end) < float(start):
                 continue
-            start, end = milliseconds(start_raw), milliseconds(end_raw)
-            if end < start:
-                continue
-            words.append({"text": text, "start": round(start, 3), "end": round(end, 3), "isGap": False})
-    words.sort(key=lambda item: (item["start"], item["end"]))
-    if not words:
-        raise RuntimeError("Volcengine response has no usable word timestamps")
-    return words
+            words.append({"text": text, "start": float(start), "end": float(end)})
+        if words:
+            return words
+    raise RuntimeError("ASR Router result has no usable word timestamps")
 
 
 def words_with_gaps(words: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -466,7 +318,7 @@ def build_captions(script: str, mapping: list[int], asr_timings: list[dict[str, 
             "start": round(start, 3),
             "end": round(max(start + 0.05, end), 3),
             "text": chunk,
-            "source": "volcengine-word-timestamps",
+            "source": TIMING_SOURCE,
         })
         cursor += length
 
@@ -558,7 +410,7 @@ def build_qc(
         errors.append("no captions generated")
     return {
         "status": "fail" if errors else "pass",
-        "timing_source": "volcengine-word-timestamps",
+        "timing_source": TIMING_SOURCE,
         "alignment_coverage": round(coverage, 6),
         "minimum_coverage": min_coverage,
         "script_characters": len(script_chars),
@@ -579,15 +431,12 @@ def build_qc(
 
 
 def doctor(args: argparse.Namespace) -> int:
-    config, env_file = load_config(args.env_file)
     checks = {
         "ffmpeg": shutil.which("ffmpeg") is not None,
         "ffprobe": shutil.which("ffprobe") is not None,
-        "volcengine_api_key": bool(config.get("VOLCENGINE_API_KEY")),
-        "resource_id": config.get("VOLCENGINE_RESOURCE_ID", DEFAULT_RESOURCE_ID),
-        "env_file": str(env_file) if env_file else None,
+        "asr_result_required": True,
     }
-    checks["ready"] = bool(checks["ffmpeg"] and checks["ffprobe"] and checks["volcengine_api_key"])
+    checks["ready"] = bool(checks["ffmpeg"] and checks["ffprobe"])
     print(json.dumps(checks, ensure_ascii=False, indent=2))
     return 0 if checks["ready"] else 1
 
@@ -598,11 +447,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--script", help="narration JSON, Markdown handoff, or plain text file")
     parser.add_argument("--script-text", help="inline narration text")
     parser.add_argument("--out-dir", default="media/captions")
-    parser.add_argument("--asr-result", help="reuse an existing Volcengine result instead of calling the API")
-    parser.add_argument("--env-file")
-    parser.add_argument("--resource-id")
-    parser.add_argument("--poll-interval", type=int, default=3)
-    parser.add_argument("--timeout", type=int, default=900)
+    parser.add_argument("--asr-result", help="ASR Router normalized result (required)")
     parser.add_argument("--max-chars", type=int, default=22)
     parser.add_argument("--min-coverage", type=float, default=0.90)
     parser.add_argument("--doctor", action="store_true")
@@ -621,22 +466,18 @@ def main() -> int:
     if not 0 < args.min_coverage <= 1:
         raise RuntimeError("--min-coverage must be between 0 and 1")
 
-    config, _ = load_config(args.env_file)
-    resource_id = args.resource_id or config.get("VOLCENGINE_RESOURCE_ID", DEFAULT_RESOURCE_ID)
     script = load_script(args.script, args.script_text)
     out_dir = Path(args.out_dir).expanduser().resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    with tempfile.TemporaryDirectory(prefix="ra-captions-") as temp_name:
-        audio = prepare_audio(media, Path(temp_name))
-        if args.asr_result:
-            result_path = Path(args.asr_result).expanduser().resolve()
-            result = json.loads(result_path.read_text(encoding="utf-8"))
-        else:
-            api_key = config.get("VOLCENGINE_API_KEY")
-            if not api_key:
-                raise RuntimeError("VOLCENGINE_API_KEY is missing from the environment or workspace .env")
-            result = transcribe(audio, api_key, resource_id, args.poll_interval, args.timeout)
+    if not args.asr_result:
+        raise RuntimeError("--asr-result is required; invoke asr-router before subtitle generation")
+    result_path = Path(args.asr_result).expanduser().resolve()
+    loaded_result = json.loads(result_path.read_text(encoding="utf-8"))
+    if not loaded_result.get("schema_version"):
+        raise RuntimeError("--asr-result must be an ASR Router normalized result")
+    resource_id = str(loaded_result.get("model") or loaded_result.get("resource_id") or "asr-router")
+    result = loaded_result
 
     raw_words = extract_word_units(result)
     asr_chars, asr_timings = expand_asr_characters(raw_words)
