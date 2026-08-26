@@ -10,7 +10,7 @@ Its core goals are:
 
 - **Single Entry Point**: All agents must route through this router to locate the correct sub-skill before executing any task. Direct access is prohibited.
 - **Structured Classification**: Skills across multiple functional domains (agent planning, execution, verification, skill tooling, cloud, e-commerce, LLM, social media, etc.) are organized into corresponding folders.
-- **Extensible Architecture**: A standardized skill registration process allows the knowledge base to grow on demand, with a cap of 50 skills per category.
+- **Extensible Architecture**: A standardized skill registration process allows the knowledge base to grow on demand, with a cap of 100 skills per category.
 - **Tooling Support**: `skill_reader.py` provides fast scanning of all registered sub-skills and their descriptions for agent querying and indexing.
 
 ### Installation
@@ -241,7 +241,7 @@ Never skip or bypass this router. Never assume sub-skill content without routing
 
 - **統一入口**：所有 agent 在執行任務前，必須先通過本 router 找到正確的子 skill，禁止直接跳過存取。
 - **結構化分類**：將多個功能領域的 skill（Agent 規劃、執行、驗證、skill tooling、雲端、電商、LLM、社群媒體…等）整齊歸類於對應資料夾中。
-- **可擴展架構**：提供標準化的 skill 追加流程，讓知識庫能隨需求持續成長，每個分類上限 50 個 skill。
+- **可擴展架構**：提供標準化的 skill 追加流程，讓知識庫能隨需求持續成長，每個分類上限 100 個 skill。
 - **工具輔助掃描**：透過 `skill_reader.py` 快速列出所有已登錄的子 skill 及其描述，便於 agent 查詢與索引。
 
 ---

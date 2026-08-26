@@ -84,6 +84,7 @@ metadata:
 | 58 | `Diagramming-and-Visualization/` | Diagramming & Visualization | 此分類涵蓋流程圖、架構圖、序列圖、狀態圖、ER 圖、資料流圖及其他技術視覺化的生成、驗證與渲染。適用於需要將系統、流程或關係轉換為 Mermaid、Graphviz、PlantUML 或 SVG 的場景。 |
 | 59 | `Writing-Craft/` | Writing Craft | 此分類涵蓋文章素材探索、段落結構塑形、敘事節拍編排與其他寫作工藝方法。適用於需要從零散素材發展文章、建立閱讀旅程、或改善長文結構與節奏的場景。 |
 | 60 | `Creative-Video-Generation/` | Creative Video Generation | 此分類涵蓋以特定美術風格、敘事結構與生成模型為核心的創意影片工作流，包括產品廣告、3D 動畫短片、紙藝定格、品牌宣傳、音樂字幕、遊戲開場與手繪實拍融合。適用於需要從創意規劃、素材確認、分鏡到生成與驗收的一體化影片製作場景。 |
+| 61 | `Reverse-Analysis/` | Reverse Analysis | 此分類統一收納逆向分析與 CTF 競賽分析 skill，涵蓋二進位、行動應用、前端 JavaScript、惡意程式、數位鑑識、雲端、身分、協定、硬體、漏洞利用與多類型 CTF 題目。所有 skill 均以單層目錄攤平，適用於需要直接搜尋、載入或組合逆向與競賽分析工作流的場景。 |
 
 > **新增 skill 時，必須按照下方「追加 Skill 流程」操作。**
 
@@ -97,7 +98,7 @@ metadata:
 2. **平台歸屬優先**：若明確屬於某平台（GitHub → `GitHub/`、Google → `Google-Services/`、Microsoft → `Microsoft-Services/`）直接歸類
 3. **功能歸屬次之**：根據核心功能匹配最接近的分類（例如「語音轉文字」→ `Speech-Recognition/`）
 4. **若橫跨多類**：在所有相關分類中各放置一份，允許重複放置
-5. **每個分類上限 50 個 skill**：若某分類已達 50 個，考慮拆分為子分類
+5. **每個分類上限 100 個 skill**：若某分類已達 100 個，考慮拆分為子分類
 
 ---
 
