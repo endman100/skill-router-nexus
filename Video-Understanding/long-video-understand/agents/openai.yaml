@@ -1,0 +1,4 @@
+interface:
+  display_name: "Long Video Understanding"
+  short_description: "Analyze long videos with VideoChat3"
+  default_prompt: "Use $long-video-understand to analyze this long video and produce a timestamped summary."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "FilmOps-first Video Analysis"
+  short_description: "Analyze cinematic language before video prompting"
+  default_prompt: "Use $filmops-first-video-analysis to analyze this video before generating a prompt."

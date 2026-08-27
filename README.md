@@ -70,6 +70,7 @@ skill-router-nexus/
 ├── CI-CD-and-Monitoring/
 ├── Cloud-and-Hosting/
 ├── Coding/
+├── Video-Understanding/
 ├── ...
 └── Writing-and-Content/
 ```
@@ -305,6 +306,7 @@ skill-router-nexus/
 ├── CI-CD-and-Monitoring/
 ├── Cloud-and-Hosting/
 ├── Coding/
+├── Video-Understanding/
 ├── ...
 └── Writing-and-Content/
 ```
