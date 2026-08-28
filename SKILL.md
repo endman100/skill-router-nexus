@@ -77,7 +77,7 @@ metadata:
 | 51 | `Writing-and-Content/` | Writing & Content | 此分類涵蓋腦力激盪、內容研究與撰寫、摘要生成、翻譯潤稿、命名發想、以及寫作計畫制定。適用於需要輔助內容創作、改善文案品質、或規劃寫作流程的場景。 |
 | 52 | `ComfyUI/` | ComfyUI | 此分類涵蓋 ComfyUI 自訂節點開發的完整知識庫，包括 V3 節點結構、資料型別（IMAGE/LATENT/MASK 等）、輸入輸出設定、前端 JavaScript 擴充、執行生命週期（快取/驗證/lazy）、打包發布、以及 V1 → V3 遷移指南。適用於需要開發、除錯、遷移或打包 ComfyUI 自訂節點的場景。 |
 | 53 | `Entrepreneurship/` | Entrepreneurship | 此分類涵蓋 Minimalist Entrepreneur（極簡創業家）方法論的完整工作流，基於 Sahil Lavingia（Gumroad 創辦人）所著《The Minimalist Entrepreneur》。包括社群識別（find-community）、構想驗證（validate-idea）、MVP 建構（mvp）、手動流程化（processize）、早期客戶獲取（first-customers）、定價策略（pricing）、內容行銷計畫（marketing-plan）、可持續成長決策（grow-sustainably）、公司文化與價值觀（company-values）、以及業務決策審查（minimalist-review）。適用於 bootstrapped 創業者、獨立開發者、或任何希望以小規模可獲利方式建立事業的人。 |
-| 54 | `AI-Research/` | AI Research | 涵蓋 AI 研究完整生命週期的 95 個 skill（來源：Orchestra Research）。包括自主研究編排（autoresearch）、模型架構（LitGPT、Mamba、NanoGPT、RWKV、TorchTitan）、分詞、微調（Axolotl、LLaMA-Factory、PEFT、Unsloth）、機制性可解釋性、資料處理、後訓練（TRL、GRPO、OpenRLHF、SimPO、verl 等）、安全對齊、分散式訓練（DeepSpeed、FSDP、Megatron-Core 等）、基礎設施、優化與量化（Flash Attention、bitsandbytes、GPTQ、AWQ 等）、評估、推論服務（vLLM、TensorRT-LLM、llama.cpp、SGLang）、MLOps、Agent 框架、RAG、提示工程、觀測、多模態（CLIP、Whisper、LLaVA、SAM 等）、前沿技術、論文撰寫、以及研究構想。適用於任何 AI/ML 研究、訓練、推論、評估、論文撰寫相關的場景。 |
+| 54 | `AI-Research/` | AI Research | 此分類涵蓋 AI 研究方法與研究生命週期，包括自主研究編排、研究構想、學術檢索、機制可解釋性、因果干預、論文撰寫、學術圖表與會議報告。適用於提出研究假設、設計與執行實驗、解釋模型行為、查找文獻或產出研究成果；訓練、推論、RAG 與具體模態工具應按核心功能路由至專屬分類。 |
 | 55 | `Science/` | Science | 涵蓋 134 個科學與研究 skill（來源：[K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills)）。包括生物資訊與基因體學（BioPython、Scanpy、scVelo、Arboreto）、化學資訊與藥物發現（RDKit、DeepChem、DiffDock、datamol）、蛋白質體學與質譜（matchms、pyOpenMS）、臨床研究與精準醫學（ClinicalTrials.gov、ClinVar、臨床決策支援）、醫學影像與數位病理（pydicom、histolab、PathML）、神經科學（Neuropixels）、機器學習（PyTorch Lightning、Transformers、scikit-learn）、材料科學與物理（Pymatgen、Astropy、量子運算 Cirq/PennyLane/Qiskit）、工程與模擬（FluidSim、SimPy、SymPy）、資料分析與視覺化（NetworkX、GeoPandas、Dask、Polars）、實驗室自動化（PyLabRobot、Opentrons、Benchling）、多體學與系統生物學（PrimeKG、LaminDB）、蛋白質工程（ESM）、科學溝通（文獻回顧、科學寫作、海報、投影片）、科學資料庫（統一查詢 78+ 公開資料庫）、基礎設施（Modal、GPU 最佳化）、研究方法論、以及法規標準（ISO 13485）。適用於任何科學研究、生物醫學分析、藥物開發、臨床數據分析、實驗室自動化、科學寫作與溝通的場景。 |
 | 56 | `Metaphysics-and-Spirituality/` | Metaphysics & Spirituality | 此分類涵蓋中華傳統命理術數與宗教靈性相關的 AI Skill，包括四柱八字排盤與命理分析、奇門遁甲判斷與擇時、紫微斗數本命盤解讀、姻緣測算（八字合婚、生肖配對、紫微夫妻宮、桃花運勢）、以及基於佛教經典文獻的漢傳祖師教學角色生成與對話。適用於需要進行傳統命理排盤計算、術數分析、姻緣配對、佛學經典查詢、或建置傳統文化 AI 應用的場景。 |
 | 57 | `2D-Rigging-and-Animation/` | 2D Rigging & Animation | 此分類涵蓋 2D 角色綁定與動畫專案，包括網格、變形器、參數與關鍵形、紋理與圖集、專案封裝格式及可編輯模型資產處理。適用於需要分析、解包、修改、重封裝或驗證 Live2D 等 2D 骨架動畫工程檔的場景。 |
@@ -87,6 +87,13 @@ metadata:
 | 61 | `Creative-Video-Generation/` | Creative Video Generation | 此分類涵蓋以特定美術風格、敘事結構與生成模型為核心的創意影片工作流，包括產品廣告、3D 動畫短片、紙藝定格、品牌宣傳、音樂字幕、遊戲開場與手繪實拍融合。適用於需要從創意規劃、素材確認、分鏡到生成與驗收的一體化影片製作場景。 |
 | 62 | `Reverse-Analysis/` | Reverse Analysis | 此分類統一收納逆向分析與 CTF 競賽分析 skill，涵蓋二進位、行動應用、前端 JavaScript、惡意程式、數位鑑識、雲端、身分、協定、硬體、漏洞利用與多類型 CTF 題目。所有 skill 均以單層目錄攤平，適用於需要直接搜尋、載入或組合逆向與競賽分析工作流的場景。 |
 | 63 | `Video-Understanding/` | Video Understanding | 此分類涵蓋長短影片的視覺內容理解、時間分段、影片問答、事件與鏡頭定位、電影語言分析、場景檢索及即時串流理解。適用於需要從影片畫面取得可驗證描述、時間戳摘要、運鏡與構圖證據、語意索引或事件警報的場景；純語音轉錄、剪輯、轉碼與影片生成應分別路由至其專屬分類。 |
+| 64 | `AI-Training/` | AI Training | 此分類涵蓋模型預訓練、微調、後訓練、RLHF、偏好最佳化、知識蒸餾、資料整理、分散式訓練與模型合併。適用於建立或調整模型權重、準備訓練資料、執行大規模訓練及管理訓練工作流。 |
+| 65 | `AI-Inference-and-Optimization/` | AI Inference & Optimization | 此分類涵蓋模型推論服務、量化、解碼加速、注意力最佳化、模型壓縮與硬體執行階段最佳化。適用於降低延遲或記憶體使用、提升吞吐量、部署本地模型或建立高效推論服務。 |
+| 66 | `AI-Models-and-Architecture/` | AI Models & Architecture | 此分類涵蓋模型架構、序列建模、長上下文技術、分詞器與基礎模型實作。適用於理解、比較或實作模型結構，以及建立模型輸入表示與架構元件。 |
+| 67 | `AI-Evaluation-and-Benchmarking/` | AI Evaluation & Benchmarking | 此分類涵蓋模型評測框架、標準基準、可重現比較與品質量測。適用於比較模型能力、追蹤訓練成效、產生研究或產品評測結果，以及執行跨後端基準測試。 |
+| 68 | `AI-MLOps/` | AI MLOps | 此分類涵蓋 AI 實驗追蹤、可觀測性、執行比較、模型登錄、資料與產物版本管理及生產監控。適用於管理模型生命週期、追蹤實驗指標、除錯 LLM 應用或監控模型系統。 |
+| 69 | `AI-Robotics/` | AI Robotics | 此分類涵蓋機器人策略、Vision-Language-Action 模型、模擬環境、操作任務微調與機器人評測。適用於訓練、部署或評估具身 AI 與機器人控制模型。 |
+| 70 | `Audio-and-Music-Generation/` | Audio & Music Generation | 此分類涵蓋 AI 音樂、音效及其他非語音音訊生成。適用於從文字或旋律條件建立音樂與聲音素材；語音合成應路由至 TTS-and-Voice-AI，語音辨識應路由至 Speech-Recognition。 |
 
 > **新增 skill 時，必須按照下方「追加 Skill 流程」操作。**
 

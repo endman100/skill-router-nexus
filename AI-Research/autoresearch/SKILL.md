@@ -87,7 +87,7 @@ There is no rigid boundary between the two loops — you decide when enough inne
 The two-loop structure is a rhythm, not a railroad. At any point during research you can and should:
 
 - **Return to literature** when results surprise you, assumptions break, or you need context for a new direction — always save what you find to `literature/`
-- **Brainstorm new ideas** using `21-research-ideation/` skills when you're stuck or when results open unexpected questions
+- **Brainstorm new ideas** using `AI-Research/brainstorming-research-ideas/` and `AI-Research/creative-thinking-for-research/` when you're stuck or when results open unexpected questions
 - **Pivot the question entirely** if experiments reveal the original question was wrong or less interesting than what you found
 
 This is normal. Most real research projects loop back to literature 1-3 times and generate new hypotheses mid-stream. Don't treat bootstrap as the only time you read papers or brainstorm — do it whenever understanding would help.
@@ -98,7 +98,7 @@ Before entering the loops, understand the landscape. Keep this efficient — the
 
 1. **Search literature** for the research question. Use multiple sources — never stop at one:
    - **Exa MCP** (`web_search_exa`) if available — best for broad discovery and finding relevant papers quickly
-   - **Semantic Scholar** (`pip install semanticscholar`) — best for ML/AI papers, citation graphs, and specific paper lookup. See `20-ml-paper-writing` skill's `references/citation-workflow.md` for complete API code examples
+   - **Semantic Scholar** (`pip install semanticscholar`) — best for ML/AI papers, citation graphs, and specific paper lookup. See `AI-Research/ml-paper-writing/references/citation-workflow.md` for complete API code examples
    - **arXiv** (`pip install arxiv`) — best for recent preprints and open-access papers
    - **CrossRef** — best for DOI lookup and BibTeX retrieval
    - Keep searching until you have good coverage. If one source comes up empty, try another with different keywords
@@ -109,7 +109,7 @@ Before entering the loops, understand the landscape. Keep this efficient — the
    - What's been tried? What hasn't? Where do existing methods break?
    - What do Discussion sections flag as future work?
 
-3. **Form initial hypotheses** — invoke `21-research-ideation/` skills
+3. **Form initial hypotheses** — route to the research ideation skills in `AI-Research/`
    - `brainstorming-research-ideas` for structured diverge-converge workflow
    - `creative-thinking-for-research` for deeper cognitive frameworks
    - Each hypothesis must be testable with a clear prediction
@@ -155,17 +155,17 @@ When you need domain-specific execution, search the skills library:
 
 | Research Activity | Look In |
 |---|---|
-| Data preparation | `05-data-processing/` |
-| Model training / fine-tuning | `01-model-architecture/`, `03-fine-tuning/`, `06-post-training/` |
-| Distributed training | `08-distributed-training/` |
-| Optimization (quantization, attention) | `10-optimization/` |
-| Evaluation / benchmarks | `11-evaluation/` |
-| Inference / serving | `12-inference-serving/` |
-| Interpretability analysis | `04-mechanistic-interpretability/` |
-| Experiment tracking (W&B, MLflow) | `13-mlops/` |
-| Cloud compute | `09-infrastructure/` |
+| Data preparation | `AI-Training/` |
+| Model training / fine-tuning | `AI-Training/` |
+| Distributed training | `AI-Training/` |
+| Optimization (quantization, attention) | `AI-Inference-and-Optimization/` |
+| Evaluation / benchmarks | `AI-Evaluation-and-Benchmarking/` |
+| Inference / serving | `AI-Inference-and-Optimization/` |
+| Interpretability analysis | `AI-Research/` |
+| Experiment tracking (W&B, MLflow) | `AI-MLOps/` |
+| Cloud compute | `Cloud-and-Hosting/` |
 
-Read the relevant SKILL.md before starting — it has workflows, common issues, and code examples. See [references/skill-routing.md](references/skill-routing.md) for a complete guide.
+Read the repository's root `SKILL.md`, scan the candidate categories with `skill_reader.py`, and then load the selected skill. See [references/skill-routing.md](references/skill-routing.md) for the current Router-relative map.
 
 ### Track the Experiment Trajectory
 
@@ -195,7 +195,7 @@ Step back from individual experiments. Synthesize.
 3. Ask WHY — identify the mechanism behind successes and failures
 4. Update findings.md with current understanding
 5. Search literature if results were surprising or assumptions need revisiting
-6. Generate new hypotheses if warranted (invoke 21-research-ideation/ skills)
+6. Generate new hypotheses if warranted (route to the research ideation skills in `AI-Research/`)
 7. Decide direction (see criteria below)
 8. Update research-state.yaml with new direction
 9. Log the reflection in research-log.md
@@ -332,7 +332,7 @@ When the outer loop decides to CONCLUDE:
 
 1. Ensure findings.md has a clear, well-supported narrative
 2. Study 2-3 top related papers to learn their format, style, and section structure
-3. Invoke the `20-ml-paper-writing` skill — it has LaTeX templates for NeurIPS, ICML, ICLR, ACL, AAAI, COLM, and systems venues
+3. Invoke `AI-Research/ml-paper-writing` — it has LaTeX templates for NeurIPS, ICML, ICLR, ACL, AAAI, COLM, and systems venues
 4. Feed it the accumulated literature, experimental results, and findings
 5. Follow its citation verification workflow — never hallucinate references
 6. Generate a final comprehensive research presentation
@@ -384,7 +384,7 @@ Principles to enforce continuously — not tied to any specific phase:
 Run an outer loop. Is the metric the right one? Is the search space exhausted? Consider broadening or pivoting. Search literature for new approaches.
 
 **Stuck and not making progress**
-Don't keep trying random changes. Step back: search literature for related work, invoke `21-research-ideation/` brainstorming skills, or run an outer loop reflection. Being stuck means you need new information or a new perspective, not more experiments.
+Don't keep trying random changes. Step back: search literature for related work, route to the research ideation skills in `AI-Research/`, or run an outer loop reflection. Being stuck means you need new information or a new perspective, not more experiments.
 
 **Results contradict baseline expectations**
 Investigate, don't ignore. Return to literature — your protocol might have an error, the published baseline may be wrong, or conditions differ. Update findings.md with what you learn.
@@ -393,7 +393,7 @@ Investigate, don't ignore. Return to literature — your protocol might have an 
 Ensure research-state.yaml and findings.md are updated after every action. These files are your memory across sessions.
 
 **Can't find relevant papers**
-Try multiple approaches in order: Exa MCP for broad search, Semantic Scholar for specific ML/AI paper lookup (`pip install semanticscholar`), arXiv for preprints (`pip install arxiv`). Check `20-ml-paper-writing` skill's `references/citation-workflow.md` for complete API code. Note: Google Scholar has no official API — use Semantic Scholar instead for programmatic search.
+Try multiple approaches in order: Exa MCP for broad search, Semantic Scholar for specific ML/AI paper lookup (`pip install semanticscholar`), arXiv for preprints (`pip install arxiv`). Check `AI-Research/ml-paper-writing/references/citation-workflow.md` for complete API code. Note: Google Scholar has no official API — use Semantic Scholar instead for programmatic search.
 
 **No GPU available**
 Use CPU and scale experiments down. Many research tasks (analysis, interpretability, small model training) run fine on CPU. Adjust experiment design to fit available compute rather than blocking.
