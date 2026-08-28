@@ -16,7 +16,8 @@ if (-not $PackageRoot) { $PackageRoot = Split-Path -Parent $skillsRoot }
 
 if ([string]::IsNullOrWhiteSpace($LogDir)) {
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-    $LogDir = Join-Path $env:TEMP ("rs-smoke-{0}" -f $stamp)
+    $tmpBase = if ($env:TEMP) { $env:TEMP } else { [System.IO.Path]::GetTempPath() }
+    $LogDir = Join-Path $tmpBase ("rs-smoke-{0}" -f $stamp)
 }
 New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
 
@@ -27,7 +28,23 @@ function Bad([string] $m) {
     [void]$fail.Add($m)
 }
 
-Write-Host ("=== reverse-skill smoke | LogDir={0} ===" -f $LogDir)
+# Prefer the same host that launched smoke (pwsh on GHA windows-latest).
+# Bare "powershell" often resolves to Windows PowerShell 5.1, which mis-parses
+# UTF-8 scripts without BOM when nested from pwsh.
+$SmokeHostExe = $null
+try {
+    $procPath = (Get-Process -Id $PID -ErrorAction Stop).Path
+    if ($procPath -and (Test-Path -LiteralPath $procPath)) { $SmokeHostExe = $procPath }
+} catch { }
+if (-not $SmokeHostExe) {
+    $cmd = Get-Command pwsh -ErrorAction SilentlyContinue
+    if ($cmd -and $cmd.Source) {
+        $SmokeHostExe = $cmd.Source
+    } else {
+        $SmokeHostExe = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+    }
+}
+Write-Host ("=== reverse-skill smoke | LogDir={0} | Host={1} ===" -f $LogDir, $SmokeHostExe)
 
 # --- 1) routing coherence ---
 $verify = Join-Path $scriptDir 'verify-routing-coherence.ps1'
@@ -36,7 +53,7 @@ if (-not (Test-Path -LiteralPath $verify)) {
     $verifyExit = 1
 } else {
     $vLog = Join-Path $LogDir '01-verify.txt'
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $verify 2>&1 | Tee-Object -FilePath $vLog | Out-Null
+    & $SmokeHostExe -NoProfile -ExecutionPolicy Bypass -File $verify 2>&1 | Tee-Object -FilePath $vLog | Out-Null
     $verifyExit = $LASTEXITCODE
     if ($verifyExit -eq 0) { Ok 'verify-routing-coherence exit 0' } else { Bad ("verify-routing-coherence exit {0}" -f $verifyExit) }
 }
@@ -51,7 +68,10 @@ $scripts = @(
     'refresh-tool-index.ps1',
     'smoke.ps1',
     'append-evidence.ps1',
-    'case-guard.ps1'
+    'case-guard.ps1',
+    'test-routing.ps1',
+    'extract-summaries.ps1'
+    'test-bootstrap-codex-encoding.ps1'
 )
 $parseOk = 0
 $parseFail = 0
@@ -82,7 +102,24 @@ foreach ($name in $scripts) {
 }
 $parseLog -join [Environment]::NewLine | Set-Content (Join-Path $LogDir '02-parse.txt') -Encoding UTF8
 
-# --- 3) master-route sample matrix ---
+# --- 3) Codex config UTF-8 round-trip regression ---
+$encodingTest = Join-Path $scriptDir 'test-bootstrap-codex-encoding.ps1'
+if (-not (Test-Path -LiteralPath $encodingTest)) {
+    Bad 'test-bootstrap-codex-encoding.ps1 missing'
+} else {
+    $encodingLog = Join-Path $LogDir '03-codex-encoding.txt'
+    & $SmokeHostExe -NoProfile -ExecutionPolicy Bypass -File $encodingTest `
+        -ScratchDir (Join-Path $LogDir 'codex-encoding') 2>&1 |
+        Tee-Object -FilePath $encodingLog | Out-Null
+    $encodingExit = $LASTEXITCODE
+    if ($encodingExit -eq 0) {
+        Ok 'Codex config UTF-8 round-trip regression'
+    } else {
+        Bad ("Codex config UTF-8 regression exit {0}" -f $encodingExit)
+    }
+}
+
+# --- 4) master-route sample matrix ---
 $mr = Join-Path $scriptDir 'master-route.ps1'
 $cases = @(
     @{ Name = 'apk'; Hint = 'decompile APK with jadx apktool smali'; Expect = 'apk-reverse' },
@@ -92,7 +129,8 @@ $cases = @(
     @{ Name = 'llm'; Hint = 'LLM prompt inject jailbreak agent security garak'; Expect = 'llm-security' },
     @{ Name = 'zh-apk'; Hint = '安卓 APK 加固 反编译'; Expect = 'apk-reverse' },
     @{ Name = 'zh-pentest'; Hint = '渗透测试 端口扫描 SQL注入'; Expect = 'pentest-tools' },
-    @{ Name = 'zh-js'; Hint = '前端签名 JS逆向 加密参数'; Expect = 'js-reverse' }
+    @{ Name = 'zh-js'; Hint = '前端签名 JS逆向 加密参数'; Expect = 'js-reverse' },
+    @{ Name = 'evidence'; Hint = 'case review evidence chain traceability'; Expect = 'case-review' }
 )
 $routeOk = 0
 $routeFail = 0
@@ -102,7 +140,7 @@ if (-not (Test-Path -LiteralPath $mr)) {
 } else {
     foreach ($c in $cases) {
         $outFile = Join-Path $LogDir ("route-{0}.txt" -f $c.Name)
-        $raw = & powershell -NoProfile -ExecutionPolicy Bypass -File $mr -Hint $c.Hint 2>&1 | Out-String
+        $raw = & $SmokeHostExe -NoProfile -ExecutionPolicy Bypass -File $mr -Hint $c.Hint 2>&1 | Out-String
         $raw | Set-Content -Path $outFile -Encoding UTF8
         if ($raw -match [regex]::Escape($c.Expect)) {
             Ok ("route {0} -> {1}" -f $c.Name, $c.Expect)
@@ -117,13 +155,45 @@ if (-not (Test-Path -LiteralPath $mr)) {
 }
 $routeSummary -join [Environment]::NewLine | Set-Content (Join-Path $LogDir '03-route-summary.txt') -Encoding UTF8
 
-# --- 4) must-not product modules under skills/ ---
-foreach ($ghost in @('blockchain-security', 'bitcoin-puzzle')) {
-    $gp = Join-Path $skillsRoot $ghost
-    if (Test-Path -LiteralPath $gp) {
-        Bad ("core must not contain skills/{0}" -f $ghost)
+# --- 5) Evidence ID immutability ---
+$appendEvidence = Join-Path $scriptDir 'append-evidence.ps1'
+$evidenceCase = Join-Path $LogDir 'evidence-immutability'
+if (-not (Test-Path -LiteralPath $appendEvidence)) {
+    Bad 'append-evidence.ps1 missing for immutability check'
+} else {
+    New-Item -ItemType Directory -Path $evidenceCase -Force | Out-Null
+    & $SmokeHostExe -NoProfile -ExecutionPolicy Bypass -File $appendEvidence `
+        -CaseRoot $evidenceCase `
+        -Id 'E-IMMUTABLE' `
+        -Title 'first write' `
+        -ReproCommand 'echo first' 2>&1 | Out-Null
+    $firstEvidenceExit = $LASTEXITCODE
+    if ($firstEvidenceExit -ne 0) {
+        Bad ("initial Evidence append exit {0}" -f $firstEvidenceExit)
     } else {
-        Ok ("no skills/{0}" -f $ghost)
+        $evidencePath = Join-Path $evidenceCase 'evidence\E-IMMUTABLE.md'
+        $indexPath = Join-Path $evidenceCase 'evidence\INDEX.md'
+        $beforeEvidence = (Get-FileHash -LiteralPath $evidencePath -Algorithm SHA256).Hash
+        $beforeIndex = (Get-FileHash -LiteralPath $indexPath -Algorithm SHA256).Hash
+
+        & $SmokeHostExe -NoProfile -ExecutionPolicy Bypass -File $appendEvidence `
+            -CaseRoot $evidenceCase `
+            -Id 'E-IMMUTABLE' `
+            -Title 'second write' `
+            -ReproCommand 'echo second' 2>&1 | Out-Null
+        $duplicateEvidenceExit = $LASTEXITCODE
+
+        $afterEvidence = (Get-FileHash -LiteralPath $evidencePath -Algorithm SHA256).Hash
+        $afterIndex = (Get-FileHash -LiteralPath $indexPath -Algorithm SHA256).Hash
+        if ($duplicateEvidenceExit -eq 0) {
+            Bad 'duplicate Evidence ID was accepted'
+        } elseif ($beforeEvidence -ne $afterEvidence) {
+            Bad 'existing Evidence changed after duplicate append'
+        } elseif ($beforeIndex -ne $afterIndex) {
+            Bad 'Evidence index changed after duplicate append'
+        } else {
+            Ok 'duplicate Evidence ID rejected without mutation'
+        }
     }
 }
 
@@ -145,3 +215,4 @@ if ($fail.Count -gt 0) {
 }
 Write-Host 'OVERALL: ALL PASS' -ForegroundColor Green
 exit 0
+

@@ -9,9 +9,12 @@ param(
 
     [switch]$StartServices,
 
-    [ValidateSet('Claude', 'Codex', 'Both')]
-    [string]$McpHostTarget = 'Both'
+    [ValidateSet('None', 'Claude', 'Codex', 'Both')]
+    [string]$McpHostTarget = 'None'
 )
+
+# 临时目录统一入口（$env:TEMP 在 Linux/macOS 上可能未设置）
+$tmpBase = if ($env:TEMP) { $env:TEMP } else { [System.IO.Path]::GetTempPath() }
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -20,6 +23,18 @@ $ErrorActionPreference = 'Stop'
 $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
 . (Join-Path $PSScriptRoot 'lib\ToolDiscovery.ps1')
+. (Join-Path $PSScriptRoot 'lib\BootstrapSupplyChain.ps1')
+
+function Get-BootstrapDependency {
+    param([Parameter(Mandatory = $true)][string]$Name)
+
+    $manifest = Get-Content -LiteralPath (Get-ReverseBootstrapManifestPath) -Raw -Encoding UTF8 | ConvertFrom-Json
+    $dependency = $manifest.bootstrapDependencies.PSObject.Properties[$Name].Value
+    if ($null -eq $dependency -or [string]::IsNullOrWhiteSpace([string]$dependency.package) -or [string]::IsNullOrWhiteSpace([string]$dependency.version)) {
+        throw "bootstrapDependencies.$Name must define package and version."
+    }
+    return $dependency
+}
 
 $Capability = @(
     foreach ($item in @($Capability)) {
@@ -81,7 +96,8 @@ function Get-McpHostTargets {
     switch ($McpHostTarget) {
         'Claude' { return @('Claude') }
         'Codex' { return @('Codex') }
-        default { return @('Claude', 'Codex') }
+        'Both' { return @('Claude', 'Codex') }
+        default { return @() }
     }
 }
 
@@ -150,20 +166,6 @@ function Ensure-JavaRuntime {
     }
 }
 
-function Ensure-Pnpm {
-    Ensure-NodeRuntime
-    if (-not (Get-NodeCommandPath -Name 'pnpm')) {
-        $npm = Get-NodeCommandPath -Name 'npm'
-        if ([string]::IsNullOrWhiteSpace($npm)) {
-            throw 'npm is not available after Node.js installation.'
-        }
-        & $npm install -g pnpm
-        if ($LASTEXITCODE -ne 0) {
-            throw 'Failed to install pnpm globally.'
-        }
-    }
-}
-
 function Get-AnythingAnalyzerUserDataPaths {
     $candidates = @(
         (Join-Path $env:APPDATA 'anything-analyzer'),
@@ -181,15 +183,40 @@ function Get-AnythingAnalyzerUserDataPaths {
 function Ensure-AnythingAnalyzerMcpConfig {
     param([int]$Port = 23816)
 
-    $tokenBytes = New-Object byte[] 32
-    (New-Object Security.Cryptography.RNGCryptoServiceProvider).GetBytes($tokenBytes)
-    $generatedToken = [Convert]::ToBase64String($tokenBytes)
+    $token = ''
+    foreach ($userDataPath in Get-AnythingAnalyzerUserDataPaths) {
+        $configPath = Join-Path $userDataPath 'mcp-server-config.json'
+        if (-not (Test-Path -LiteralPath $configPath)) {
+            continue
+        }
+        try {
+            $existing = Get-Content -LiteralPath $configPath -Raw -Encoding utf8 | ConvertFrom-Json
+            if (-not [string]::IsNullOrWhiteSpace([string]$existing.authToken)) {
+                $token = [string]$existing.authToken
+                break
+            }
+        }
+        catch {
+            $token = ''
+        }
+    }
+    if ([string]::IsNullOrWhiteSpace($token)) {
+        $tokenBytes = New-Object byte[] 32
+        $rng = [Security.Cryptography.RandomNumberGenerator]::Create()
+        try {
+            $rng.GetBytes($tokenBytes)
+        }
+        finally {
+            $rng.Dispose()
+        }
+        $token = [Convert]::ToBase64String($tokenBytes)
+    }
 
     $payload = [ordered]@{
         enabled     = $true
         port        = $Port
         authEnabled = $true
-        authToken   = $generatedToken
+        authToken   = $token
     }
 
     foreach ($userDataPath in Get-AnythingAnalyzerUserDataPaths) {
@@ -199,6 +226,8 @@ function Ensure-AnythingAnalyzerMcpConfig {
         $configPath = Join-Path $userDataPath 'mcp-server-config.json'
         $payload | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $configPath -Encoding utf8
     }
+
+    return $token
 }
 
 function Test-VsBuildToolsInstalled {
@@ -311,33 +340,10 @@ function Set-AnythingAnalyzerPnpmBuildApprovals {
 
 function Approve-AnythingAnalyzerBuildScripts {
     param(
-        [Parameter(Mandatory = $true)][string]$RepoDir,
-        [Parameter(Mandatory = $true)][string]$PnpmPath
+        [Parameter(Mandatory = $true)][string]$RepoDir
     )
 
     $buildPackages = @('electron', 'esbuild', 'better-sqlite3')
-
-    Push-Location $RepoDir
-    try {
-        $approveExitCode = 1
-        try {
-            $approveOutput = & $PnpmPath approve-builds --all 2>&1
-            $approveExitCode = $LASTEXITCODE
-        }
-        catch {
-            $approveOutput = $_.Exception.Message
-            $approveExitCode = 1
-        }
-
-        if ($approveExitCode -eq 0) {
-            return
-        }
-
-        Write-Warning 'pnpm approve-builds --all is unavailable or failed; writing pnpm-workspace.yaml build approvals directly.'
-    }
-    finally {
-        Pop-Location
-    }
 
     Set-AnythingAnalyzerPnpmBuildApprovals -RepoDir $RepoDir -Packages $buildPackages
 }
@@ -411,7 +417,7 @@ function Expand-ArchiveIntoDirectory {
         [Parameter(Mandatory = $true)][string]$Destination
     )
 
-    $tempExtract = Join-Path $env:TEMP ("reverse-bootstrap-" + [System.Guid]::NewGuid().ToString('N'))
+    $tempExtract = Join-Path $tmpBase ("reverse-bootstrap-" + [System.Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $tempExtract -Force | Out-Null
     Expand-Archive -LiteralPath $ZipPath -DestinationPath $tempExtract -Force
 
@@ -458,7 +464,7 @@ function Ensure-GitHubZipInstall {
     $releaseTag = if ($Definition.PSObject.Properties['releaseTag']) { [string]$Definition.releaseTag } else { '' }
     $asset = Get-GitHubLatestReleaseAsset -Repo $Definition.repo -AssetRegex $Definition.assetRegex -ReleaseTag $releaseTag
     $downloadUrl = if ($asset.PSObject.Properties['browser_download_url']) { $asset.browser_download_url } else { $asset.url }
-    $downloadPath = Join-Path $env:TEMP $asset.name
+    $downloadPath = Join-Path $tmpBase $asset.name
     Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadPath -Headers @{ 'Accept' = 'application/octet-stream' }
     Assert-DownloadedFileIntegrity -Path $downloadPath -Definition $Definition -Asset $asset | Out-Null
     Ensure-DownloadDirectory -Path (Split-Path -Path $TargetPath -Parent)
@@ -626,8 +632,31 @@ function Set-CodexMcpServer {
     }
 
     $lines = @()
+    $writeUtf8Bom = $false
+    $newline = [Environment]::NewLine
     if (Test-Path -LiteralPath $path) {
-        $rawLines = @(Get-Content -LiteralPath $path)
+        $bytes = [System.IO.File]::ReadAllBytes($path)
+        $offset = 0
+        if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+            $writeUtf8Bom = $true
+            $offset = 3
+        }
+
+        # TOML is UTF-8. Decode strictly so an unexpected legacy encoding stops
+        # the update instead of being silently converted into mojibake.
+        $strictUtf8 = [System.Text.UTF8Encoding]::new($false, $true)
+        $text = $strictUtf8.GetString($bytes, $offset, $bytes.Length - $offset)
+        $newlineMatch = [regex]::Match($text, "\r\n|\n|\r")
+        if ($newlineMatch.Success) {
+            $newline = $newlineMatch.Value
+        }
+
+        $rawLines = if ([string]::IsNullOrEmpty($text)) {
+            @()
+        }
+        else {
+            @([regex]::Split($text, "\r\n|\n|\r"))
+        }
         if ($rawLines.Count -eq 1 -and [string]::IsNullOrEmpty($rawLines[0])) {
             $lines = @()
         }
@@ -662,7 +691,12 @@ function Set-CodexMcpServer {
         }
     }
 
-    Set-Content -LiteralPath $path -Value $lines -Encoding utf8
+    $content = $lines -join $newline
+    if ($lines.Count -gt 0) {
+        $content += $newline
+    }
+    $utf8 = [System.Text.UTF8Encoding]::new($writeUtf8Bom)
+    [System.IO.File]::WriteAllText($path, $content, $utf8)
 }
 
 function Ensure-McpServer {
@@ -675,11 +709,23 @@ function Ensure-McpServer {
         switch ($target) {
             'Claude' {
                 $config = Get-ClaudeMcpConfig
-                $config.json.mcpServers[$ServerName] = $ServerDefinition
+                $claudeDefinition = @{}
+                foreach ($key in $ServerDefinition.Keys) {
+                    if ($key -ne 'bearer_token_env_var') {
+                        $claudeDefinition[$key] = $ServerDefinition[$key]
+                    }
+                }
+                $config.json.mcpServers[$ServerName] = $claudeDefinition
                 Save-ClaudeMcpConfig -Config $config
             }
             'Codex' {
-                Set-CodexMcpServer -ServerName $ServerName -ServerDefinition $ServerDefinition
+                $codexDefinition = @{}
+                foreach ($key in $ServerDefinition.Keys) {
+                    if ($key -ne 'headers') {
+                        $codexDefinition[$key] = $ServerDefinition[$key]
+                    }
+                }
+                Set-CodexMcpServer -ServerName $ServerName -ServerDefinition $codexDefinition
             }
         }
     }
@@ -726,7 +772,21 @@ function Wait-ForPort {
 }
 
 function Start-AnythingAnalyzerService {
-    param([Parameter(Mandatory = $true)]$Definition)
+    param(
+        [Parameter(Mandatory = $true)]$Definition,
+        [string]$AuthToken = ''
+    )
+
+    if ([string]::IsNullOrWhiteSpace($AuthToken)) {
+        $AuthToken = Ensure-AnythingAnalyzerMcpConfig -Port ([int]$Definition.servicePort)
+    }
+
+    $repoDir = [string]$Definition.installDir
+    $checkoutDefinition = [pscustomobject]@{
+        repo         = [string]$Definition.repoUrl
+        pinnedCommit = [string]$Definition.pinnedCommit
+    }
+    Ensure-GitCloneInstall -Definition $checkoutDefinition -TargetPath $repoDir | Out-Null
 
     if (Test-ReverseTcpPort -Port ([int]$Definition.servicePort)) {
         return
@@ -744,67 +804,13 @@ if (Test-ReverseIsWindows) {
     }
 }
 
-    $repoDir = @($Definition.startupDirCandidates) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
-    if ([string]::IsNullOrWhiteSpace($repoDir)) {
-        $installDir = $Definition.installDir
-        $gh = Get-FirstCommandPath -Names @('gh')
-        $git = Get-FirstCommandPath -Names @('git')
-        if ($gh) {
-            & $gh repo clone 'Mouseww/anything-analyzer' $installDir
-        }
-        elseif ($git) {
-            & $git clone $Definition.repoUrl $installDir
-        }
-        else {
-            throw 'Cannot clone anything-analyzer because neither gh nor git is available.'
-        }
-        if ($LASTEXITCODE -ne 0) {
-            throw 'Failed to clone anything-analyzer.'
-        }
-        $repoDir = $installDir
-    }
-
-    Ensure-AnythingAnalyzerMcpConfig -Port ([int]$Definition.servicePort)
-
     $pnpm = Get-NodeCommandPath -Name 'pnpm'
     if ([string]::IsNullOrWhiteSpace($pnpm)) {
         throw 'pnpm is not available after installation.'
     }
-
-    Push-Location $repoDir
-    try {
-        Approve-AnythingAnalyzerBuildScripts -RepoDir $repoDir -PnpmPath $pnpm
-
-        if (-not (Test-AnythingAnalyzerElectronHealthy -RepoDir $repoDir -PnpmPath $pnpm)) {
-            $nodeModules = Join-Path $repoDir 'node_modules'
-            if (Test-Path -LiteralPath $nodeModules) {
-                Remove-Item -LiteralPath $nodeModules -Recurse -Force
-            }
-        }
-
-        & $pnpm install
-        if ($LASTEXITCODE -ne 0) {
-            if (-not [string]::IsNullOrWhiteSpace($vsBuildToolsError)) {
-                throw "pnpm install failed for anything-analyzer. Visual Studio Build Tools auto-install also failed earlier: $vsBuildToolsError"
-            }
-            throw 'pnpm install failed for anything-analyzer.'
-        }
-
-        & $pnpm rebuild electron esbuild better-sqlite3
-        if ($LASTEXITCODE -ne 0) {
-            if (-not [string]::IsNullOrWhiteSpace($vsBuildToolsError)) {
-                throw "pnpm rebuild failed for anything-analyzer. Visual Studio Build Tools auto-install also failed earlier: $vsBuildToolsError"
-            }
-            throw 'pnpm rebuild failed for anything-analyzer.'
-        }
-
-        if (-not (Test-AnythingAnalyzerElectronHealthy -RepoDir $repoDir -PnpmPath $pnpm)) {
-            throw 'Electron is still not healthy after reinstall/rebuild.'
-        }
-    }
-    finally {
-        Pop-Location
-    }
+    $git = Get-FirstCommandPath -Names @('git')
+    Invoke-AnythingAnalyzerPinnedInstall -RepoDir $repoDir -PnpmPath $pnpm -GitPath $git `
+        -PinnedCommit ([string]$Definition.pinnedCommit) -VsBuildToolsError $vsBuildToolsError
 
     $stdoutLog = Join-Path $repoDir 'anything-analyzer-dev.log'
     $stderrLog = Join-Path $repoDir 'anything-analyzer-dev.err.log'
@@ -845,36 +851,6 @@ function Ensure-AndroidPlatformTools {
     return (Resolve-ReverseToolSpec -Name 'adb')
 }
 
-function Ensure-GitCloneInstall {
-    param(
-        [Parameter(Mandatory = $true)]$Definition,
-        [Parameter(Mandatory = $true)][string]$TargetPath
-    )
-
-    if ((Test-Path -LiteralPath $TargetPath -PathType Container) -and (Test-Path -LiteralPath (Join-Path $TargetPath '.git'))) {
-        return $true
-    }
-
-    if (Test-Path -LiteralPath $TargetPath) {
-        $backupPath = "$TargetPath.bak-$([DateTime]::UtcNow.ToString('yyyyMMddHHmmss'))"
-        Move-Item -LiteralPath $TargetPath -Destination $backupPath -Force
-    }
-
-    Ensure-DownloadDirectory -Path (Split-Path -Path $TargetPath -Parent)
-
-    $git = Get-FirstCommandPath -Names @('git')
-    if ([string]::IsNullOrWhiteSpace($git)) {
-        throw "Cannot clone $($Definition.repo) because git is not available."
-    }
-
-    & $git clone --depth 1 $Definition.repo $TargetPath
-    if ($LASTEXITCODE -ne 0) {
-        throw "git clone failed for $($Definition.repo)"
-    }
-
-    return $true
-}
-
 function Ensure-Capability {
     param([Parameter(Mandatory = $true)][string]$Name)
 
@@ -887,7 +863,7 @@ function Ensure-Capability {
     if ($definition.PSObject.Properties['canAutoInstall'] -and $definition.canAutoInstall -eq $false) {
         $hint = if ($definition.PSObject.Properties['manualInstallHint']) { $definition.manualInstallHint } else { "Please install $Name manually. Docs: $($definition.docsUrl)" }
         Write-Warning "MANUAL_INSTALL_REQUIRED: $Name — $hint"
-        # Still try to register MCP URL if applicable
+        # Still try to register MCP URL if applicable and a host was explicitly selected.
         if ($definition.PSObject.Properties['mcpNames'] -and $definition.PSObject.Properties['mcpUrl']) {
             Ensure-McpServer -ServerName $definition.mcpNames[0] -ServerDefinition @{ url = $definition.mcpUrl }
         }
@@ -895,7 +871,7 @@ function Ensure-Capability {
     }
 
     $existingState = Get-ReverseCapabilityState -Name $Name
-    if ($existingState -and -not $definition.PSObject.Properties['mcpNames']) {
+    if ($existingState -and -not $definition.PSObject.Properties['mcpNames'] -and $definition.bootstrapKind -ne 'git-clone') {
         $toolSpec = $null
         try {
             $toolSpec = Resolve-ReverseToolSpec -Name $Name
@@ -948,6 +924,16 @@ function Ensure-Capability {
             Ensure-McpServer -ServerName $definition.mcpNames[0] -ServerDefinition $serverDefinition
             return $true
         }
+        'remote-http-mcp' {
+            if (-not $definition.PSObject.Properties['mcpNames'] -or @($definition.mcpNames).Count -eq 0) {
+                throw "remote-http-mcp capability $Name is missing mcpNames in bootstrap-manifest.json."
+            }
+            if (-not $definition.PSObject.Properties['mcpUrl'] -or [string]::IsNullOrWhiteSpace([string]$definition.mcpUrl)) {
+                throw "remote-http-mcp capability $Name is missing mcpUrl in bootstrap-manifest.json."
+            }
+            Ensure-McpServer -ServerName $definition.mcpNames[0] -ServerDefinition @{ url = [string]$definition.mcpUrl }
+            return $true
+        }
         'npm-global' {
             Ensure-NodeRuntime
             $npm = Get-NodeCommandPath -Name 'npm'
@@ -990,9 +976,22 @@ function Ensure-Capability {
         }
         'local-http-mcp' {
             if ($Name -eq 'anything-analyzer') {
-                Ensure-McpServer -ServerName 'anything-analyzer' -ServerDefinition @{ url = $definition.mcpUrl }
+                $authToken = Ensure-AnythingAnalyzerMcpConfig -Port ([int]$definition.servicePort)
+                $env:ANYTHING_ANALYZER_MCP_TOKEN = $authToken
+                try {
+                    [Environment]::SetEnvironmentVariable('ANYTHING_ANALYZER_MCP_TOKEN', $authToken, 'User')
+                }
+                catch {
+                    Write-Warning "Could not persist ANYTHING_ANALYZER_MCP_TOKEN for future MCP clients: $($_.Exception.Message)"
+                }
+                $serverDefinition = @{
+                    url                  = $definition.mcpUrl
+                    headers              = @{ Authorization = "Bearer $authToken" }
+                    bearer_token_env_var = 'ANYTHING_ANALYZER_MCP_TOKEN'
+                }
+                Ensure-McpServer -ServerName 'anything-analyzer' -ServerDefinition $serverDefinition
                 if ($StartServices) {
-                    Start-AnythingAnalyzerService -Definition $definition
+                    Start-AnythingAnalyzerService -Definition $definition -AuthToken $authToken
                 }
                 return $true
             }
@@ -1093,6 +1092,12 @@ function Expand-CapabilityDependencies {
     return $ordered
 }
 
+function Test-BootstrapResultsSucceeded {
+    param([Parameter(Mandatory = $true)][object[]]$Results)
+
+    return (@($Results | Where-Object { $_.status -eq 'failed' }).Count -eq 0)
+}
+
 $expandedCapabilities = Expand-CapabilityDependencies -Names $Capability
 $results = @()
 
@@ -1152,3 +1157,6 @@ if (-not $SkipRefresh) {
 }
 
 $results | ConvertTo-Json -Depth 5
+if (-not (Test-BootstrapResultsSucceeded -Results $results)) {
+    exit 1
+}

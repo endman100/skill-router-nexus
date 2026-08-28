@@ -25,21 +25,24 @@
 | WASM / Python 字节码 / .NET | `reverse-engineering/languages.md` | 按具体语言查对应章节 |
 | macOS / iOS | `reverse-engineering/platforms.md` — Mach-O/ObjC/Swift | — |
 | 内存转储 / PCAP | `reverse-engineering/platforms.md` | `reverse-engineering/patterns*.md` |
+| 已有 case / 证据交接审查 | `case-review/SKILL.md`: Evidence 图与 fixity 校验 | `docs-generator/`: 最终报告 |
 | 密码学 / 加解密算法 | `reverse-engineering/patterns*.md` — 密码学模式 | `js-reverse/`（如果是前端加密） |
 | 协议逆向 / 自定义协议 | `reverse-engineering/platforms.md` — 网络协议 | `js-reverse/`（如果是 WebSocket/HTTP） |
 | Go / Rust 二进制 | `reverse-engineering/languages-compiled.md` + `go-reverse.md` | `ida-reverse/` 或 `radare2/` |
-| **CTF 竞赛全栈** | `../CTF-Sandbox-Orchestrator/ctf-sandbox-orchestrator/SKILL.md` — 总控入口 | 按证据面路由到 40+ 子技能 |
-| Web 运行时 / API | `../CTF-Sandbox-Orchestrator/competition-web-runtime/SKILL.md` | — |
-| 云 / 容器 / K8s | `../CTF-Sandbox-Orchestrator/competition-agent-cloud/SKILL.md` | — |
-| Windows / AD / 身份 | `../CTF-Sandbox-Orchestrator/competition-identity-windows/SKILL.md` | — |
-| 取证 / PCAP / 隐写 | `../CTF-Sandbox-Orchestrator/competition-forensic-timeline/SKILL.md` | — |
-| Prompt 注入 / Agent | `../CTF-Sandbox-Orchestrator/competition-prompt-injection/SKILL.md` | — |
-| 移动端 (Android/iOS) | `../CTF-Sandbox-Orchestrator/competition-android-hooking/SKILL.md` | — |
-| 固件 / 恶意样本 | `../CTF-Sandbox-Orchestrator/competition-firmware-layout/SKILL.md` | — |
-| **LLM 应用 / AI Agent** | `llm-security/SKILL.md` — OWASP LLM + ASI Top 10 | `../CTF-Sandbox-Orchestrator/competition-prompt-injection/SKILL.md` — CTF 场景 |
+| **CTF 竞赛全栈** | `CTF-Sandbox-Orchestrator/ctf-sandbox-orchestrator/SKILL.md` — 总控入口 | 按证据面路由到 40+ 子技能 |
+| **CTF ZIP / PKZIP 压缩包题** | `CTF-Sandbox-Orchestrator/competition-zip-archive/SKILL.md` — legacy ZipCrypto + `bkcrack` 明文攻击 | 优先于密码暴力破解 |
+| Web 运行时 / API | `CTF-Sandbox-Orchestrator/competition-web-runtime/SKILL.md` | — |
+| 云 / 容器 / K8s | `CTF-Sandbox-Orchestrator/competition-agent-cloud/SKILL.md` | — |
+| Windows / AD / 身份 | `CTF-Sandbox-Orchestrator/competition-identity-windows/SKILL.md` | — |
+| 取证 / PCAP / 隐写 | `CTF-Sandbox-Orchestrator/competition-forensic-timeline/SKILL.md` | — |
+| Prompt 注入 / Agent | `CTF-Sandbox-Orchestrator/competition-prompt-injection/SKILL.md` | — |
+| 移动端 (Android/iOS) | `CTF-Sandbox-Orchestrator/competition-android-hooking/SKILL.md` | — |
+| 固件 / 恶意样本 | `CTF-Sandbox-Orchestrator/competition-firmware-layout/SKILL.md` | — |
+| **LLM 应用 / AI Agent** | `llm-security/SKILL.md` — OWASP LLM + ASI Top 10 | `CTF-Sandbox-Orchestrator/competition-prompt-injection/SKILL.md` — CTF 场景 |
 | **REST / GraphQL / WebSocket API** | `api-security/SKILL.md` — 10 阶段方法论 | `pentest-tools/SKILL.md` — 基础 Web 渗透 |
 | **软件供应链 / SBOM / SCA** | `supply-chain-security/SKILL.md` — 六层治理框架 | `pentest-tools/SKILL.md` — 依赖扫描工具 |
 | **恶意软件 / 病毒样本** | `malware-analysis/SKILL.md` — 六阶段分析 + YARA/Sigma | `reverse-engineering/SKILL.md` — 仅通用逆向 / `ida-reverse/` 深度分析 |
+| **公开来源威胁情报 / OSINT** | `threat-intelligence/SKILL.md` — IOC 补充与活动关联 | 公开 X/Twitter 帖子必须由独立来源核验 |
 
 ## 按用户意图
 
@@ -65,7 +68,9 @@
 | "模拟执行/Unicorn" | `reverse-engineering/tools.md` — Unicorn 章节 |
 | "补环境/Node 复现" | `js-reverse/references/env-patching.md` |
 | "CTF 题/竞赛逆向" | `reverse-engineering/patterns-ctf*.md` |
+| "CTF ZIP/PKZIP/bkcrack/压缩包明文攻击" | `CTF-Sandbox-Orchestrator/competition-zip-archive/SKILL.md` |
 | "写报告/写文档/出报告" | `docs-generator/` — 技术文档编写 |
+| "审查 case / 证据链 / 可追溯性" | `case-review/SKILL.md`: 只读 Evidence 图审查 |
 | "写 writeup" | `docs-generator/` — CTF writeup 模板 |
 | "打开网页/浏览器自动化/填表" | `browser-automation/SKILL.md` — Playwright 浏览器操作 |
 | "爬取页面/截图/自动化登录" | `browser-automation/SKILL.md` — 浏览器自动化 |
@@ -108,7 +113,7 @@
 | "密码学/加解密/AES/RSA" | `reverse-engineering/patterns*.md` — 密码学模式识别 |
 | "协议逆向/Protobuf/自定义协议" | `reverse-engineering/platforms.md` — 网络协议分析 |
 | "内存转储/dump 分析" | `reverse-engineering/platforms.md` |
-| "云安全/容器逃逸/K8s" | `../CTF-Sandbox-Orchestrator/competition-agent-cloud/SKILL.md` |
+| "云安全/容器逃逸/K8s" | `CTF-Sandbox-Orchestrator/competition-agent-cloud/SKILL.md` |
 | "Prompt 注入/AI 安全" | `llm-security/SKILL.md` — OWASP LLM + ASI Top 10 完整框架 |
 | "Agent 不干活/只读不干/AI 懒/跳过步骤" | `llm-security/references/agent-obedience-engineering.md` — Agent 服从性工程 |
 | "让 AI 干活/强制执行/Agent 指令加强" | `llm-security/references/agent-obedience-engineering.md` — 8 大技术 + 借口反驳表 |
@@ -160,6 +165,7 @@
 | "域渗透/BloodHound/Certipy/Kerberoast" | `windows-ad/SKILL.md` |
 | "取证/Volatility/内存转储" | `digital-forensics/SKILL.md` |
 | "代码审计/SAST/Semgrep" | `code-audit/SKILL.md` |
+| "开源情报/威胁情报/公开 X IOC 补充" | `threat-intelligence/SKILL.md` — 公开帖子仅作为待核验线索 |
 | "威胁狩猎/蓝队/检测工程" | `threat-hunting/SKILL.md` |
 | "游戏逆向/IL2CPP/Unity" | `reverse-engineering/SKILL.md` + seed-014 |
 | "WiFi/无线渗透/aircrack" | `wifi-wireless/SKILL.md` |
@@ -212,6 +218,7 @@
 | Frida | `reverse-engineering/tools-dynamic.md` |
 | GDB / rr（通用调试） | `reverse-engineering/tools.md` |
 | Ghidra (headless) | `reverse-engineering/tools.md` + Ghidra MCP（免费 IDA 替代，可通过 bootstrap 自动注册） |
+| Python 3 标准库 | `case-review/`: 只读 case Evidence 图审查 |
 | angr / Qiling / Unicorn | `reverse-engineering/tools-dynamic.md` |
 | BinDiff / Diaphora | `reverse-engineering/tools-advanced.md` |
 | anything-analyzer MCP | 端口 23816 的 MCP 服务器（浏览器+HTTP 捕获+AI 分析） |

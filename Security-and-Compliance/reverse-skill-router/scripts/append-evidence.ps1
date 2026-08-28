@@ -34,7 +34,8 @@ param(
     [string] $Location = '',
     [string] $Notes = '',
     [string] $NotesFile = '',
-    [string] $ReproCommandFile = ''
+    [string] $ReproCommandFile = '',
+    [string] $ArtifactPath = ''
 )
 $ErrorActionPreference = 'Stop'
 
@@ -84,6 +85,27 @@ if ($null -ne $fromExcerptFile) { $RawExcerpt = $fromExcerptFile }
 $fromNotesFile = Read-OptionalFile $NotesFile
 if ($null -ne $fromNotesFile) { $Notes = $fromNotesFile }
 
+$contentHash = 'n/a'
+$artifactRef = 'n/a'
+if (-not [string]::IsNullOrWhiteSpace($ArtifactPath)) {
+    $artifactCandidate = $ArtifactPath
+    if (-not [System.IO.Path]::IsPathRooted($artifactCandidate)) {
+        $caseArtifact = Join-Path $CaseRoot $artifactCandidate
+        if (Test-Path -LiteralPath $caseArtifact -PathType Leaf) { $artifactCandidate = $caseArtifact }
+    }
+    if (-not (Test-Path -LiteralPath $artifactCandidate -PathType Leaf)) {
+        throw "ArtifactPath must point to a file inside CaseRoot: $ArtifactPath"
+    }
+    $caseRootFull = (Resolve-Path -LiteralPath $CaseRoot).Path
+    $artifactFull = (Resolve-Path -LiteralPath $artifactCandidate).Path
+    $casePrefix = $caseRootFull.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+    if (-not $artifactFull.StartsWith($casePrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "ArtifactPath must point inside CaseRoot: $ArtifactPath"
+    }
+    $artifactRef = $artifactFull.Substring($casePrefix.Length) -replace '\\', '/'
+    $contentHash = 'sha256:' + (Get-FileHash -LiteralPath $artifactFull -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+
 $evDir = Join-Path $CaseRoot 'evidence'
 New-Item -ItemType Directory -Force -Path $evDir | Out-Null
 
@@ -117,7 +139,8 @@ $body = @"
 - observed_at: $observed
 - source_type: $src
 - source_ref: append-evidence.ps1
-- content_hash: n/a
+- content_hash: $contentHash
+- artifact_path: $artifactRef
 - severity: $sev
 - status: $st
 - location: $loc
@@ -132,7 +155,31 @@ $notesBlock
 "@
 
 $utf8 = New-Object System.Text.UTF8Encoding $false
-[System.IO.File]::WriteAllText($path, $body, $utf8)
+$stream = $null
+$writer = $null
+try {
+    try {
+        $stream = [System.IO.File]::Open(
+            $path,
+            [System.IO.FileMode]::CreateNew,
+            [System.IO.FileAccess]::Write,
+            [System.IO.FileShare]::None
+        )
+    } catch [System.IO.IOException] {
+        if (Test-Path -LiteralPath $path) {
+            throw ("Evidence record already exists and is immutable: {0}. Use a new -Id." -f $fileName)
+        }
+        throw
+    }
+    $writer = [System.IO.StreamWriter]::new($stream, $utf8)
+    $writer.Write($body)
+} finally {
+    if ($null -ne $writer) {
+        $writer.Dispose()
+    } elseif ($null -ne $stream) {
+        $stream.Dispose()
+    }
+}
 
 $index = Join-Path $evDir 'INDEX.md'
 $line = "- $idSafe | $sev | $st | $titleLine | $fileName"

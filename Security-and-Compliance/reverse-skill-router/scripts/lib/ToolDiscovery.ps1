@@ -106,6 +106,55 @@ function Get-ReverseToolCatalog {
             )
         }
         [pscustomobject]@{
+            Name = 'idalib-mcp'
+            Skill = 'ida-reverse'
+            Purpose = 'IDA Pro idalib MCP HTTP/stdio 服务器'
+            FixedVersion = 'v0.5.0'
+            VersionArgs = @('--help')
+            Fallbacks = @(
+                [pscustomobject]@{ Type = 'command'; Value = 'idalib-mcp' },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\bin\idalib-mcp.cmd') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-ReverseOptionalPath -Path $localAppData -ChildPath 'Python\pythoncore-3.14-64\Scripts\idalib-mcp.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-ReverseOptionalPath -Path $localAppData -ChildPath 'Programs\Python\Python314\Scripts\idalib-mcp.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-ReverseOptionalPath -Path $localAppData -ChildPath 'Programs\Python\Python312\Scripts\idalib-mcp.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Desktop\IDA Pro 9.4\App\IDA Pro\Python314\Scripts\idalib-mcp.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'IDA Pro 9.4\App\IDA Pro\Python314\Scripts\idalib-mcp.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\IDA Pro 9.4\App\IDA Pro\Python314\Scripts\idalib-mcp.exe') }
+            )
+        }
+        [pscustomobject]@{
+            Name = 'ida-pro-mcp'
+            Skill = 'ida-reverse'
+            Purpose = 'IDA Pro MCP CLI / 插件安装器'
+            FixedVersion = 'v0.5.0'
+            VersionArgs = @('--help')
+            Fallbacks = @(
+                [pscustomobject]@{ Type = 'command'; Value = 'ida-pro-mcp' },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\bin\ida-pro-mcp.cmd') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-ReverseOptionalPath -Path $localAppData -ChildPath 'Python\pythoncore-3.14-64\Scripts\ida-pro-mcp.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-ReverseOptionalPath -Path $localAppData -ChildPath 'Programs\Python\Python314\Scripts\ida-pro-mcp.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-ReverseOptionalPath -Path $localAppData -ChildPath 'Programs\Python\Python312\Scripts\ida-pro-mcp.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Desktop\IDA Pro 9.4\App\IDA Pro\Python314\Scripts\ida-pro-mcp.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'IDA Pro 9.4\App\IDA Pro\Python314\Scripts\ida-pro-mcp.exe') }
+            )
+        }
+        [pscustomobject]@{
+            Name = 'ida'
+            Skill = 'ida-reverse'
+            Purpose = 'IDA Pro 主程序'
+            FixedVersion = 'v0.5.0'
+            VersionArgs = @()
+            Fallbacks = @(
+                [pscustomobject]@{ Type = 'command'; Value = 'ida' },
+                [pscustomobject]@{ Type = 'path'; Value = 'C:\Program Files\IDA Professional 9.4\ida.exe' },
+                [pscustomobject]@{ Type = 'path'; Value = 'C:\Program Files\IDA Pro 9.4\ida.exe' },
+                [pscustomobject]@{ Type = 'path'; Value = 'C:\Program Files\IDA Pro\ida.exe' },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Desktop\IDA Pro 9.4\App\IDA Pro\ida.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'IDA Pro 9.4\App\IDA Pro\ida.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\IDA Pro 9.4\App\IDA Pro\ida.exe') }
+            )
+        }
+        [pscustomobject]@{
             Name = 'frida'
             Skill = 'apk-reverse'
             Purpose = 'Frida 动态注入'
@@ -134,8 +183,15 @@ function Get-ReverseToolCatalog {
             VersionArgs = @('-v')
             Fallbacks = @(
                 [pscustomobject]@{ Type = 'command'; Value = 'r2' },
+                [pscustomobject]@{ Type = 'command'; Value = 'radare2' },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\bin\r2.bat') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\bin\radare2.exe') },
                 [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\bin\r2.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\r2.bat') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\radare2.exe') },
                 [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\r2.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = 'C:\Tools\radare2\bin\r2.bat' },
+                [pscustomobject]@{ Type = 'path'; Value = 'C:\Tools\radare2\bin\radare2.exe' },
                 [pscustomobject]@{ Type = 'path'; Value = 'C:\Tools\radare2\bin\r2.exe' }
             )
         }
@@ -200,6 +256,66 @@ function Get-ReverseToolCatalog {
             )
         }
         [pscustomobject]@{
+            Name = 'r2pm'
+            Skill = 'radare2'
+            Purpose = 'radare2 插件管理'
+            VersionArgs = @('-v')
+            Fallbacks = @(
+                [pscustomobject]@{ Type = 'command'; Value = 'r2pm' },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\bin\r2pm.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\r2pm.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = 'C:\Tools\radare2\bin\r2pm.exe' }
+            )
+        }
+        [pscustomobject]@{
+            Name = 'r2xsql'
+            Skill = 'radare2'
+            Purpose = 'radare2 SQL 查询工具'
+            VersionArgs = @('--version')
+            Fallbacks = @(
+                [pscustomobject]@{ Type = 'command'; Value = 'r2xsql' },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\bin\r2xsql.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\r2xsql.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = 'C:\Tools\radare2\bin\r2xsql.exe' }
+            )
+        }
+        [pscustomobject]@{
+            Name = 'r2xsql-full'
+            Skill = 'radare2'
+            Purpose = 'radare2 SQL 查询工具（完整版）'
+            VersionArgs = @('--version')
+            Fallbacks = @(
+                [pscustomobject]@{ Type = 'command'; Value = 'r2xsql-full' },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\bin\r2xsql-full.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\r2xsql-full.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = 'C:\Tools\radare2\bin\r2xsql-full.exe' }
+            )
+        }
+        [pscustomobject]@{
+            Name = 'r2mcp'
+            Skill = 'radare2'
+            Purpose = 'radare2 MCP 协议分析'
+            VersionArgs = @('-v')
+            Fallbacks = @(
+                [pscustomobject]@{ Type = 'command'; Value = 'r2mcp' },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\bin\r2mcp.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\r2mcp.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = 'C:\Tools\radare2\bin\r2mcp.exe' }
+            )
+        }
+        [pscustomobject]@{
+            Name = 'radius2'
+            Skill = 'radare2'
+            Purpose = 'radare2 符号执行与动态分析'
+            VersionArgs = @('-v')
+            Fallbacks = @(
+                [pscustomobject]@{ Type = 'command'; Value = 'radius2' },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\bin\radius2.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\radare2\radius2.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = 'C:\Tools\radare2\bin\radius2.exe' }
+            )
+        }
+        [pscustomobject]@{
             Name = 'python'
             Skill = 'reverse-engineering'
             Purpose = '辅助脚本执行'
@@ -244,22 +360,25 @@ function Get-ReverseToolCatalog {
         [pscustomobject]@{
             Name = 'jshookmcp'
             Skill = 'js-reverse'
-            Purpose = '通过 npx 启动 @jshookmcp/jshook MCP（仍需先配置并启用 MCP server）'
+            Purpose = '通过 npx 启动 @jshookmcp/jshook MCP（需 MCP 注册；npx 本身不代表该能力已安装）'
             FixedVersion = '@jshookmcp/jshook@0.3.4'
             VersionArgs = @()
-            Fallbacks = @(
-                [pscustomobject]@{ Type = 'command'; Value = 'npx' }
-            )
+            Fallbacks = @()
         }
         [pscustomobject]@{
             Name = 'reqable-mcp'
             Skill = 'pentest-tools'
-            Purpose = '通过 npx 启动 Reqable 桌面客户端 MCP（仍需先安装并启动 Reqable）'
+            Purpose = '通过 npx 启动 Reqable 桌面客户端 MCP（需 MCP 注册与 Reqable；npx 本身不代表该能力已安装）'
             FixedVersion = 'reqable-mcp-server@1.0.1'
             VersionArgs = @()
-            Fallbacks = @(
-                [pscustomobject]@{ Type = 'command'; Value = 'npx' }
-            )
+            Fallbacks = @()
+        }
+        [pscustomobject]@{
+            Name = 'xquik-mcp'
+            Skill = 'threat-intelligence'
+            Purpose = '公开 X/Twitter 威胁情报采集的远程 MCP（需客户端登记与 OAuth）'
+            VersionArgs = @()
+            Fallbacks = @()
         }
         [pscustomobject]@{
             Name = 'agent-browser'
@@ -375,6 +494,18 @@ function Get-ReverseToolCatalog {
             Fallbacks = @(
                 [pscustomobject]@{ Type = 'command'; Value = 'pwntools' },
                 [pscustomobject]@{ Type = 'command'; Value = 'pwn' }
+            )
+        }
+        [pscustomobject]@{
+            Name = 'bkcrack'
+            Skill = 'reverse-engineering'
+            Purpose = 'CTF ZIP/PKZIP ZipCrypto 已知明文攻击'
+            FixedVersion = 'v1.8.1'
+            VersionArgs = @('--version')
+            Fallbacks = @(
+                [pscustomobject]@{ Type = 'command'; Value = 'bkcrack' },
+                [pscustomobject]@{ Type = 'path'; Value = (Join-Path $userProfile 'Tools\bkcrack\bkcrack.exe') },
+                [pscustomobject]@{ Type = 'path'; Value = 'C:\Tools\bkcrack\bkcrack.exe' }
             )
         }
     )
@@ -768,10 +899,24 @@ function Get-ReverseCapabilityState {
         $toolReady = $false
     }
 
+    $runtimeReady = $toolReady
+    if ($definition.bootstrapKind -eq 'npm-mcp') {
+        try {
+            $runtimeSpec = Resolve-ReverseToolSpec -Name 'npx'
+            $runtimeReady = [bool]$runtimeSpec.Available
+        }
+        catch {
+            $runtimeReady = $false
+        }
+    }
+
     $verificationMode = if ($definition.PSObject.Properties['verificationMode']) { [string]$definition.verificationMode } else { '' }
     $ready = $toolReady
     if ($definition.PSObject.Properties['mcpNames']) {
         switch ($verificationMode) {
+            'registration-only' {
+                $ready = $registered
+            }
             'service-and-registration' {
                 $ready = $registered -and $serviceOnline
             }
@@ -780,7 +925,7 @@ function Get-ReverseCapabilityState {
             }
             default {
                 if ($definition.bootstrapKind -eq 'npm-mcp') {
-                    $ready = $registered -and $toolReady
+                    $ready = $registered -and $runtimeReady
                 }
                 else {
                     $ready = $registered -or $toolReady
@@ -796,6 +941,7 @@ function Get-ReverseCapabilityState {
         DocsUrl = [string]$definition.docsUrl
         Ready = $ready
         Registered = $registered
+        RuntimeAvailable = $runtimeReady
         ServiceOnline = $serviceOnline
         McpHttpVerified = $mcpHttpVerified
     }

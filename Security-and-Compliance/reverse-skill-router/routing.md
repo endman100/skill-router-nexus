@@ -1,11 +1,13 @@
 # Reverse Engineering Skill Routing Matrix
 
+> **Advisory only.** PRIMARY comes from `config/routing.json` via `scripts/master-route.ps1`. This file is a 3-axis disambiguation view. If a row here disagrees with JSON, JSON wins.
+
 Route tasks to the most appropriate skill module by target type, user intent, and toolchain.
 
 ## CRITICAL: Routing Execution Protocol
 
 1. **MUST** complete routing BEFORE executing. Do NOT "do first, route later".
-2. **SHOULD** start from `MASTER-ROUTING.md` or `scripts/master-route.ps1` for PRIMARY; use this full matrix when ambiguous.
+2. **MUST** start from `scripts/master-route.ps1` (JSON). Use this matrix only when PRIMARY is ambiguous.
 3. **MUST** match dimensions (target type + user intent + toolchain) before entering a skill.
 4. If route not matched → propose new skill, do NOT force-fit.
 5. Cross-module tasks → combine skills per "Path Crossing" section.
@@ -27,8 +29,9 @@ Route tasks to the most appropriate skill module by target type, user intent, an
 | macOS / iOS | `reverse-engineering/platforms.md` — Mach-O/ObjC/Swift | `mobile-reverse/` for iOS-specific |
 | Game (Unity) | `reverse-engineering/` — engine reverse, anti-cheat, IL2CPP/Mono (see seed-014) | `ida-reverse/` deep analysis |
 | Memory dump / PCAP | `digital-forensics/` — memory/timeline/PCAP IR | `protocol-reverse/` for protocol recovery |
+| Existing case package / evidence handoff | `case-review/`: Evidence graph and fixity review | `docs-generator/` for final report writing |
 | Custom protocol / Protobuf / gRPC | `protocol-reverse/` | `js-reverse/` if pure browser WS crypto |
-| Cloud / Container / K8s | `cloud-k8s/` | CTF: `../CTF-Sandbox-Orchestrator/competition-agent-cloud/` |
+| Cloud / Container / K8s | `cloud-k8s/` | CTF: `CTF-Sandbox-Orchestrator/competition-agent-cloud/` |
 | Windows AD / Kerberos / AD CS | `windows-ad/` | multi-stage: `attack-chain/` |
 | Source code / SAST | `code-audit/` | deps/CI: `supply-chain-security/` |
 | Game client (Unity/UE) | `reverse-engineering/` + seed-014 | `dotnet-reverse/` for Mono assemblies |
@@ -43,6 +46,7 @@ Route tasks to the most appropriate skill module by target type, user intent, an
 | RF / SDR (non-Wi-Fi) | `radio-sdr/` | Wi-Fi → `wifi-wireless/` |
 | Browser extension (crx/xpi) | `browser-extension-reverse/` | page JS only → `js-reverse/` |
 | Wi-Fi / wireless | `wifi-wireless/` | close-range chain → `attack-chain/` |
+| Public-source threat intelligence / OSINT | `threat-intelligence/` | X/Twitter posts remain leads until independently corroborated |
 | Blue team / threat hunt | `threat-hunting/` | sample IOC → `malware-analysis/` |
 | Ghidra (no IDA) | `ghidra-reverse/` | `ida-reverse/` if IDA MCP available |
 
@@ -54,14 +58,15 @@ Route tasks to the most appropriate skill module by target type, user intent, an
 | API / REST / GraphQL | `api-security/` — BOLA/BFLA/JWT/OAuth | `pentest-tools/` for scanning |
 | Supply chain / SBOM / CI-CD | `supply-chain-security/` — Trivy/Syft/Gitleaks | — |
 | iOS app (IPA) | `mobile-reverse/` — class-dump/Hopper/Frida iOS | `reverse-engineering/platforms.md` |
-| **CTF competition (full stack)** | `../CTF-Sandbox-Orchestrator/ctf-sandbox-orchestrator/SKILL.md` — master entry | Route to 40+ sub-skills by evidence |
-| Web runtime / API | `../CTF-Sandbox-Orchestrator/competition-web-runtime/SKILL.md` | — |
-| Cloud / Container / K8s | `../CTF-Sandbox-Orchestrator/competition-agent-cloud/SKILL.md` | — |
-| Windows / AD / Identity | `../CTF-Sandbox-Orchestrator/competition-identity-windows/SKILL.md` | — |
-| Forensics / PCAP / Steganography | `../CTF-Sandbox-Orchestrator/competition-forensic-timeline/SKILL.md` | — |
-| Prompt injection / Agent | `../CTF-Sandbox-Orchestrator/competition-prompt-injection/SKILL.md` | — |
-| Mobile (Android/iOS) | `../CTF-Sandbox-Orchestrator/competition-android-hooking/SKILL.md` | — |
-| Firmware / Malware sample | `../CTF-Sandbox-Orchestrator/competition-firmware-layout/SKILL.md` | — |
+| **CTF competition (full stack)** | `CTF-Sandbox-Orchestrator/ctf-sandbox-orchestrator/SKILL.md` — master entry | Route to 40+ sub-skills by evidence |
+| **CTF ZIP / PKZIP archive** | `CTF-Sandbox-Orchestrator/competition-zip-archive/SKILL.md` — legacy ZipCrypto + `bkcrack` known plaintext | Use before password brute force |
+| Web runtime / API | `CTF-Sandbox-Orchestrator/competition-web-runtime/SKILL.md` | — |
+| Cloud / Container / K8s | `cloud-k8s/` | CTF-only extra: sidecar orchestrator after PRIMARY `ctf-sandbox/` |
+| Windows / AD / Identity | `CTF-Sandbox-Orchestrator/competition-identity-windows/SKILL.md` | — |
+| Forensics / PCAP / Steganography | `CTF-Sandbox-Orchestrator/competition-forensic-timeline/SKILL.md` | — |
+| Prompt injection / Agent | `CTF-Sandbox-Orchestrator/competition-prompt-injection/SKILL.md` | — |
+| Mobile (Android/iOS) | `CTF-Sandbox-Orchestrator/competition-android-hooking/SKILL.md` | — |
+| Firmware / Malware sample | `CTF-Sandbox-Orchestrator/competition-firmware-layout/SKILL.md` | — |
 
 ## By User Intent
 
@@ -92,8 +97,10 @@ Route tasks to the most appropriate skill module by target type, user intent, an
 | "Python bytecode / pyc" | `reverse-engineering/languages.md` — Python section |
 | "symbol execution / angr" | `reverse-engineering/tools-dynamic.md` — angr section |
 | "patch environment / Node reproduce" | `js-reverse/references/env-patching.md` |
-| "CTF challenge / competition reverse" | `reverse-engineering/patterns-ctf*.md` |
+| "CTF challenge / competition reverse" | `ctf-sandbox/SKILL.md` → sidecar orchestrator |
+| "CTF ZIP / PKZIP / bkcrack / 压缩包明文攻击" | `CTF-Sandbox-Orchestrator/competition-zip-archive/SKILL.md` |
 | "write report / documentation" | `docs-generator/` — technical documentation |
+| "review case / evidence chain / traceability" | `case-review/`: read-only Evidence Graph Review |
 | "write writeup" | `docs-generator/` — CTF writeup template |
 | "open webpage / browser automation / fill form" | `browser-automation/SKILL.md` — Playwright |
 | "crawl page / screenshot / auto login" | `browser-automation/SKILL.md` |
@@ -118,7 +125,7 @@ Route tasks to the most appropriate skill module by target type, user intent, an
 | "firmware / IoT / binwalk / ARM" | `reverse-engineering/platforms-hardware.md` |
 | "cryptography / AES / RSA" | `reverse-engineering/patterns*.md` — crypto pattern recognition |
 | "protocol reverse / Protobuf / custom protocol" | `reverse-engineering/platforms.md` |
-| "cloud security / container escape / K8s" | `../CTF-Sandbox-Orchestrator/competition-agent-cloud/SKILL.md` |
+| "cloud security / container escape / K8s" | `cloud-k8s/SKILL.md` |
 | "Prompt injection / AI security" | `llm-security/SKILL.md` — OWASP LLM + ASI Top 10 |
 | "internal network / lateral movement" | `pentest-tools/SKILL.md` + `references/network-attack-defense.md` |
 | "privilege escalation" | `pentest-tools/references/network-attack-defense.md` — escalation section |
@@ -139,8 +146,8 @@ Route tasks to the most appropriate skill module by target type, user intent, an
 | "red team / HW / attack exercise" | `attack-chain/SKILL.md` — full attack chain orchestration |
 | "initial breach / boundary breach" | `attack-chain/SKILL.md` — boundary breach phase |
 | "close-range pentest / BadUSB / WiFi phishing" | `attack-chain/SKILL.md` — close-range section |
-| "EDR bypass / evasion / AV bypass" | `attack-chain/SKILL.md` — EDR/AV evasion section |
-| "phishing / social engineering" | `attack-chain/SKILL.md` — phishing section |
+| "EDR bypass / evasion / AV bypass" | `edr-bypass-re/SKILL.md` |
+| "phishing / social engineering" | `email-security/SKILL.md` |
 | "supply chain attack" | `attack-chain/SKILL.md` — supply chain section |
 | "trace cleanup / anti-forensics" | `attack-chain/SKILL.md` — cleanup section |
 | "full pentest / end-to-end" | `attack-chain/SKILL.md` — full chain planning |
@@ -156,11 +163,11 @@ Route tasks to the most appropriate skill module by target type, user intent, an
 | "iOS reverse / IPA / Mach-O" | `mobile-reverse/SKILL.md` — class-dump/Hopper/Frida iOS |
 | "Objection / SSL Pinning bypass" | `mobile-reverse/SKILL.md` — dynamic instrumentation |
 | "YARA / malware detection rules" | `malware-analysis/SKILL.md` — YARA/Sigma/IOC |
-| "N-day / patch diff / CVE reproduction" | `binary-diff/SKILL.md` — ghidriff/Diaphora/DeepDiff |
+| "N-day / patch diff / CVE reproduction" | `patch-diff-exploit/SKILL.md` |
 | "MBA simplification / mixed boolean-arithmetic / 表达式化简" | `reverse-engineering/references/ollvm-deobfuscation.md` — SiMBA/D-810 |
 | "opaque predicate / 不透明谓词去除" | `reverse-engineering/references/ollvm-deobfuscation.md` — 符号执行去除 |
 | "Hikari deobfuscate / 字符串加密恢复" | `reverse-engineering/references/ollvm-deobfuscation.md` — Hikari 变种处理 |
-| "pwn / stack overflow / ROP / ret2libc" | `reverse-engineering/patterns-ctf*.md` + pwntools |
+| "pwn / stack overflow / ROP / ret2libc" | `pwn-chain/SKILL.md` |
 | "Agent not working / AI lazy / skip steps" | `llm-security/references/agent-obedience-engineering.md` |
 | "MSF stuck / orphan process / MSF protocol" | `pentest-tools/references/msf-protocol.md` |
 | "anonymize / placeholder / writeup desensitize" | `field-journal/anonymization.md` |
@@ -174,6 +181,7 @@ Route tasks to the most appropriate skill module by target type, user intent, an
 | "Active Directory / Kerberoast / Certipy / BloodHound" | `windows-ad/SKILL.md` |
 | "forensics / Volatility / memory dump / IR timeline" | `digital-forensics/SKILL.md` |
 | "code audit / SAST / Semgrep / CodeQL / whitebox" | `code-audit/SKILL.md` |
+| "OSINT / threat intelligence / public X IOC enrichment" | `threat-intelligence/SKILL.md` — public posts require independent corroboration |
 | "threat hunting / blue team / detection engineering" | `threat-hunting/SKILL.md` |
 | "game reverse / IL2CPP / Unity / Unreal" | `reverse-engineering/SKILL.md` + seed-014 |
 | "Wi-Fi / aircrack / wireless pentest" | `wifi-wireless/SKILL.md` |
@@ -214,6 +222,7 @@ Do NOT force the user to repeatedly confirm "this is CTF/local." Carry the CTF/l
 | Frida | `reverse-engineering/tools-dynamic.md` |
 | GDB / GEF / pwndbg / rr | `reverse-engineering/tools.md` |
 | Ghidra (headless) | `reverse-engineering/tools.md` + Ghidra MCP |
+| Python 3 standard library | `case-review/`: read-only case evidence graph review |
 | angr / Qiling / Unicorn | `reverse-engineering/tools-dynamic.md` |
 | D-810 / d810-ng | `reverse-engineering/references/ollvm-deobfuscation.md` — IDA Pro 反混淆插件，OLLVM/Tigress/Hodur/Approov + Z3 SMT |
 | obpo-plugin | `reverse-engineering/references/ollvm-deobfuscation.md` — Hex-Rays microcode 云插件，效果最强 |
@@ -259,7 +268,7 @@ When the user's wording is vague, emotionally phrased, imprecise, mixed-language
 3. **Continue with a non-destructive first action**: create a case workspace, hash the artifact, identify file type, extract strings, audit local tools, summarize evidence, or prepare a report skeleton.
 4. **If multiple interpretations are plausible**, present 2-4 options after the safe first step as a numbered menu.
 5. **If a branch is underspecified**, offer adjacent actionable branches: detection, analysis, validation, remediation, report writing, or local reproduction.
-6. **Always provide a next-step menu** — never leave the user with only a dead end.
+6. **Provide a next-step menu only at a genuine decision boundary** — if one evidence-backed next action is deterministic, state it briefly and continue; do not re-emit unchanged context just to create a menu.
 
 Suggested Chinese phrasing when recovering ambiguous intent:
 
@@ -310,7 +319,7 @@ DSL VM Reverse Path:
   js-reverse/ → Observe→Capture→Rebuild (API layer only)
 
 CTF Competition Path (via CTF-Sandbox-Orchestrator):
-  ../CTF-Sandbox-Orchestrator/ctf-sandbox-orchestrator/SKILL.md → build sandbox model
+  CTF-Sandbox-Orchestrator/ctf-sandbox-orchestrator/SKILL.md → build sandbox model
   ↓ Route by dominant evidence
   competition-web-runtime/ or competition-reverse-pwn/ or competition-identity-windows/
   ↓ Blocked → return to master

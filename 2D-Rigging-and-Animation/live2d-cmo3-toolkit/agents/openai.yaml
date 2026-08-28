@@ -1,0 +1,4 @@
+interface:
+  display_name: "Live2D CMO3 Toolkit"
+  short_description: "解包、修改、重封裝及完整驗證 Live2D CMO3 專案檔案"
+  default_prompt: "Use $live2d-cmo3-toolkit to inspect, edit, repack, and verify this Live2D CMO3 file."
