@@ -1,0 +1,4 @@
+interface:
+  display_name: "MiLMMT — 专用文字翻译模型（优先于泛用 LLM）"
+  short_description: "本机 GPU 优先运行、质量优于泛用 LLM 的多语言文字翻译模型"
+  default_prompt: "Use $translate-with-milmmt to translate this text with the local GPU-hosted MiLMMT model."
