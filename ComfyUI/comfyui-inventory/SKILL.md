@@ -1,157 +1,56 @@
 ---
 name: comfyui-inventory
-description: Discover and cache all installed ComfyUI models, custom nodes, and system capabilities. Works online (API queries) and offline (directory scanning). Use before generating workflows to verify available resources.
-user-invocable: true
-metadata: {"openclaw":{"emoji":"📦","os":["darwin","linux","win32"],"requires":{"bins":["pwsh"]},"primaryEnv":"COMFYUI_PATH"}}
+description: Discover the capabilities of a current ComfyUI installation, including node schemas, model folders, custom nodes, runtime versions, devices, and workflow compatibility. Use before generating or repairing workflows.
 ---
 
-# ComfyUI Inventory Skill
+# Inspect a ComfyUI installation
 
-Discovers what's installed in the user's ComfyUI instance and caches results for workflow validation.
+Inventory the actual target instance. Do not infer installed models or nodes from generic examples.
 
-## Purpose
+## Online inspection
 
-Every workflow generation MUST be preceded by an inventory check. This prevents:
-- Referencing models that aren't downloaded
-- Using nodes that aren't installed
-- Exceeding VRAM limits
+1. GET /system_stats for ComfyUI, Python, PyTorch, device and memory information exposed by the server.
+2. GET /object_info for installed node class types, required and optional inputs, return types, categories and metadata.
+3. Use documented model-folder routes when available.
+4. Submit a dry validation through /prompt only with user approval if it would enqueue work; otherwise validate locally against /object_info.
+5. Record custom-node package versions from the installation or manager when available.
 
-## Two Discovery Modes
+Route details:
 
-### Online Mode (ComfyUI API Running)
+https://docs.comfy.org/development/comfyui-server/comms_routes
 
-Query the live server for authoritative information.
+## Offline inspection
 
-**1. System info:**
-```bash
-curl http://127.0.0.1:8188/system_stats
-```
-Extracts: GPU name, total VRAM, free VRAM, ComfyUI version.
+When the server is unavailable:
 
-**2. Installed nodes:**
-```bash
-curl http://127.0.0.1:8188/object_info
-```
-Returns all registered node classes with their input/output specifications.
+- Locate the exact ComfyUI installation supplied by the user.
+- Enumerate model folders through ComfyUI's folder_paths configuration, including extra_model_paths.yaml.
+- Inspect custom_nodes package metadata and version-control revisions.
+- Read requirements and runtime versions without importing untrusted custom-node code.
+- Mark results as offline and potentially incomplete.
 
-**3. Installed models (per type):**
-```bash
-curl http://127.0.0.1:8188/models/checkpoints
-curl http://127.0.0.1:8188/models/loras
-curl http://127.0.0.1:8188/models/vae
-curl http://127.0.0.1:8188/models/controlnet
-curl http://127.0.0.1:8188/models/clip
-curl http://127.0.0.1:8188/models/clip_vision
-curl http://127.0.0.1:8188/models/upscale_models
-curl http://127.0.0.1:8188/models/diffusion_models
-```
+Do not assume the current working directory is the ComfyUI root.
 
-### Offline Mode (Directory Scan)
+## Inventory output
 
-When ComfyUI isn't running, scan the filesystem directly.
+Return a timestamped summary containing:
 
-**Requires**: ComfyUI installation path (e.g., `C:\ComfyUI`)
+- server/base path and inspection mode
+- ComfyUI commit or release when discoverable
+- Python, PyTorch, accelerator and memory
+- installed node class types or package summary
+- model categories and filenames
+- missing requirements for the requested workflow
+- confidence and limitations
 
-**Scan directories:**
-```
-{ComfyUI}/models/checkpoints/    → .safetensors, .ckpt
-{ComfyUI}/models/loras/          → .safetensors
-{ComfyUI}/models/vae/            → .safetensors, .pt
-{ComfyUI}/models/controlnet/     → .safetensors, .pth
-{ComfyUI}/models/clip/           → .safetensors
-{ComfyUI}/models/clip_vision/    → .safetensors
-{ComfyUI}/models/upscale_models/ → .pth, .safetensors
-{ComfyUI}/models/diffusion_models/ → .safetensors
-{ComfyUI}/models/ipadapter/      → .safetensors, .bin
-{ComfyUI}/models/instantid/      → .bin
-{ComfyUI}/models/insightface/    → .onnx + folders
-{ComfyUI}/models/facerestore_models/ → .pth
-{ComfyUI}/models/ultralytics/bbox/ → .pt
-{ComfyUI}/custom_nodes/          → folder names = node packages
-```
+Do not persist an inventory file unless the caller asks for one. If persisted, place it in a user-approved project path and include generated_at plus the target instance identity.
 
-**Custom node detection**: List directories under `custom_nodes/`. Each directory name corresponds to a node package (e.g., `ComfyUI_IPAdapter_plus`, `ComfyUI-Impact-Pack`).
+## Compatibility check
 
-## Cache Format
+For each workflow node:
 
-Save results to `state/inventory.json`:
-
-```json
-{
-  "last_updated": "2026-02-06T12:00:00Z",
-  "mode": "online",
-  "comfyui_version": "0.3.10",
-  "system": {
-    "gpu": "NVIDIA RTX 5090",
-    "vram_total_gb": 32,
-    "vram_free_gb": 28
-  },
-  "models": {
-    "checkpoints": ["flux1-dev.safetensors", "RealVisXL_V5.0.safetensors"],
-    "loras": ["sage_character.safetensors"],
-    "vae": ["ae.safetensors", "wan_2.1_vae.safetensors"],
-    "controlnet": ["instantid_controlnet.safetensors"],
-    "clip": ["t5xxl_fp16.safetensors", "clip_l.safetensors"],
-    "clip_vision": ["CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"],
-    "upscale_models": ["4x-UltraSharp.pth"],
-    "diffusion_models": ["wan2.1_i2v_720p_14b_bf16.safetensors"],
-    "ipadapter": ["ip-adapter-faceid-plusv2_sd15.bin"],
-    "instantid": ["ip-adapter.bin"],
-    "insightface": ["inswapper_128.onnx"],
-    "facerestore": ["codeformer.pth"],
-    "detection": ["face_yolov8m.pt"]
-  },
-  "custom_nodes": [
-    "ComfyUI-Manager",
-    "ComfyUI_IPAdapter_plus",
-    "ComfyUI_InstantID",
-    "ComfyUI-Impact-Pack",
-    "ComfyUI-AnimateDiff-Evolved",
-    "ComfyUI-VideoHelperSuite"
-  ]
-}
-```
-
-## Workflow Validation
-
-Given a workflow JSON, validate against inventory:
-
-```
-For each node:
-  1. Check class_type against known node classes
-  2. If missing: identify which custom_node package provides it
-  3. Suggest install: "Install via ComfyUI-Manager: {package_name}"
-
-For each model reference:
-  1. Check filename against inventory models of that type
-  2. If missing: look up in references/models.md for download link
-  3. Report: "Missing: {filename} - Download from {url} -> {path}"
-```
-
-## Common Node-to-Package Mapping
-
-| Node Class | Package |
-|-----------|---------|
-| ApplyInstantID | ComfyUI_InstantID |
-| IPAdapterUnifiedLoader | ComfyUI_IPAdapter_plus |
-| FaceDetailer | ComfyUI-Impact-Pack |
-| ReactorFaceSwap | ComfyUI-ReActor |
-| AnimateDiffLoaderWithContext | ComfyUI-AnimateDiff-Evolved |
-| VideoHelper* | ComfyUI-VideoHelperSuite |
-| ControlNetApply* | comfyui_controlnet_aux |
-| UltimateSDUpscale | ComfyUI_UltimateSDUpscale |
-| VHS_* | ComfyUI-VideoHelperSuite |
-| RIFE* | ComfyUI-Frame-Interpolation |
-
-## Cache Freshness
-
-- Cache is valid for **1 hour** during active sessions
-- Invalidate cache when user installs new models/nodes
-- Force refresh: `scan-inventory.ps1` or API re-query
-
-## Integration
-
-- Called by `comfyui-workflow-builder` before generating workflows
-- Called by `comfyui-character-gen` (via agent wrapper) for model selection
-- Called by `comfyui-troubleshooter` when diagnosing missing model errors
-- Results stored in `state/inventory.json` for all skills to reference
+1. Confirm class_type exists in /object_info.
+2. Confirm required input names and accepted types.
+3. Confirm referenced model filenames exist in the correct model category.
+4. Confirm custom-node versions support saved widget values.
+5. Report substitutions rather than silently changing the workflow.

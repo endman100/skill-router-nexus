@@ -1,156 +1,67 @@
 ---
 name: comfyui-troubleshooter
-description: Diagnose ComfyUI errors, workflow failures, and quality issues. Suggests fixes based on error patterns, missing dependencies, and community-known workarounds. Use when ComfyUI workflows fail or produce unexpected results.
-user-invocable: true
-metadata: {"openclaw":{"emoji":"🔍","os":["darwin","linux","win32"]}}
+description: Diagnose current ComfyUI startup, custom-node, workflow, model, memory, API, frontend, and output-quality failures with evidence from logs, schemas, inventories, and minimal reproductions.
 ---
 
-# ComfyUI Troubleshooter
+# Troubleshoot ComfyUI
 
-Diagnoses and resolves ComfyUI issues across four categories: server errors, workflow errors, quality issues, and performance problems.
+Diagnose before changing files or installing packages.
 
-## Diagnosis Process
+## Evidence collection
 
-### Step 1: Classify the Error
+Collect:
 
-| Category | Symptoms | First Check |
-|----------|----------|-------------|
-| **Server** | Connection refused, timeouts, crashes | Is ComfyUI running? Check `/system_stats` |
-| **Workflow** | Node errors, missing inputs, type mismatches | Validate workflow against inventory |
-| **Quality** | Artifacts, wrong identity, blurry output | Check settings (CFG, weights, resolution) |
-| **Performance** | OOM, slow generation, VRAM errors | Check VRAM usage, model sizes |
+- exact error text and full relevant traceback
+- ComfyUI commit/release and frontend version
+- Python, PyTorch, accelerator, driver and device
+- custom-node package versions
+- workflow JSON format and failing node ID/class_type
+- /object_info entry for the failing class
+- model filename, category, source and hash when relevant
+- reproduction steps and whether a clean core workflow works
 
-### Step 2: Gather Context
+Redact secrets and private paths before sharing logs.
 
-Collect before diagnosing:
-1. **Error message** (exact text)
-2. **Workflow** being executed (or description)
-3. **Models** involved (checkpoint, LoRA, ControlNet, etc.)
-4. **Settings** (CFG, steps, resolution, sampler)
-5. **Hardware** (from `foundation/hardware-profile.md`)
-6. **Inventory** (from `state/inventory.json`)
+## Failure branches
 
-### Step 3: Match Error Pattern
+### Startup or import failure
 
-See `references/troubleshooting.md` for the full error database.
+Find the first relevant exception, identify the importing package, compare its declared dependencies to the environment, and test with that custom node disabled. Do not upgrade the entire environment as a first response.
 
-## Quick Fix Reference
+### Prompt validation failure
 
-### Top 10 Most Common Errors
+Compare every reported class_type and input against /object_info. Distinguish UI workflow JSON from API prompt JSON. Fix the smallest mismatch and resubmit.
 
-**1. "CUDA out of memory"**
-→ Use FP8: `--fp8_e4m3fn-unet`
-→ Enable tiled VAE
-→ Reduce resolution
-→ Restart ComfyUI (clears fragmentation)
+### Missing model
 
-**2. "Node type not found: {name}"**
-→ Install the custom node package via ComfyUI-Manager
-→ Check `comfyui-inventory` node-to-package mapping
+Confirm the loader's model category, extra_model_paths.yaml, exact filename and file integrity. Do not rename arbitrary models to satisfy a workflow.
 
-**3. "Expected scalar type BFloat16 but found Float"**
-→ Precision mismatch. Add `--force-fp16` or use matching precision nodes
+### CUDA or memory failure
 
-**4. Burned/overexposed faces**
-→ Lower CFG to 4-5 (InstantID)
-→ Reduce identity method weight
-→ Add noise to negative embeds (35%)
+Record dimensions, batch size, frame count, dtype, attention mode and loaded models. Reduce one pressure source at a time. Clear the queue or unload models through supported controls before restarting the process.
 
-**5. "No model found at path"**
-→ Check filename spelling (exact match required)
-→ Verify file is in correct subdirectory
-→ Run inventory scan to confirm
+### Frontend failure
 
-**6. Watermark artifacts at 1024x1024**
-→ Use 1016x1016 or 1020x1020 instead
+Use an uncached reload, inspect browser console/network logs, check frontend compatibility and disable the suspected extension. Avoid prototype monkeypatch fixes.
 
-**7. Identity doesn't match reference**
-→ Use higher quality reference image (clear, front-facing)
-→ Increase IP-Adapter weight to 0.8+
-→ Verify InsightFace antelopev2 is installed
+### Wrong or poor output
 
-**8. Video flickering**
-→ Lower FaceDetailer denoise to 0.3
-→ Add deflicker post-processing
-→ Increase AnimateDiff context overlap to 4+
+First verify that the intended model, VAE, text encoders, scheduler, conditioning and seed were actually used. Compare with a minimal official workflow before changing prompt wording.
 
-**9. Queue stuck/not processing**
-→ POST `/interrupt` to cancel
-→ POST `/free` to unload models
-→ Restart ComfyUI
+## Resolution standard
 
-**10. Slow generation**
-→ Check if `--lowvram` is enabled (remove it on RTX 5090)
-→ Use `--highvram` instead
-→ Update cuDNN to 8800+
-→ Enable SageAttention for Wan models
+For every proposed fix, state:
 
-## Decision Tree: Quality Issues
+- evidence linking it to the failure
+- exact reversible change
+- expected observation
+- rollback
+- verification command or workflow
 
-```
-OUTPUT LOOKS WRONG
-    |
-    |-- Faces look wrong
-    |   |-- Too smooth/plastic → Add skin texture LoRA (0.2-0.4)
-    |   |-- Wrong identity → Increase identity weight, check reference quality
-    |   |-- Burned/hot → Lower CFG to 4-5, reduce InstantID weight
-    |   |-- Deformed → Add "bad anatomy, deformed" to negative
-    |   |-- Different every time → Fix seed, add LoRA for consistency
-    |
-    |-- Colors wrong
-    |   |-- Oversaturated → Lower CFG, add "oversaturated" to negative
-    |   |-- Washed out → Check VAE is loaded, try different scheduler
-    |   |-- Color shift in video → Add color correction post-processing
-    |
-    |-- Resolution/sharpness
-    |   |-- Blurry → Increase steps (25-30), check resolution matches model
-    |   |-- Pixelated → Use proper upscaler (4x-UltraSharp), not resize
-    |   |-- Artifacts → Lower denoise, check for model corruption
-    |
-    |-- Composition
-    |   |-- Ignoring prompt → Increase CFG slightly, simplify prompt
-    |   |-- Extra limbs/objects → Add to negative prompt, use ControlNet
-    |   |-- Wrong pose → Add ControlNet OpenPose with reference
-```
+Do not present community anecdotes as confirmed fixes. Link the original issue or release and note affected versions.
 
-## Missing Dependency Resolution
+## Sources
 
-When a workflow references something not in inventory:
-
-### Missing Custom Node
-```
-1. Identify package from class_type (see inventory skill's mapping)
-2. Suggest: "Open ComfyUI-Manager → Search → Install {package_name}"
-3. Alternative: "cd {ComfyUI}/custom_nodes && git clone {repo_url}"
-4. Remind: Restart ComfyUI after installation
-```
-
-### Missing Model
-```
-1. Look up in references/models.md for download link
-2. Provide: exact filename, download URL, target directory
-3. For large models (>10GB): suggest HF CLI for reliability
-   "huggingface-cli download {repo} {file} --local-dir {path}"
-```
-
-### Version Incompatibility
-```
-1. Check ComfyUI version vs node package requirements
-2. Suggest: "cd {ComfyUI} && git pull" for ComfyUI update
-3. Or: pin specific node version if newest breaks things
-```
-
-## Escalation
-
-If troubleshooting doesn't resolve the issue:
-
-1. Check ComfyUI GitHub Issues for known bugs
-2. Check specific node package's Issues
-3. Search r/comfyui for community solutions
-4. Suggest posting in ComfyUI Discord with error details
-
-## Reference
-
-- `references/troubleshooting.md` - Full error database with solutions
-- `state/inventory.json` - Current installation state
-- `references/models.md` - Model download links and paths
+- https://docs.comfy.org/troubleshooting/overview
+- https://docs.comfy.org/development/comfyui-server/comms_routes
+- https://github.com/Comfy-Org/ComfyUI/issues
