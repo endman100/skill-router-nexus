@@ -1,6 +1,6 @@
 # skill_reader.py — skill-router-nexus 子 skill 掃描工具
 # 由 SKILL.md Step 2 路由流程呼叫，請勿單獨修改路由邏輯
-# 用法：python skill_reader.py [-c <category>]...
+# 用法：python -B skill_reader.py [-c <category>]...
 import argparse
 import re
 import sys
@@ -10,16 +10,84 @@ SKIP = {"__pycache__", ".git", "node_modules"}
 
 
 def parse_fm(content):
-    if not content.startswith("---"):
+    lines = content.splitlines()
+    if not lines or lines[0].strip() != "---":
         return {}
-    end = content.find("\n---", 3)
-    if end == -1:
+
+    try:
+        end = next(i for i, line in enumerate(lines[1:], 1) if line.strip() == "---")
+    except StopIteration:
         return {}
+
+    frontmatter = lines[1:end]
+    significant_lines = [
+        line for line in frontmatter if line.strip() and not line.lstrip().startswith("#")
+    ]
+    base_indent = min(
+        (len(line) - len(line.lstrip()) for line in significant_lines),
+        default=0,
+    )
+    if base_indent:
+        frontmatter = [
+            line[base_indent:] if line.strip() else "" for line in frontmatter
+        ]
+
     meta = {}
-    for line in content[3:end].splitlines():
-        m = re.match(r'^(name|description)\s*:\s*["\']?(.*?)["\']?\s*$', line)
-        if m:
-            meta[m.group(1)] = m.group(2).strip("\"'")
+    index = 0
+    while index < len(frontmatter):
+        line = frontmatter[index]
+        match = re.match(r"^(name|description)\s*:\s*(.*?)\s*$", line)
+        if not match:
+            index += 1
+            continue
+
+        key, raw_value = match.groups()
+        if re.fullmatch(r"[|>][+-]?", raw_value):
+            block_lines = []
+            index += 1
+            while index < len(frontmatter):
+                block_line = frontmatter[index]
+                if block_line and not block_line[0].isspace():
+                    break
+                block_lines.append(block_line)
+                index += 1
+
+            non_empty = [line for line in block_lines if line.strip()]
+            indent = min(
+                (len(line) - len(line.lstrip()) for line in non_empty),
+                default=0,
+            )
+            normalized = [
+                line[indent:].rstrip() if line.strip() else "" for line in block_lines
+            ]
+
+            if raw_value.startswith("|"):
+                value = "\n".join(normalized).strip()
+            else:
+                paragraphs = []
+                paragraph = []
+                for block_line in normalized:
+                    if block_line:
+                        paragraph.append(block_line.strip())
+                    else:
+                        if paragraph:
+                            paragraphs.append(" ".join(paragraph))
+                            paragraph = []
+                if paragraph:
+                    paragraphs.append(" ".join(paragraph))
+                value = "\n\n".join(paragraphs).strip()
+
+            meta[key] = value
+            continue
+
+        if (
+            len(raw_value) >= 2
+            and raw_value[0] == raw_value[-1]
+            and raw_value[0] in {'"', "'"}
+        ):
+            raw_value = raw_value[1:-1]
+        meta[key] = raw_value
+        index += 1
     return meta
 
 

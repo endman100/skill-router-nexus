@@ -1,0 +1,25 @@
+{
+  "height_cm": 160.0,
+  "height_source": "default",
+  "body_data": [
+    "Weight: ~50 kg",
+    "Shoulder width: ~38 cm",
+    "Arm length: ~56 cm",
+    "Foot length: ~23 cm",
+    "Bust circumference: ~82 cm",
+    "Waist circumference: ~64 cm",
+    "Hip circumference: ~88 cm",
+    "Outseam: ~100 cm",
+    "Inseam: ~76 cm"
+  ],
+  "views": [
+    {"name": "front", "file": "front.png", "label": "FRONT"},
+    {"name": "profile", "file": "profile.png", "label": "LEFT PROFILE"},
+    {"name": "back", "file": "back.png", "label": "BACK"}
+  ],
+  "expressions": [
+    {"name": "neutral", "file": "expression-1.png", "label": "NEUTRAL"},
+    {"name": "smile", "file": "expression-2.png", "label": "SMILE"},
+    {"name": "displeased", "file": "expression-3.png", "label": "DISPLEASED"}
+  ]
+}

@@ -24,8 +24,8 @@ metadata:
 
 | # | 資料夾 | 英文名 | 說明 |
 |---|--------|--------|------|
-| 1 | `Agent-Plan/` | Agent Plan | ⚠️ Agent 規劃初期必查此分類。涵蓋腦力激盪、問題拆解、方向探索、unblocking、以及從模糊需求到可行計畫初稿的生成。適用於 Agent 需要探索方向、釐清需求、或制定行動計畫的場景。 |
-| 2 | `Agent-Plan-Review/` | Agent Plan Review | ⚠️ 計畫完成後、執行前必查此分類。涵蓋多視角計畫審查（CEO/設計/工程）、自動審查管道、程式碼審查請求與接收流程。適用於計畫草稿需要壓力測試、多視角交叉驗證、或進行 code review 的場景。 |
+| 1 | `Agent-Plan/` | Agent Plan | PLAN 階段啟用時優先檢查此分類。涵蓋腦力激盪、問題拆解、方向探索、unblocking、以及從模糊需求到可行計畫初稿的生成。適用於 Agent 需要探索方向、釐清需求、或制定行動計畫的場景。 |
+| 2 | `Agent-Plan-Review/` | Agent Plan Review | 計畫需要壓力測試或執行前審查時檢查此分類。涵蓋多視角計畫審查（CEO/設計/工程）、自動審查管道、程式碼審查請求與接收流程。適用於計畫草稿需要交叉驗證、或進行 code review 的場景。 |
 | 3 | `Agent-Execute/` | Agent Execute | 涵蓋計畫實際執行、子代理平行派遣、子代理驅動開發、執行中的檢查點儲存與恢復、以及開發分支完成整合（merge/PR/清理）。適用於 Agent 需要將計畫付諸行動、平行派發子任務、中途暫停與繼續、或完成功能分支收尾的場景。 |
 | 4 | `Agent-Verification/` | Agent Verification | ⚠️ 完成任務、提交 PR 或宣告完成前必查此分類。涵蓋完成前驗證、完成度確認、以及防止虛報完成的查核機制。適用於任何提交/PR/完成宣告之前的強制驗證。 |
 | 5 | `CI-CD-and-Monitoring/` | CI/CD & Monitoring | 此分類涵蓋持續整合與持續部署（CI/CD）管道、應用程式效能監控、錯誤追蹤、日誌管理、功能旗標控制、以及服務狀態監控。適用於需要自動化建置部署流程、即時追蹤系統健康狀態、或管理運維告警的場景。 |
@@ -77,7 +77,7 @@ metadata:
 | 51 | `Writing-and-Content/` | Writing & Content | 此分類涵蓋腦力激盪、內容研究與撰寫、摘要生成、翻譯潤稿、命名發想、以及寫作計畫制定。適用於需要輔助內容創作、改善文案品質、或規劃寫作流程的場景。 |
 | 52 | `ComfyUI/` | ComfyUI | 此分類涵蓋 ComfyUI 自訂節點開發的完整知識庫，包括 V3 節點結構、資料型別（IMAGE/LATENT/MASK 等）、輸入輸出設定、前端 JavaScript 擴充、執行生命週期（快取/驗證/lazy）、打包發布、以及 V1 → V3 遷移指南。適用於需要開發、除錯、遷移或打包 ComfyUI 自訂節點的場景。 |
 | 53 | `Entrepreneurship/` | Entrepreneurship | 此分類涵蓋 Minimalist Entrepreneur（極簡創業家）方法論的完整工作流，基於 Sahil Lavingia（Gumroad 創辦人）所著《The Minimalist Entrepreneur》。包括社群識別（find-community）、構想驗證（validate-idea）、MVP 建構（mvp）、手動流程化（processize）、早期客戶獲取（first-customers）、定價策略（pricing）、內容行銷計畫（marketing-plan）、可持續成長決策（grow-sustainably）、公司文化與價值觀（company-values）、以及業務決策審查（minimalist-review）。適用於 bootstrapped 創業者、獨立開發者、或任何希望以小規模可獲利方式建立事業的人。 |
-| 54 | `AI-Research/` | AI Research | 此分類涵蓋 AI 研究方法與研究生命週期，包括自主研究編排、研究構想、學術檢索、機制可解釋性、因果干預、論文撰寫、學術圖表與會議報告。適用於提出研究假設、設計與執行實驗、解釋模型行為、查找文獻或產出研究成果；訓練、推論、RAG 與具體模態工具應按核心功能路由至專屬分類。 |
+| 54 | `AI-Research/` | AI Research | 此分類涵蓋 AI 研究方法與研究生命週期，包括自主研究編排、研究構想、學術檢索、可執行 rubric 誘導、證據導向驗證與修訂、機制可解釋性、因果干預、論文撰寫、學術圖表與會議報告。適用於提出研究假設、設計與執行實驗、把開放式科學任務轉成可驗證規格、解釋模型行為、查找文獻或產出研究成果；訓練、推論、RAG 與具體模態工具應按核心功能路由至專屬分類。 |
 | 55 | `Science/` | Science | 涵蓋 134 個科學與研究 skill（來源：[K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills)）。包括生物資訊與基因體學（BioPython、Scanpy、scVelo、Arboreto）、化學資訊與藥物發現（RDKit、DeepChem、DiffDock、datamol）、蛋白質體學與質譜（matchms、pyOpenMS）、臨床研究與精準醫學（ClinicalTrials.gov、ClinVar、臨床決策支援）、醫學影像與數位病理（pydicom、histolab、PathML）、神經科學（Neuropixels）、機器學習（PyTorch Lightning、Transformers、scikit-learn）、材料科學與物理（Pymatgen、Astropy、量子運算 Cirq/PennyLane/Qiskit）、工程與模擬（FluidSim、SimPy、SymPy）、資料分析與視覺化（NetworkX、GeoPandas、Dask、Polars）、實驗室自動化（PyLabRobot、Opentrons、Benchling）、多體學與系統生物學（PrimeKG、LaminDB）、蛋白質工程（ESM）、科學溝通（文獻回顧、科學寫作、海報、投影片）、科學資料庫（統一查詢 78+ 公開資料庫）、基礎設施（Modal、GPU 最佳化）、研究方法論、以及法規標準（ISO 13485）。適用於任何科學研究、生物醫學分析、藥物開發、臨床數據分析、實驗室自動化、科學寫作與溝通的場景。 |
 | 56 | `Metaphysics-and-Spirituality/` | Metaphysics & Spirituality | 此分類涵蓋中華傳統命理術數與宗教靈性相關的 AI Skill，包括四柱八字排盤與命理分析、奇門遁甲判斷與擇時、紫微斗數本命盤解讀、姻緣測算（八字合婚、生肖配對、紫微夫妻宮、桃花運勢）、以及基於佛教經典文獻的漢傳祖師教學角色生成與對話。適用於需要進行傳統命理排盤計算、術數分析、姻緣配對、佛學經典查詢、或建置傳統文化 AI 應用的場景。 |
 | 57 | `2D-Rigging-and-Animation/` | 2D Rigging & Animation | 此分類涵蓋 2D 角色綁定與動畫專案，包括網格、變形器、參數與關鍵形、紋理與圖集、專案封裝格式及可編輯模型資產處理。適用於需要分析、解包、修改、重封裝或驗證 Live2D 等 2D 骨架動畫工程檔的場景。 |
@@ -94,6 +94,7 @@ metadata:
 | 68 | `AI-MLOps/` | AI MLOps | 此分類涵蓋 AI 實驗追蹤、可觀測性、執行比較、模型登錄、資料與產物版本管理及生產監控。適用於管理模型生命週期、追蹤實驗指標、除錯 LLM 應用或監控模型系統。 |
 | 69 | `AI-Robotics/` | AI Robotics | 此分類涵蓋機器人策略、Vision-Language-Action 模型、模擬環境、操作任務微調與機器人評測。適用於訓練、部署或評估具身 AI 與機器人控制模型。 |
 | 70 | `Audio-and-Music-Generation/` | Audio & Music Generation | 此分類涵蓋 AI 音樂、音效及其他非語音音訊生成。適用於從文字或旋律條件建立音樂與聲音素材；語音合成應路由至 TTS-and-Voice-AI，語音辨識應路由至 Speech-Recognition。 |
+| 71 | `Agent-Delivery/` | Agent Delivery | DELIVER 階段優先檢查此分類。涵蓋使用者可讀的結果整理、成品連結、驗證證據、限制與阻塞狀態交付。適用於任何任務完成、部分完成或受阻時的最終回覆。 |
 
 > **新增 skill 時，必須按照下方「追加 Skill 流程」操作。**
 
@@ -160,11 +161,39 @@ metadata:
 
 ## 路由流程（強制執行，禁止跳步）
 
-### Step 1 — 判斷任務分類
-先判斷任務主軸，再圈出 2 到 4 個候選分類（主分類 + 相關分類）。
-若任務同時涉及規劃、實作、整合、驗證、部署任一組合，預設至少命中 2 個分類，不建議只看單一分類。
+### Step 1 — 建立五階段路由帳本
 
-### Step 2 — 用 skill_reader.py 多分類掃描
+先將任務拆成以下生命週期階段，逐階段記錄狀態、候選分類、候選 skill、已載入 skill、覆蓋理由與缺口：
+
+| 階段 | 必要性 | 完成條件 |
+|------|--------|----------|
+| `UNDERSTAND` | 必要 | 已用 skill 確認目標、輸入、限制與完成標準 |
+| `PLAN` | 條件式 | 若啟用，已有可執行步驟、依賴與風險；若跳過，已記錄理由 |
+| `EXECUTE` | 必要 | 已用 skill 產出使用者要求的結果或採取所需行動 |
+| `VERIFY` | 必要 | 已用 skill 取得足以支持結果狀態的新鮮證據 |
+| `DELIVER` | 必要 | 已用 skill 按成品類型整理可讀、可用、可追溯的交付內容 |
+
+當使用者明確要求計畫，或任務仍有重大歧義、高風險、不可逆操作、跨系統依賴時，啟用 `PLAN`。對目標清楚、低風險且可直接完成的任務，將 `PLAN` 標記為 `SKIPPED` 並記錄理由。
+
+同一個 skill 可以覆蓋多個階段；在帳本中逐階段記錄，但只載入一次。Router 本身只負責路由，不得被計為任何階段的執行 skill。
+
+### Step 2 — 每階段搜尋 1 到 2 個分類
+
+對每個必要階段及已啟用的 `PLAN` 分別搜尋：
+
+1. 先選 1 個最直接的主要分類。
+2. 只有主要分類沒有合格候選，或仍有明確能力缺口時，才增加第 2 個相關分類。
+3. 不得為整個任務預先設定固定分類總數；分類數量由各階段的覆蓋需求決定。
+
+分類方向：
+
+- `UNDERSTAND`：優先選任務領域分類；需要研究或需求釐清時再選相鄰分類。
+- `PLAN`：優先選 `Agent-Plan`；需要壓力測試時再選 `Agent-Plan-Review` 或任務領域分類。
+- `EXECUTE`：優先選能直接產生成品或操作目標系統的領域／平台分類；需要通用執行方法時再選 `Agent-Execute`、`Coding` 等相關分類。
+- `VERIFY`：先選 `Agent-Verification`；需要成品專屬 QC 時再選任務領域或品質分類。
+- `DELIVER`：先選 `Agent-Delivery`；成品需要專屬格式、發布或傳送規則時，再選 `Writing-and-Content`、`Document-Generation`、`PPT-Design`、`Communication` 或該成品的領域分類。
+
+使用 `skill_reader.py` 掃描每個階段選出的分類：
 
 > **⚠️ 路徑推導規則：禁止猜測或硬編碼路徑。**
 > `skill_reader.py` 與本 `SKILL.md` 位於同一目錄。
@@ -173,29 +202,95 @@ metadata:
 > 則腳本路徑為 `/foo/bar/skill-router-nexus/skill_reader.py`。
 
 ```bash
-# 掃描多個分類（推薦）—— <SKILL_DIR> 替換為本檔所在目錄的實際絕對路徑
-python "<SKILL_DIR>/skill_reader.py" --category Agent-Plan --category Coding --category CI-CD-and-Monitoring
+# 先掃描目前階段的主要分類—— <SKILL_DIR> 替換為本檔所在目錄的實際絕對路徑
+python -B "<SKILL_DIR>/skill_reader.py" --category Video-Generation
 
-# 也可用逗號分隔一次傳入多分類
-python "<SKILL_DIR>/skill_reader.py" --category Agent-Plan,Coding,CI-CD-and-Monitoring
-
-# 掃描全部分類（慎用，避免 token 浪費）
-python "<SKILL_DIR>/skill_reader.py"
+# 只有主要分類不足時，才另行掃描第 2 個分類
+python -B "<SKILL_DIR>/skill_reader.py" --category Creative-Video-Generation
 ```
 `skill_reader.py` 會自動解析每個子 skill 的 frontmatter 並輸出 `name`、`description`、`path`。
-優先掃描 Step 1 選出的候選分類，再決定是否擴大掃描範圍。
+每次掃描只處理目前階段；第一個分類已足夠時停止，不繼續擴張。
+同一任務中已掃描過的分類結果可以直接重用於其他階段，不重跑命令；但仍須按新階段的完成條件重新評分候選。
+掃描全部分類僅限 Router 維護、索引診斷或使用者明確要求的全庫盤點，不屬於一般五階段任務路由。
 
-### Step 3 — 根據輸出進行 mapping
-比對 `skill_reader.py` 輸出的 `description` 與任務，從每個命中分類至少挑 1 個 skill。
-總數建議 2 到 6 個 skill；複合型任務可提高到 8 個，但仍維持最小必要載入。
+### Step 3 — 每階段保留 1 到 4 個合格候選
 
-### Step 4 — On-demand 載入選定 skill
-分批讀取這些選定 skill 的完整 `SKILL.md`（先主分類，再輔助分類），依其指令執行任務。
+比對 `description` 與目前階段的完成條件，依直接性排序並建立 shortlist：
 
-### Step 5 — 回報來源路徑
-完成後必須告知使用者：
-> 「已使用 `skill-router-nexus → Agent-Plan + Coding → gstack-plan-eng-review + systematic-debugging` 完成任務」
-> ....
+若掃描結果的 description 缺失，不得直接淘汰或只靠 skill 名稱猜測。針對該候選讀取 `SKILL.md` 的 frontmatter、標題與開頭用途段落後再評分，並將缺少有效 frontmatter 記為 metadata debt；這種針對性 discovery 不等於載入完整 skill 指令。
+
+1. 每個啟用階段至少保留 1 個、最多 4 個合格候選 skill。
+2. 候選必須直接提供目前階段需要的能力；僅有關鍵字重疊或鄰近用途不算合格。
+3. 先將實體檔解析為 `resolved absolute path`；Windows 路徑以不區分大小寫比較，相同路徑只保留一次。
+4. 跨分類但內容相同的副本以 `SKILL.md` 的 SHA-256 分組，選擇正規化後字典序最小的路徑作為 canonical 代表。Discovery 階段允許為此進行 hash-only 讀取；hash-only 不等於載入 skill 指令。
+5. 同一個 skill 可同時列入多個階段，但要分別說明它如何滿足各階段完成條件。
+6. 第一個分類找不到合格候選時，才掃描第 2 個分類；兩個分類都找不到時，將該階段標記為 `UNRESOLVED` 並明確記錄缺少的能力。
+
+所有必要階段都有合格候選時，狀態為 `READY` 並正常進入 Step 4。若 `UNDERSTAND`、`EXECUTE`、`VERIFY` 或 `DELIVER` 為 `UNRESOLVED`，依下列降級路徑處理：
+
+- 已解析階段仍可進入 Step 4，僅執行不依賴缺口的安全工作；跳過依賴未解析能力的行動。
+- 已取得部分可用結果時標記 `PARTIAL`；無法產生可用結果時標記 `BLOCKED`。
+- 不得宣告 `COMPLETED`，也不得用鄰近 skill 冒充缺少的能力。
+- `DELIVER` 未解析時仍允許輸出最小阻塞報告，只包含真實狀態、缺少能力與需要的下一步；此例外不代表 `DELIVER` 已覆蓋。
+
+### Step 4 — On-demand 載入並依序執行
+
+依 `UNDERSTAND → PLAN（若啟用）→ EXECUTE → VERIFY → DELIVER` 的順序處理：
+
+1. 每個階段先完整讀取排名最高的 1 個主 skill。
+2. 只有主 skill 留下明確能力缺口時，才讀取第 2 個輔助 skill。
+3. 候選 shortlist 只是比較集合，不等於全部載入；每階段通常載入 1 個、最多 2 個 skill。
+4. 若已載入的 skill 能覆蓋後續階段，直接重用並在帳本中註明，不重複讀取。
+5. 依選定 skill 的指令完成該階段，達成完成條件後才移至下一階段。
+
+不得使用固定的全任務 skill 配額。以必要階段全部被直接覆蓋為停止條件，而不是以載入數量作為完成標準。
+
+#### 複合 workflow 的 dependency 載入
+
+若已選中的主 skill 明確宣告內部階段或 reference dependency，可由該主 skill 在執行到對應階段時按需載入：
+
+1. workflow controller 是 Router shortlist 中的一級候選；內部 dependency 不得再冒充新的獨立候選或增加分類命中數。
+2. dependency 必須由主 skill 以明確相對路徑及載入條件宣告；禁止靠名稱猜測、全目錄掃描或一次全部預載。
+3. 每個 dependency 只能在流程到達其階段時讀取，並記錄在同一份路由帳本；未實際讀取的 dependency 不得宣稱已使用。
+4. 每階段最多 2 個 skill 的限制仍適用於 Router 選出的獨立 skill；主 skill 內的 reference dependency 屬 progressive disclosure，不另計為 skill。
+5. dependency 不得繞過必要階段、權限、安全規則或完成門檻，也不得取代 Router 的通用 VERIFY 與 DELIVER。
+
+#### 有界修訂循環
+
+若專用 VERIFY skill 產生具體失敗條件，且已選 workflow 明確提供 targeted revision，可在交付前執行：
+
+```text
+EXECUTE(revision) → VERIFY → EXECUTE(revision) → VERIFY
+```
+
+- 每輪沿用穩定的 criterion／issue ID，只處理已驗證的缺口。
+- 進入循環前必須有使用者指定或 workflow 宣告的最大輪數；沒有指定時採用主 skill 的較小安全預設。
+- 每輪修改後都要取得較新的驗證證據，不得因檔案已變更就視為通過。
+- 通過、耗盡預算、使用者停止或缺口不可行時立即結束，並把真實狀態交給 DELIVER。
+
+### Step 5 — 驗證、交付並回報來源路徑
+
+交付前重新檢查路由帳本。只有所有必要階段都有 skill 覆蓋，且 `VERIFY` 已取得充分的新鮮證據時，才可宣告 `COMPLETED`。
+
+`VERIFY` 證據至少記錄：檢查命令或資料來源、執行時間或 revision、exit code／斷言結果、失敗數與未檢項。證據必須晚於最後一次修改；檢查失敗、證據過舊或缺少必要檢查時，只能回報 `PARTIAL` 或 `BLOCKED`。
+
+最終回覆依序包含：
+
+1. **結果**：先說明完成了什麼或目前真實狀態。
+2. **交付物**：提供答案、預覽、可點擊檔案路徑或必要操作資訊。
+3. **驗證**：列出實際檢查、關鍵證據與未通過項目。
+4. **缺口／下一步**：只在仍有阻塞或需要使用者決策時提供。
+5. **路由來源**：按階段列出使用的分類與 skill；`PLAN` 跳過時一併說明理由。
+
+簡短任務可以合併前四項，但仍須保持「結果先行、證據可見、缺口誠實」。來源格式例如：
+
+> 狀態：`<COMPLETED|PARTIAL|BLOCKED>`
+> 已使用 `skill-router-nexus` 處理任務：
+> - `UNDERSTAND`：`<分類> → <skill-name>`
+> - `PLAN`：`SKIPPED（目標明確且低風險）`
+> - `EXECUTE`：`<分類> → <skill-name>`
+> - `VERIFY`：`<分類> → <skill-name>`
+> - `DELIVER`：`<分類> → <skill-name>`
 
 ---
 
@@ -206,6 +301,10 @@ python "<SKILL_DIR>/skill_reader.py"
 | 假設任何子 skill 已載入 | 每次 session 必須重新路由 |
 | 直接進入子資料夾而不讀此檔 | 此檔是強制入口，不可繞過 |
 | 直接查詢或搜尋子 skill 而不先讀此檔 | 查詢行為同樣必須經由路由流程 |
-| 跨域任務只命中單一分類就結束 | 容易遺漏關鍵能力，降低路由品質 |
-| 命中分類後只選 1 個 skill 且不做比對 | 缺乏備援與交叉驗證，風險較高 |
+| 為整個任務固定分類或 skill 總數 | 數量不能證明生命週期覆蓋完整 |
+| 為填滿配額選擇旁支 skill | 關鍵字相關不等於能完成目前階段 |
+| 將 1 到 4 個候選全部載入 | 候選用於比較，實際載入應按缺口逐一增加 |
+| 將同一 skill 的跨分類副本重複計數或載入 | 會製造虛假的多樣性並浪費 context |
+| 必要階段仍為 `UNRESOLVED` 卻宣告完整完成 | 應揭露能力缺口並限制完成聲明 |
+| 沒有新鮮驗證證據便宣告完成 | 完成狀態必須由實際檢查支持 |
 | 一次性 pre-load 整個分類 | 浪費 token，違反最小載入原則 |
