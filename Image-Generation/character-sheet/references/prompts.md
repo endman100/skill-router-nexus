@@ -59,11 +59,11 @@ Avoid: beautification, retouching, morphological redesign, head rotation, perspe
 
 ### Strong-expression default package
 
-- `HAPPY`: `Create an unmistakably happy expression using a broad genuine open-mouth smile, clearly visible natural upper teeth, lifted mouth corners, raised cheeks, subtle smile lines, and both eyes engaged and slightly narrowed while remaining open. The emotion must read immediately at thumbnail size, not as a polite smile.`
-- `ANGRY`: `Create an unmistakably angry expression using eyebrows drawn clearly downward and inward, a focused intense stare with both eyes open, tense lower eyelids and nose area, firmly pressed lips with lowered corners, and natural jaw tension. Keep the mouth closed; do not scream.`
+- `HAPPY`: `Create an unmistakably happy expression using a broad genuine open-mouth smile, clearly visible natural upper teeth, lifted mouth corners, raised cheeks, and subtle smile lines. Simultaneously close only the eye on the LEFT SIDE OF THE IMAGE as viewed by the viewer, and keep the eye on the RIGHT SIDE OF THE IMAGE fully open with a stable forward gaze. The happy emotion and the unilateral eye closure are two separate mandatory conditions; satisfy both. Do not close both eyes and do not swap sides. The emotion must read immediately at thumbnail size, not as a polite smile.`
+- `ANGRY`: `Create an unmistakably angry expression using eyebrows drawn clearly downward and inward, a focused intense stare, tense lower eyelids and nose area, firmly pressed lips with lowered corners, and natural jaw tension. Simultaneously close only the eye on the RIGHT SIDE OF THE IMAGE as viewed by the viewer, and keep the eye on the LEFT SIDE OF THE IMAGE fully open with a stable forward gaze. The angry emotion and the unilateral eye closure are two separate mandatory conditions; satisfy both. Do not close both eyes and do not swap sides. Keep the mouth closed; do not scream.`
 - `NORMAL`: copy the accepted neutral identity anchor unchanged. Do not call ImageGen.
 
-Use this package unless the user names different expressions. Expression intensity may deform the relevant facial muscles, but must not alter the underlying identity.
+Use this package unless the user names different expressions. Expression intensity may deform the relevant facial muscles, but must not alter the underlying identity. Inspect both generated expression assets at full size and reject any result that loses the emotion, closes the wrong eye, closes both eyes, or fails to keep the opposite eye visibly open.
 
 ## Targeted facial edit
 
@@ -82,4 +82,4 @@ For side-specific eye edits, write both the visual side and the invariant:
 Close the eye on the LEFT SIDE OF THE IMAGE as viewed by the viewer. Keep the eye on the RIGHT SIDE OF THE IMAGE fully open and unchanged. This is viewer-relative, not the character's anatomical left.
 ```
 
-Use targeted facial edits only when the user asks for a specific isolated feature change. Do not use the one-feature lock for the default `HAPPY` or `ANGRY` assets because strong emotions require coordinated changes across the face.
+Use targeted facial edits when the first expression generation has the correct emotion but the wrong unilateral eye state. Edit the accepted expression asset rather than regenerating the whole face: make one eye-state correction, preserve the emotion and every other feature, then re-check both simultaneous requirements.

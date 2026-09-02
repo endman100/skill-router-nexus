@@ -68,7 +68,11 @@ def main() -> None:
         require(cells[0][3] == cells[1][1], "Expression rows 1 and 2 have a gap")
         require(cells[1][3] == cells[2][1], "Expression rows 2 and 3 have a gap")
         require(cells[2][3] == image.height, "Expression column does not reach the bottom")
-        require(all(cell[0] == 1680 and cell[2] == image.width for cell in cells), "Expression cell widths differ")
+        expression_left = cells[0][0]
+        require(
+            all(cell[0] == expression_left and cell[2] == image.width for cell in cells),
+            "Expression cell widths differ",
+        )
         for name, placement in expressions.items():
             cell_left, cell_top, cell_right, cell_bottom = placement["cell"]
             label_left, label_top, label_right, label_bottom = placement["label_box"]
@@ -79,12 +83,16 @@ def main() -> None:
         line_y = ruler["height_line_y"]
         red_count = sum(
             1
-            for x in range(ruler["x"], 1680)
+            for x in range(ruler["x"], expression_left)
             if pixels[x, line_y][0] > 180 and pixels[x, line_y][1] < 60 and pixels[x, line_y][2] < 60
         )
-        line_span = 1680 - ruler["x"]
+        line_span = expression_left - ruler["x"]
         occluded_width = sum(
-            max(0, min(1680, placement["placed_box"][2]) - max(ruler["x"], placement["placed_box"][0]))
+            max(
+                0,
+                min(expression_left, placement["placed_box"][2])
+                - max(ruler["x"], placement["placed_box"][0]),
+            )
             for placement in views.values()
         )
         minimum_red_count = line_span - occluded_width - 16
@@ -95,7 +103,7 @@ def main() -> None:
 
         baseline_count = sum(
             1
-            for x in range(160, 1680)
+            for x in range(160, expression_left)
             if all(channel < 70 for channel in pixels[x, image.height - 1])
         )
         require(baseline_count > 1000, f"Zero baseline coverage is too short: {baseline_count}px")

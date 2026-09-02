@@ -15,12 +15,12 @@ Produce the final sheet in two layers: ImageGen creates character pixels; Python
    - generate the front from the original reference plus the accepted identity anchor;
    - generate the left profile and back from the accepted front plus the identity anchor, using the original reference only as secondary evidence.
 4. Create the three default expression assets from the identity anchor:
-   - `HAPPY`: generate a strong, immediately readable happy expression;
-   - `ANGRY`: generate a strong, immediately readable angry expression;
+   - `HAPPY`: generate a strong, immediately readable happy expression while closing only the eye on the `LEFT SIDE OF THE IMAGE` and keeping the eye on the `RIGHT SIDE OF THE IMAGE` fully open;
+   - `ANGRY`: generate a strong, immediately readable angry expression while closing only the eye on the `RIGHT SIDE OF THE IMAGE` and keeping the eye on the `LEFT SIDE OF THE IMAGE` fully open;
    - `NORMAL`: copy the accepted neutral identity anchor unchanged; do not send it through ImageGen.
-   User-requested expressions override this default package.
+   Emotion and unilateral eye state are simultaneous requirements, not alternatives. User-requested expressions override this default package.
 5. Keep identity, age presentation, body proportions, hairstyle, accessories, clothing, rendering treatment, and crop logic consistent across assets. Preserve the reference outfit unless the user requests a change.
-6. Verify that the three body views and three facial images are individually separable. Regenerate only the failed generated asset; never regenerate `NORMAL` when it is the accepted anchor.
+6. Verify that the three body views and three facial images are individually separable. For the default expression package, also verify that `HAPPY` has only the image-left eye closed, `ANGRY` has only the image-right eye closed, and the opposite eye remains visibly open in each asset. Regenerate only the failed generated asset; never regenerate `NORMAL` when it is the accepted anchor.
 7. For a local asset edit, inspect it before ImageGen editing. Make one targeted change per call and repeat all invariants.
 8. Resolve height before generating Body Data: use a user value first, then trustworthy scale or metadata, then an LLM visual estimate when at least one usable head-to-sole full-body reference exists. Use `160 cm` only when no usable full-body reference exists. Read [references/body-data-estimation.md](references/body-data-estimation.md) for source labels and estimation limits.
 9. Prepare Body Data. Preserve user-supplied measurements exactly; otherwise have the LLM estimate the missing standard fields from the accepted body views, calibrated to the known height. Read [references/body-data-estimation.md](references/body-data-estimation.md) for the estimation and labeling rules.
@@ -54,9 +54,10 @@ Read [references/prompts.md](references/prompts.md) when generating or editing t
 - Treat the accepted neutral identity anchor as the face authority for every generated asset.
 - Preserve face shape, eye spacing, nose geometry, mouth width, jaw, chin, natural asymmetry, visible skin details, hairline, and apparent age. Do not retouch, beautify, or redesign them.
 - Allow coordinated facial-muscle deformation for expressions while keeping the underlying facial morphology unchanged.
-- Make `HAPPY` visibly joyful through an open-mouth smile, natural visible upper teeth, lifted mouth corners and cheeks, and engaged eyes.
-- Make `ANGRY` visibly angry through brows drawn down and inward, an intense gaze, lower-eyelid and nose tension, pressed lips, and jaw tension. Keep the mouth closed unless the user requests otherwise.
+- Make `HAPPY` visibly joyful through an open-mouth smile, natural visible upper teeth, lifted mouth corners and cheeks. At the same time, close only the eye on the `LEFT SIDE OF THE IMAGE`; keep the eye on the `RIGHT SIDE OF THE IMAGE` fully open. Do not weaken either requirement.
+- Make `ANGRY` visibly angry through brows drawn down and inward, an intense gaze, lower-eyelid and nose tension, pressed lips, and jaw tension. At the same time, close only the eye on the `RIGHT SIDE OF THE IMAGE`; keep the eye on the `LEFT SIDE OF THE IMAGE` fully open. Keep the mouth closed unless the user requests otherwise. Do not weaken either requirement.
 - Reuse the neutral anchor unchanged for `NORMAL`; do not apply a nominal or identity-preserving edit to it.
+- Treat the emotional expression and unilateral eye pose as two independent constraints that must both pass. Never satisfy one by dropping the other, closing both eyes, or swapping sides.
 
 ## Measurement Contract
 
