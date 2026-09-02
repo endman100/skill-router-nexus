@@ -18,8 +18,8 @@
     {"name": "back", "file": "back.png", "label": "BACK"}
   ],
   "expressions": [
-    {"name": "neutral", "file": "expression-1.png", "label": "NEUTRAL"},
-    {"name": "smile", "file": "expression-2.png", "label": "SMILE"},
-    {"name": "displeased", "file": "expression-3.png", "label": "DISPLEASED"}
+    {"name": "happy", "file": "expression-1.png", "label": "HAPPY"},
+    {"name": "angry", "file": "expression-2.png", "label": "ANGRY"},
+    {"name": "normal", "file": "expression-3.png", "label": "NORMAL"}
   ]
 }

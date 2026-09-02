@@ -2,32 +2,68 @@
 
 Use English prompts for generation stability. Add only user-supplied character facts and reference roles; keep style unspecified unless the reference or user establishes one.
 
-## Full-body view
+## Neutral identity anchor
+
+Use the clearest identity-bearing reference. For a real person, prefer the image with the least occlusion and perspective distortion.
+
+```text
+Use case: identity-preserve
+Asset type: authoritative neutral identity anchor for a character turnaround sheet
+Input images: Image 1 is the authoritative identity reference.
+Primary request: Create one exact frontal head-and-upper-shoulders neutral portrait of the same subject on a pure uniform white background.
+Constraints: preserve facial morphology, face shape, eye spacing, nose bridge, width, tip and nostril geometry, mouth width, jaw, chin, natural asymmetry, skin tone and texture, visible moles or marks, hairline, hairstyle, apparent age, clothing neckline, and rendering treatment. Use a level head, direct gaze, closed relaxed mouth, and neutral expression.
+Avoid: beautification, retouching, facial symmetry correction, age change, makeup change, identity blending, head rotation, perspective distortion, text, border, watermark.
+```
+
+Accept this asset before generating other views. It is the sole face authority for expressions.
+
+## Front full-body view
 
 ```text
 Use case: identity-preserve
 Asset type: isolated character turnaround source asset
-Input images: Image 1 is the authoritative character reference.
-Primary request: Create one full-body <FRONT / LEFT PROFILE / BACK> view of the same character.
+Input images: Image 1 is the authoritative character reference. Image 2 is the accepted neutral identity anchor and controls the face.
+Primary request: Create one full-body FRONT view of the same character.
 Composition: upright neutral turnaround pose, entire body visible from the topmost hair or accessory to the soles, arms relaxed slightly away from the torso, feet visible, centered, orthographic-like presentation.
 Scene/backdrop: pure uniform white background; no floor plane.
-Constraints: preserve identity, apparent age, body proportions, hairstyle, accessories, clothing design, colors, and rendering treatment from the reference. Preserve the original outfit unless the user explicitly requests another outfit. Reproduce only visible garment details; do not invent badges, school emblems, logos, printed text, pocket stripes, or decorative trim. Keep pose suitable for alignment with the other views.
+Constraints: use Image 2 as the face authority. Preserve apparent age, facial morphology, natural asymmetry, body proportions, hairstyle, accessories, clothing design, colors, and rendering treatment from the references. Preserve the original outfit unless the user explicitly requests another outfit. Reproduce only visible garment details; do not invent badges, school emblems, logos, printed text, pocket stripes, or decorative trim. Keep pose suitable for alignment with the other views.
 Avoid: perspective exaggeration, dynamic pose, cropped head or feet, shadow, reflection, props, text, ruler, measurement marks, borders, watermark.
 ```
 
-Generate each view separately. If the reference does not show the back, infer the minimum coherent back construction and disclose that inference.
+## Dependent profile or back view
+
+```text
+Use case: identity-preserve
+Asset type: isolated character turnaround source asset
+Input images: Image 1 is the accepted front full-body asset and controls body proportions, outfit construction, hair length, figure scale, pose family, and rendering treatment. Image 2 is the accepted neutral identity anchor and controls facial identity. Image 3 is the original character reference and is secondary evidence only.
+Primary request: Create one full-body <LEFT PROFILE / BACK> view of the same character.
+Composition: upright neutral turnaround pose, entire body visible from the topmost hair or accessory to the soles, arms relaxed slightly away from the torso, feet visible, centered, orthographic-like presentation. Match the accepted front asset's figure scale and vertical crop.
+Scene/backdrop: pure uniform white background; no floor plane.
+Constraints: preserve identity, apparent age, body proportions, hairstyle, accessories, clothing design, colors, and rendering treatment. Preserve the original outfit unless the user explicitly requests another outfit. Reproduce only supported garment details; if the back is hidden, infer the minimum coherent back construction.
+Avoid: perspective exaggeration, dynamic pose, cropped head or feet, shadow, reflection, props, text, ruler, measurement marks, borders, watermark.
+```
+
+Generate each view separately. Disclose inferred hidden details.
 
 ## Facial-expression source
 
 ```text
 Use case: identity-preserve
 Asset type: facial-expression source asset for a character turnaround sheet
-Input images: Image 1 is the authoritative face reference.
+Input images: Image 1 is the accepted neutral identity anchor and the sole face authority.
 Primary request: Create a centered front-facing head-and-upper-shoulders crop with <EXPRESSION>.
 Scene/backdrop: pure uniform white background.
-Constraints: preserve exact character identity, facial proportions, head angle, hairstyle, hair accessories, clothing neckline, colors, rendering treatment, crop, and scale used by the other facial assets.
-Avoid: head rotation, perspective distortion, extra accessories, text, border, watermark.
+Constraints: preserve the same underlying facial morphology, face shape, eye spacing, nose geometry, mouth width, jaw, chin, natural asymmetry, skin tone and texture, visible marks, hairline, hairstyle, hair accessories, apparent age, clothing neckline, colors, rendering treatment, crop, and scale. Coordinated facial-muscle movement is allowed and required when necessary for the requested emotion.
+Avoid: beautification, retouching, morphological redesign, head rotation, perspective distortion, extra accessories, text, border, watermark.
 ```
+
+### Strong-expression default package
+
+- `HAPPY`: `Create an unmistakably happy expression using a broad genuine open-mouth smile, clearly visible natural upper teeth, lifted mouth corners, raised cheeks, subtle smile lines, and both eyes engaged and slightly narrowed while remaining open. The emotion must read immediately at thumbnail size, not as a polite smile.`
+- `ANGRY`: `Create an unmistakably angry expression using eyebrows drawn clearly downward and inward, a focused intense stare with both eyes open, tense lower eyelids and nose area, firmly pressed lips with lowered corners, and natural jaw tension. Keep the mouth closed; do not scream.`
+- `NORMAL`: copy the accepted neutral identity anchor unchanged. Do not call ImageGen.
+
+Use this package unless the user names different expressions. Expression intensity may deform the relevant facial muscles, but must not alter the underlying identity.
 
 ## Targeted facial edit
 
@@ -46,10 +82,4 @@ For side-specific eye edits, write both the visual side and the invariant:
 Close the eye on the LEFT SIDE OF THE IMAGE as viewed by the viewer. Keep the eye on the RIGHT SIDE OF THE IMAGE fully open and unchanged. This is viewer-relative, not the character's anatomical left.
 ```
 
-## Default three-face package
-
-- Face 1: natural open mouth; both eyes unchanged.
-- Face 2: eye on the left side of the image fully closed; the other eye unchanged.
-- Face 3: eye on the right side of the image visibly half closed; the other eye unchanged.
-
-Keep the primary emotion labels chosen by the user. Facial-feature variations do not require renaming existing labels unless requested.
+Use targeted facial edits only when the user asks for a specific isolated feature change. Do not use the one-feature lock for the default `HAPPY` or `ANGRY` assets because strong emotions require coordinated changes across the face.
