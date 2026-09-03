@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
-from PIL import Image, ImageChops, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 
 CANVAS = (2300, 1876)
@@ -21,7 +22,7 @@ BODY_PANEL_WIDTH = (BODY_RIGHT - BODY_LEFT) // 3
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Compose a measured character turnaround sheet.")
+    parser = argparse.ArgumentParser(description="Compose a character sheet; no rulers by default.")
     parser.add_argument("asset_dir", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--config", required=True, type=Path)
@@ -40,10 +41,28 @@ def load_font(size: int, bold: bool = False) -> ImageFont.ImageFont:
     return ImageFont.load_default()
 
 
-def foreground_bbox(image: Image.Image, threshold: int = 18) -> tuple[int, int, int, int]:
-    rgb = image.convert("RGB")
-    difference = ImageChops.difference(rgb, Image.new("RGB", rgb.size, "white")).convert("L")
-    bbox = difference.point(lambda value: 255 if value > threshold else 0).getbbox()
+def on_white(image: Image.Image) -> Image.Image:
+    """Respect alpha before measuring or pasting; hidden RGB is not foreground."""
+    rgba = image.convert("RGBA")
+    white = Image.new("RGBA", image.size, "white")
+    return Image.alpha_composite(white, rgba).convert("RGB")
+
+
+def foreground_bbox(image: Image.Image, threshold: int = 6) -> tuple[int, int, int, int]:
+    """Retain faint clothing edges while suppressing isolated near-white noise.
+
+    Ignore the 0-5 channel-level background variation seen in generated white
+    assets while retaining the pale edges discarded by the former threshold 18.
+    This is white-margin detection, not semantic segmentation. Pure-white details
+    indistinguishable from the background still require visual crop review.
+    """
+    rgb = on_white(image)
+    channels = ImageChops.difference(rgb, Image.new("RGB", rgb.size, "white")).split()
+    difference = ImageChops.lighter(ImageChops.lighter(channels[0], channels[1]), channels[2])
+    faint = difference.point(lambda value: 255 if value > threshold else 0)
+    strong = difference.point(lambda value: 255 if value > max(18, threshold) else 0)
+    mask = ImageChops.lighter(faint.filter(ImageFilter.MedianFilter(3)), strong)
+    bbox = mask.getbbox()
     if bbox is None:
         raise ValueError("No non-white subject found")
     return bbox
@@ -53,7 +72,7 @@ def crop_subject(path: Path) -> Image.Image:
     if not path.is_file():
         raise FileNotFoundError(path)
     with Image.open(path) as source:
-        image = source.convert("RGB")
+        image = on_white(source)
     return image.crop(foreground_bbox(image))
 
 
@@ -112,6 +131,8 @@ def require_entries(config: dict[str, Any], key: str, count: int) -> list[dict[s
     for entry in entries:
         if not isinstance(entry, dict) or not all(entry.get(field) for field in ("name", "file", "label")):
             raise ValueError(f"Every config.{key} entry needs name, file, and label")
+    if len({entry["name"] for entry in entries}) != count:
+        raise ValueError(f"config.{key} names must be unique")
     return entries
 
 
@@ -140,25 +161,60 @@ def draw_body_data(
 
 
 def main() -> None:
+    global CANVAS, BODY_RIGHT, EXPRESSION_LEFT, BODY_PANEL_WIDTH
     args = parse_args()
     config = json.loads(args.config.read_text(encoding="utf-8"))
+    mode = config.get("layout_mode", "unmeasured")
+    if mode == "unmeasured":
+        from compose_unmeasured_sheet import compose
+        canvas, manifest = compose(args.asset_dir, config)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        canvas.save(args.output, optimize=True)
+        manifest.update(output=str(args.output.resolve()), config=str(args.config.resolve()))
+        manifest_path = args.output.with_name(f"{args.output.stem}.manifest.json")
+        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        print(args.output.resolve())
+        print(manifest_path.resolve())
+        return
+    if mode != "measured":
+        raise ValueError("layout_mode must be unmeasured or measured")
     views = require_entries(config, "views", 3)
     expressions = require_entries(config, "expressions", 3)
     height_cm = float(config.get("height_cm", 160.0))
     height_source = str(config.get("height_source", "default"))
-    allowed_height_sources = {"user", "scale", "visual_estimate", "default"}
+    allowed_height_sources = {"user", "scale", "visual_estimate", "design_prior", "default"}
     if height_source not in allowed_height_sources:
         raise ValueError(
-            "height_source must be one of: user, scale, visual_estimate, default"
+            "height_source must be one of: user, scale, visual_estimate, design_prior, default"
         )
     if not 0 < height_cm <= RULER_MAX_CM:
         raise ValueError("height_cm must be greater than 0 and no greater than 200")
+    height_evidence = None
+    if height_source == "design_prior":
+        evidence_name = config.get("height_evidence_file")
+        if not evidence_name:
+            raise ValueError("design_prior requires height_evidence_file")
+        evidence_path = args.asset_dir / evidence_name
+        evidence_raw = evidence_path.read_bytes()
+        evidence = json.loads(evidence_raw.decode("utf-8-sig"))
+        if evidence.get("height_source") != height_source or evidence.get("height_cm") != height_cm:
+            raise ValueError("Height evidence does not match compositor config")
+        if evidence.get("physical_height_cm") is not None:
+            raise ValueError("A design prior must not claim physical height")
+        height_evidence = {"file": str(evidence_path.resolve()), "sha256": hashlib.sha256(evidence_raw).hexdigest()}
     body_data = config.get("body_data", [])
     if not isinstance(body_data, list) or not all(isinstance(item, str) for item in body_data):
         raise ValueError("body_data must be a list of strings")
 
     height_line_y = round(BASELINE_Y - height_cm * PIXELS_PER_CM)
     target_height = BASELINE_Y - height_line_y
+    # Expand columns instead of changing a character's width-to-height ratio.
+    if config.get("auto_expand_width", False):
+        sizes = [crop_subject(args.asset_dir / entry["file"]).size for entry in views]
+        BODY_PANEL_WIDTH = max(525, max(round(w * target_height / h) for w, h in sizes) + 24)
+        BODY_RIGHT = BODY_LEFT + BODY_PANEL_WIDTH * 3
+        EXPRESSION_LEFT = BODY_RIGHT
+        CANVAS = (BODY_RIGHT + 575, CANVAS[1])
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
     canvas = Image.new("RGB", CANVAS, "white")
@@ -185,7 +241,9 @@ def main() -> None:
 
     draw.line((RULER_X, height_line_y, BODY_RIGHT, height_line_y), fill="#e00000", width=4)
     height_value = f"{height_cm:g}"
-    height_label = f"{'~' if height_source == 'visual_estimate' else ''}{height_value} cm"
+    height_label = f"{'~' if height_source in {'visual_estimate', 'design_prior'} else ''}{height_value} cm"
+    if height_source == "design_prior":
+        height_label += " (SET)"
     label_width = max(210, len(height_label) * 18)
     draw.rounded_rectangle((120, height_line_y - 52, 120 + label_width, height_line_y - 8), 8, fill="white")
     draw.text((135, height_line_y - 48), height_label, font=label_font, fill="#e00000")
@@ -260,9 +318,11 @@ def main() -> None:
 
     canvas.save(args.output, optimize=True)
     manifest = {
+        "layout_mode": "measured",
         "output": str(args.output.resolve()),
         "config": str(args.config.resolve()),
         "canvas": list(CANVAS),
+        "height_evidence": height_evidence,
         "ruler": {
             "x": RULER_X,
             "max_cm": RULER_MAX_CM,

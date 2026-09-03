@@ -1,75 +1,77 @@
-# Body Data Estimation
+# Body Data and Height Evidence
 
-Use this procedure only when one or more Body Data fields are missing. The result describes the accepted generated character representation, not a physical or clinical measurement of a real person.
+Use this reference only for explicitly requested measured output (`layout_mode: "measured"`). The default unmeasured layout skips all height inference, fallback values, rulers, and Body Data.
 
-## Required anchor
+Describe the accepted character representation, not a clinical measurement of a real person. Preserve supplied measurements exactly; distinguish estimates from design choices.
 
-Obtain height from, in order of authority:
+## Resolve height
 
-1. a value explicitly supplied by the user;
-2. trustworthy source metadata or a visible calibrated scale;
-3. an LLM visual estimate when at least one source image shows the complete upright figure from head or topmost hair to both feet or soles;
-4. the default character-setting height of `160 cm` when no usable complete full-body reference exists.
+1. Use an explicit factual height (`user`) or trustworthy source metadata first.
+2. Inspect original references for independent metric evidence: a labeled ruler, an object with verified dimensions, or a person of supplied height. Check that endpoints, subject extent, geometry, and scale are usable.
+3. Use `scale` only when a justified metric calculation is possible. Otherwise a usable complete original full-body reference may support a low-confidence `visual_estimate`; save its rationale and uncertainty range and round to 5 cm.
+4. For a cropped or highly stylized reference without metric evidence, use an explicitly selected `design_prior` when the user wants a practical character setting. State the assumption. Do not describe a proposed or accepted height as discovered fact.
+5. With no supported inference or selected design setting, use the agreed `160 cm` fallback (`default`), explicitly identified as default.
 
-Record the selected source in config as `height_source`: `user`, `scale`, `visual_estimate`, or `default`.
+Neither a complete silhouette nor a head-count ratio supplies absolute centimeters by itself. Do not map chibi/realistic drawing styles to fixed centimeter values. Generated legs, body views, rulers, shadows, or props add no independent evidence about the original subject's height.
 
-A scale-free full-body estimate is a low-confidence character-setting estimate, not a physical measurement. Judge overall proportions, apparent age, body build, camera perspective, and any ordinary environmental cues only as weak supporting evidence. Round to the nearest 5 cm and display it with `~`. Do not claim that body proportions alone prove absolute height.
+## Reproducible evidence
 
-Do not visually estimate height from a face-only, bust, seated, substantially cropped, strongly foreshortened, or severely perspective-distorted image. Use the `160 cm` default in those cases and label it as a default setting rather than an image estimate.
+Save `height-input.json`, then run:
 
-## Standard fields
-
-Fill these fields in this order:
-
-1. Weight
-2. Shoulder width
-3. Arm length
-4. Foot length
-5. Bust circumference
-6. Waist circumference
-7. Hip circumference
-8. Outseam
-9. Inseam
-
-User-supplied values override estimates and remain unprefixed. Prefix every LLM image estimate with `~`.
-
-## Estimation method
-
-1. Use the accepted full-body front view as the vertical reference, the profile view for body depth, and the back view as a consistency check. Prefer the least distorted view for each landmark.
-2. Map topmost hair or head to the soles using the resolved height. Estimate linear distances as proportions of that span:
-   - shoulder width: acromion to acromion;
-   - arm length: shoulder joint to wrist;
-   - foot length: heel to longest toe;
-   - outseam: natural waist to floor;
-   - inseam: crotch to floor.
-3. Estimate bust, waist, and hip circumference from the combined front width and profile depth. Treat these as lower-confidence values because a single rendered silhouette does not reveal a true cross-section.
-4. Estimate weight only as a rough visual body-build value at the known height. Do not infer health, diagnosis, or fitness.
-5. Round lengths and circumferences to whole centimeters and weight to a whole kilogram. Do not add decimal precision that the images cannot support.
-
-## Plausibility checks
-
-- `inseam < outseam < height`;
-- limb and foot lengths must be plausible relative to height;
-- bust, waist, and hip values must agree with both front width and profile depth;
-- clothing volume, camera perspective, hidden landmarks, and stylization reduce confidence;
-- if one field cannot be supported, write `<Field>: not reliably estimable` for that field only.
-
-## Output format
-
-Return only the list strings required by the compositor, for example:
-
-```json
-[
-  "Weight: ~26 kg",
-  "Shoulder width: ~31 cm",
-  "Arm length: ~44 cm",
-  "Foot length: ~19 cm",
-  "Bust circumference: ~70 cm",
-  "Waist circumference: ~60 cm",
-  "Hip circumference: ~74 cm",
-  "Outseam: ~73 cm",
-  "Inseam: ~55 cm"
-]
+```powershell
+python scripts/estimate_character_height.py height-input.json --output height-estimate.json
 ```
 
-In the final delivery, disclose: `LLM visual estimate; not physical measurement.`
+The script separates three paths:
+
+- `mode: scale`: use original-reference landmarks, a verified reference length, and compatible image geometry. It computes `height_cm = body_span_px / reference_span_px * reference_cm` and a pixel/length uncertainty interval. This simple ratio requires equal-scale, parallel measurement directions or a documented rectification. It is not a general perspective correction.
+- `mode: design_prior`: use a supplied `height_cm` and explicit `reason`. Optional generated landmarks describe proportions only. The output says `not_measured` and keeps physical height unknown.
+- `mode: unresolved`: record why metric scale is absent. Return no height; do not fabricate a conversion.
+
+Record `reference_kind` (`original` or `generated`), source file paths/hashes, top/chin/sole y-coordinates when available, source of the known size, geometry assumptions, pixel uncertainty, and selected height source. Use the same accepted assets and saved inputs for reruns. If manually placed landmarks change, retain both versions and rerun; test plausible endpoint perturbations.
+
+For a design prior, set `height_evidence_file: "height-estimate.json"` in the compositor config; the compositor requires matching height/source and records the evidence hash. For a subjective full-body `visual_estimate`, save the LLM rationale and range separately; this script is not a learned height predictor and does not validate that inference.
+
+For `scale`, choose a consistent endpoint definition (e.g. topmost hair to soles for the sheet). Do not call hair-top-to-shoe-bottom span barefoot stature. Do not treat an unknown shoe, phone, head, or door as a precisely known size. Foreshortened, seated, cropped, or unequal-depth subjects need additional references or valid calibrated geometry; do not repair them by inventing scale.
+
+Example design input:
+
+```json
+{
+  "mode": "design_prior",
+  "height_cm": 150,
+  "reason": "User accepted a 150 cm character-setting trial; no metric reference exists.",
+  "reference_kind": "generated",
+  "landmarks": {"top_y": 68, "chin_y": 542, "sole_y": 1473}
+}
+```
+
+Example scale input (illustrative test data, not this character):
+
+```json
+{
+  "mode": "scale",
+  "reference_kind": "original",
+  "landmarks": {"top_y": 100, "sole_y": 800},
+  "reference_span_px": 140,
+  "reference_cm": 30,
+  "reference_cm_error": 0.1,
+  "pixel_error": 1,
+  "geometry": "equal_scale",
+  "reason": "Verified 30 cm vertical target in the same frontoparallel plane."
+}
+```
+
+Geometry tests validate ruler placement, not height-estimation accuracy. Repeating the same input validates numerical reproducibility, not the correctness of the physical assumption. Only independent known-height data can validate height accuracy.
+
+For perspective metrology and its remaining scale factor, see [Criminisi et al., Single View Metrology](https://robots.ox.ac.uk/~vgg/publications/2000/Criminisi00a/).
+
+## Body Data
+
+Fill Weight, Shoulder width, Arm length, Foot length, Bust circumference, Waist circumference, Hip circumference, Outseam, and Inseam. Preserve user values; prefix image-based estimates with `~`. Do not add false decimal precision.
+
+Measure supported linear spans on accepted views relative to the selected height: shoulder-to-shoulder, shoulder-to-wrist, heel-to-toe, waist-to-sole, and crotch-to-sole. Check `inseam < outseam < height`. For circumferences, front width and profile depth are only weak evidence because clothing hides body cross-sections. Weight is not recoverable from stylized silhouettes; mark unsupported fields `not reliably estimable` rather than converting head count to kilograms.
+
+With a `design_prior`, derived lengths are design dimensions, not measurements of the original subject. Recompute them when the chosen scale changes. Do not silently apply human anthropometry to exaggerated chibi proportions. Keep uncertainty and field provenance in the sidecar, not as redundant image text.
+
+In delivery distinguish measured scale, low-confidence visual inference, and explicit character setting. Never say that aesthetics proved absolute height.

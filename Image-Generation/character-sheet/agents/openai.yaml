@@ -1,4 +1,4 @@
 interface:
   display_name: "Character Sheet"
-  short_description: "Generate measured character turnaround sheets"
-  default_prompt: "Use $character-sheet to turn my character reference into a measured three-view specification sheet."
+  short_description: "Create compact character sheets without rulers"
+  default_prompt: "Use $character-sheet to create a compact three-view sheet with three expressions, preserving my reference character and omitting rulers and body data unless I explicitly request them."

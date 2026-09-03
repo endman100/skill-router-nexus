@@ -1,10 +1,9 @@
 {
-  "layout_mode": "unmeasured",
-  "canvas_height_px": 1876,
-  "body_margin_px": 20,
-  "panel_side_padding_px": 16,
-  "expression_column_width_px": 575,
-  "identity_anchor": "identity-anchor.png",
+  "layout_mode": "measured",
+  "height_cm": 160.0,
+  "height_source": "default",
+  "auto_expand_width": true,
+  "body_data": [],
   "views": [
     {"name": "front", "file": "front.png", "label": "FRONT"},
     {"name": "profile", "file": "profile.png", "label": "LEFT PROFILE"},
