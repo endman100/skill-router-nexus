@@ -1,3 +1,8 @@
+---
+name: open-design-od-react-export
+description: Export an accepted Open Design artifact to a React application.
+---
+
 # Export To React
 
 Use this plugin when the user wants to hand an accepted Open Design artifact to a React app.

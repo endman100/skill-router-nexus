@@ -1,0 +1,79 @@
+{
+  "$schema": "./schemas/category-taxonomy.schema.json",
+  "schema_version": 2,
+  "categories": {
+    "Web-Design": {
+      "subcategories": [
+        {
+          "id": "design-research-and-direction",
+          "name": "Design Research & Direction",
+          "description": "Discovery, critique, design direction, taste, briefs, and design decisions before implementation."
+        },
+        {
+          "id": "ui-and-product-design",
+          "name": "UI & Product Design",
+          "description": "Interface systems, mobile and web product design, templates, conversion surfaces, and visual styling."
+        },
+        {
+          "id": "frontend-and-motion-implementation",
+          "name": "Frontend & Motion Implementation",
+          "description": "Frontend code, interactive motion, 3D experiences, and framework-specific implementation methods."
+        },
+        {
+          "id": "prototyping-and-site-builders",
+          "name": "Prototyping & Site Builders",
+          "description": "Rapid prototypes and sites built with canvases, low-code builders, generators, and wireframing tools."
+        },
+        {
+          "id": "media-docs-and-content",
+          "name": "Media, Docs & Content",
+          "description": "Visual media, documents, screenshots, speech, campaigns, and design-adjacent content workflows."
+        },
+        {
+          "id": "collaboration-and-operations",
+          "name": "Collaboration & Operations",
+          "description": "Design handoff, team coordination, operational artifacts, integrations, registries, and recurring design work."
+        }
+      ]
+    },
+    "Science": {
+      "subcategories": [
+        {
+          "id": "bioinformatics-and-omics",
+          "name": "Bioinformatics & Omics",
+          "description": "Sequences, genomics, transcriptomics, single-cell analysis, phylogenetics, proteomics, and biological knowledge graphs."
+        },
+        {
+          "id": "chemistry-and-drug-discovery",
+          "name": "Chemistry & Drug Discovery",
+          "description": "Molecular modeling, cheminformatics, medicinal chemistry, drug discovery, protein engineering, and materials analysis."
+        },
+        {
+          "id": "clinical-and-medical",
+          "name": "Clinical & Medical",
+          "description": "Clinical evidence, medical decision support, health data, medical imaging, pathology, neuroscience, and treatment planning."
+        },
+        {
+          "id": "lab-platforms-and-infrastructure",
+          "name": "Lab Platforms & Infrastructure",
+          "description": "Laboratory automation, research data platforms, shared resources, ELNs, microscopy repositories, and scalable compute."
+        },
+        {
+          "id": "physics-quantum-and-simulation",
+          "name": "Physics, Quantum & Simulation",
+          "description": "Astronomy, quantum computing, physical systems, mathematical modeling, engineering simulation, and what-if analysis."
+        },
+        {
+          "id": "scientific-data-and-ml",
+          "name": "Scientific Data & ML",
+          "description": "Statistics, machine learning, forecasting, graph analysis, scalable dataframes, visualization, and scientific data storage."
+        },
+        {
+          "id": "research-and-communication",
+          "name": "Research & Communication",
+          "description": "Literature discovery, hypothesis work, peer review, grants, scientific writing, diagrams, posters, slides, and research documents."
+        }
+      ]
+    }
+  }
+}

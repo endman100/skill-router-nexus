@@ -1,3 +1,8 @@
+---
+name: open-design-od-vue-export
+description: Export an accepted Open Design artifact to a Vue 3 project.
+---
+
 # Export To Vue
 
 Use this plugin when the user wants to hand an accepted Open Design artifact to a Vue 3 project.

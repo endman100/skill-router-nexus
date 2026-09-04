@@ -72,13 +72,13 @@ metadata:
 | 46 | `Video-and-Print/` | Video & Print | 此分類涵蓋照片托管與分享、3D 模型管理、數位翻頁書、名片與印刷品自動化、目錄網站建置、以及互動式展示板。適用於需要管理視覺媒體資產或自動化印刷品生產的場景。 |
 | 47 | `Video-Editing/` | Video Editing | 此分類涵蓋影片下載、影格擷取、影片託管管理、以及影片串流處理。適用於需要下載、裁切、擷取影片片段、或管理影片內容的場景。 |
 | 48 | `Video-Generation/` | Video Generation | 此分類涵蓋 AI 影片生成、虛擬人物影片、範本化影片製作、以及自動化影片剪輯與合成。適用於需要利用 AI 快速產出影片內容或建立虛擬主播影片的場景。 |
-| 49 | `Web-Design/` | Web Design | 此分類涵蓋前端網頁介面設計、HTML 互動元件建置、低程式碼網站建構、視覺化設計到程式碼轉換、以及網頁原型製作。適用於需要快速設計與建置網頁介面或互動式 Web 應用的場景。 |
+| 49 | `Web-Design/` | Web Design | 此分類涵蓋前端網頁介面設計、HTML 互動元件建置、低程式碼網站建構、視覺化設計到程式碼轉換、以及網頁原型製作。此大型分類已在 `category-taxonomy.json` 啟用第二層 subcategory；先依研究與方向、UI 與產品設計、前端與動效實作、原型與建站、媒體文件內容、協作營運等子分類定位，再選 skill。 |
 | 50 | `Web-Scraping-and-Browser/` | Web Scraping & Browser | 此分類涵蓋網頁爬蟲、資料擷取、瀏覽器自動化、代理 IP 管理、搜尋結果抓取、以及結構化資料提取。適用於需要從網站批量擷取資料、自動化瀏覽器操作、或建置資料採集管道的場景。 |
 | 51 | `Writing-and-Content/` | Writing & Content | 此分類涵蓋腦力激盪、內容研究與撰寫、摘要生成、翻譯潤稿、命名發想、以及寫作計畫制定。適用於需要輔助內容創作、改善文案品質、或規劃寫作流程的場景。 |
 | 52 | `ComfyUI/` | ComfyUI | 此分類涵蓋 ComfyUI 自訂節點開發的完整知識庫，包括 V3 節點結構、資料型別（IMAGE/LATENT/MASK 等）、輸入輸出設定、前端 JavaScript 擴充、執行生命週期（快取/驗證/lazy）、打包發布、以及 V1 → V3 遷移指南。適用於需要開發、除錯、遷移或打包 ComfyUI 自訂節點的場景。 |
 | 53 | `Entrepreneurship/` | Entrepreneurship | 此分類涵蓋 Minimalist Entrepreneur（極簡創業家）方法論的完整工作流，基於 Sahil Lavingia（Gumroad 創辦人）所著《The Minimalist Entrepreneur》。包括社群識別（find-community）、構想驗證（validate-idea）、MVP 建構（mvp）、手動流程化（processize）、早期客戶獲取（first-customers）、定價策略（pricing）、內容行銷計畫（marketing-plan）、可持續成長決策（grow-sustainably）、公司文化與價值觀（company-values）、以及業務決策審查（minimalist-review）。適用於 bootstrapped 創業者、獨立開發者、或任何希望以小規模可獲利方式建立事業的人。 |
 | 54 | `AI-Research/` | AI Research | 此分類涵蓋 AI 研究方法與研究生命週期，包括自主研究編排、研究構想、學術檢索、可執行 rubric 誘導、證據導向驗證與修訂、機制可解釋性、因果干預、論文撰寫、學術圖表與會議報告。適用於提出研究假設、設計與執行實驗、把開放式科學任務轉成可驗證規格、解釋模型行為、查找文獻或產出研究成果；訓練、推論、RAG 與具體模態工具應按核心功能路由至專屬分類。 |
-| 55 | `Science/` | Science | 涵蓋 134 個科學與研究 skill（來源：[K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills)）。包括生物資訊與基因體學（BioPython、Scanpy、scVelo、Arboreto）、化學資訊與藥物發現（RDKit、DeepChem、DiffDock、datamol）、蛋白質體學與質譜（matchms、pyOpenMS）、臨床研究與精準醫學（ClinicalTrials.gov、ClinVar、臨床決策支援）、醫學影像與數位病理（pydicom、histolab、PathML）、神經科學（Neuropixels）、機器學習（PyTorch Lightning、Transformers、scikit-learn）、材料科學與物理（Pymatgen、Astropy、量子運算 Cirq/PennyLane/Qiskit）、工程與模擬（FluidSim、SimPy、SymPy）、資料分析與視覺化（NetworkX、GeoPandas、Dask、Polars）、實驗室自動化（PyLabRobot、Opentrons、Benchling）、多體學與系統生物學（PrimeKG、LaminDB）、蛋白質工程（ESM）、科學溝通（文獻回顧、科學寫作、海報、投影片）、科學資料庫（統一查詢 78+ 公開資料庫）、基礎設施（Modal、GPU 最佳化）、研究方法論、以及法規標準（ISO 13485）。適用於任何科學研究、生物醫學分析、藥物開發、臨床數據分析、實驗室自動化、科學寫作與溝通的場景。 |
+| 55 | `Science/` | Science | 涵蓋科學與研究 skill，包括生物資訊與多體學、化學與藥物發現、臨床醫療、實驗室平台、物理量子與模擬、科學資料與機器學習、研究與溝通。此大型分類已在 `category-taxonomy.json` 啟用第二層 subcategory；先選最直接的子分類，再選具體工具或 workflow。 |
 | 56 | `Metaphysics-and-Spirituality/` | Metaphysics & Spirituality | 此分類涵蓋中華傳統命理術數與宗教靈性相關的 AI Skill，包括四柱八字排盤與命理分析、奇門遁甲判斷與擇時、紫微斗數本命盤解讀、姻緣測算（八字合婚、生肖配對、紫微夫妻宮、桃花運勢）、以及基於佛教經典文獻的漢傳祖師教學角色生成與對話。適用於需要進行傳統命理排盤計算、術數分析、姻緣配對、佛學經典查詢、或建置傳統文化 AI 應用的場景。 |
 | 57 | `2D-Rigging-and-Animation/` | 2D Rigging & Animation | 此分類涵蓋 2D 角色綁定與動畫專案，包括網格、變形器、參數與關鍵形、紋理與圖集、專案封裝格式及可編輯模型資產處理。適用於需要分析、解包、修改、重封裝或驗證 Live2D 等 2D 骨架動畫工程檔的場景。 |
 | 58 | `Reverse-Engineering/` | Reverse Engineering | 此分類涵蓋二進位、行動應用、前端 JavaScript、自訂虛擬機、跨版本差分、反編譯器與動態分析等逆向工程 skill。適用於理解編譯、混淆、封裝或虛擬化目標的內部行為，以及在合法授權範圍內將分析結果延伸至漏洞驗證。 |
@@ -96,7 +96,7 @@ metadata:
 | 70 | `Audio-and-Music-Generation/` | Audio & Music Generation | 此分類涵蓋 AI 音樂、音效及其他非語音音訊生成。適用於從文字或旋律條件建立音樂與聲音素材；語音合成應路由至 TTS-and-Voice-AI，語音辨識應路由至 Speech-Recognition。 |
 | 71 | `Agent-Delivery/` | Agent Delivery | DELIVER 階段優先檢查此分類。涵蓋使用者可讀的結果整理、成品連結、驗證證據、限制與阻塞狀態交付。適用於任何任務完成、部分完成或受阻時的最終回覆。 |
 
-> **新增 skill 時，必須按照下方「追加 Skill 流程」操作。**
+> **新增 skill 時，必須按照下方「分類與 Skill 命名規範」及「新增 Skill 與分類分裂決策流程」操作。**
 
 ---
 
@@ -108,32 +108,117 @@ metadata:
 2. **平台歸屬優先**：若明確屬於某平台（GitHub → `GitHub/`、Google → `Google-Services/`、Microsoft → `Microsoft-Services/`）直接歸類
 3. **功能歸屬次之**：根據核心功能匹配最接近的分類（例如「語音轉文字」→ `Speech-Recognition/`）
 4. **若橫跨多類**：在所有相關分類中各放置一份，允許重複放置
-5. **每個分類上限 100 個 skill**：若某分類已達 100 個，考慮拆分為子分類
+5. **大型分類使用選擇性第二層**：分類接近或超過 100 個 skill，或語義明顯混雜時，先評估在 `category-taxonomy.json` 宣告 subcategory；未登錄於 taxonomy 的分類維持單層，不為了形式一致強制拆分
+
+### 選擇性雙層分類
+
+- 第一層 category 是穩定的領域或生命週期入口；第二層 subcategory 是隸屬於該 category 的子分類，兩者是嚴格的父子關係。
+- `category-taxonomy.json` 是雙層結構的真源，並由 `schemas/category-taxonomy.schema.json` 描述格式。目前只對 `Web-Design` 與 `Science` 啟用第二層。
+- 單層分類的實體路徑是 `<category>/<skill-name>/SKILL.md`；啟用第二層後，實體路徑是 `<category>/<subcategory>/<skill-name>/SKILL.md`。
+- 未登錄於索引的分類維持單層；此索引即 `category-taxonomy.json`，只有規模或歧義真的需要時才增加 subcategory。
+- subcategory 必須按清楚的工作範圍、方法或能力命名，不按任意數量切片；每個 subcategory 只屬於一個 category，同一 category 內的每個 skill 也只能放在一個 subcategory。
 
 ---
 
-## 追加 Skill 流程
+## 分類與 Skill 命名規範
 
-當需要新增 skill 到知識庫時，**必須依序完成以下步驟**：
+名稱分成機器使用的 folder ID 與人類閱讀的 display name。folder ID 必須穩定、可預測且可由驗證器檢查；display name 可以保留正常空格、大小寫與符號，但不得改變分類語義。
 
-### Step A — 判斷分類
-讀取新 skill 的 `SKILL.md`，根據「分類判定規則」確定目標分類資料夾。
+### 第一層 category
 
-### Step B — 複製 skill
-> **⚠️ 路徑推導規則：禁止猜測或硬編碼路徑。**
-> 本 `SKILL.md` 所在目錄即為 skill 知識庫的根目錄。
-> 你讀取本檔時已知其完整路徑，以該目錄為基準放置新 skill。
-> 例如：若本檔路徑為 `D:\skills\skill-router-nexus\SKILL.md`，
-> 則目標路徑為 `D:\skills\skill-router-nexus\<分類資料夾>\<skill-name>\`。
-> **嚴禁將 skill 放到本檔所在目錄的父層或其他位置。**
+- folder ID 使用英文 `Title-Kebab-Case`，格式為 `^[A-Z0-9][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$`，最多 64 個字元。
+- 一般單字首字母大寫；既有標準縮寫維持大寫，例如 `AI`、`API`、`CRM`、`LLM`、`MCP`、`SEO`、`TTS`、`VCS`。
+- 使用名詞或穩定領域名稱，例如 `Project-Management`、`AI-Training`；避免使用一次性任務、版本號或含糊名稱。
+- 多領域組合統一使用 `-and-`；不得使用空格、底線、斜線、尾端連字號或連續連字號。
+- 不得按提供者建立第一層分類，除非該提供者本身就是使用者會直接尋找、且能長期容納多個 skill 的平台入口，例如 `GitHub`。
+- 知識庫分類地圖中的英文名是 display name，例如 folder ID `AI-Inference-and-Optimization` 對應 `AI Inference & Optimization`。
 
-將 skill 資料夾複製到對應分類目錄下：
+### 第二層 subcategory
+
+- `id` 使用英文 `lowercase-kebab-case`，格式為 `^[a-z0-9]+(?:-[a-z0-9]+)*$`，最多 64 個字元。
+- 使用名詞片語描述父分類內穩定、可重用的工作範圍，例如 `bioinformatics-and-omics`；不得以流水號、任意數量切片或暫時專案命名。
+- 不得按提供者或作者分組；只有提供者本身構成穩定的方法範圍時，才可成為名稱的一部分。
+- 不必重複父分類名稱，除非省略後會造成歧義；同一父分類內不得出現同義、包含關係不清或高度重疊的 id。
+- `category-taxonomy.json` 中的 `name` 是 display name，使用正常英文標題格式並保留標準縮寫，例如 `Bioinformatics & Omics`。
+
+### Skill
+
+- 新增或重新命名的 skill folder 與 frontmatter `name` 使用英文 `lowercase-kebab-case`，最多 64 個字元，兩者必須一致。
+- 動作型 skill 優先使用簡短的動詞導向名稱；平台專屬 skill 可在必要時加入工具 namespace，例如 `gh-address-comments`。
+- 名稱應描述可重用能力，不加入版本號、作者名、來源倉庫名或 `new`、`final` 等暫時字樣。
+- 既有 legacy skill 名稱可保留以避免破壞相容性；所有新增與主動重新命名的 skill 必須遵循本規範。
+
+---
+
+## 新增 Skill 與分類分裂決策流程
+
+當需要新增 skill 到知識庫時，必須依序完成以下步驟。正常順序是先加入目前最合理且合法的位置，再依加入後的整體狀態決定是否分裂；只有不存在合法落點時，才先調整分類結構。
+
+### Step A — 理解新 Skill
+
+完整讀取新 skill 的 `SKILL.md`，辨識主要問題、使用者觸發意圖、操作平台或領域、輸入輸出、核心工作流程，以及與現有 skill 是否重複。不得只根據名稱、作者或來源判斷分類。
+
+### Step B — 決定第一層分類
+
+使用 roadmap 比較所有第一層分類的實際描述。既有分類能準確涵蓋主要用途時，選擇最直接的一個；平台專屬 skill 優先使用對應平台分類，其他 skill 依核心功能與使用者目標分類。只有所有既有分類都不適用，且新領域是穩定、獨立、可由使用者直接尋找並能容納多個 skill 的入口時，才建立新的第一層分類。
+
+### Step C — 決定合法落點
+
+- 單層分類使用 `<分類資料夾>/<skill-name>/SKILL.md`。
+- 已啟用第二層的分類，使用 `<分類資料夾>/<subcategory>/<skill-name>/SKILL.md`，並選擇一個已宣告且最直接的 subcategory。
+- 同一個 skill 在同一 category 中只能有一個主要 subcategory。
+- 若所有既有 subcategory 都不適用，skill 不得直接放在第一層分類根目錄，也不得直接建立未宣告的 subcategory。先重新檢查第一層分類，再判斷應擴充既有描述、建立新 subcategory，或建立新 category。
+
+> **路徑推導規則：** 本 `SKILL.md` 所在目錄就是知識庫根目錄。禁止猜測、硬編碼其他根目錄，或把 skill 放到其父層及其他位置。
+
+### Step D — 加入並第一次驗證
+
+將 skill 複製到合法落點後，確認 `SKILL.md`、`name`、`description`、folder ID、父子目錄與 taxonomy 宣告均有效，並檢查同名或同內容重複。執行：
+
+```bash
+python -B "<SKILL_DIR>/skill_reader.py" --validate --category <category>
+python -B "<SKILL_DIR>/skill_reader.py" --category <category> --subcategory <subcategory> --query <skill-name>
 ```
-<本 SKILL.md 所在目錄>/<分類資料夾>/<skill-name>/
-```
 
-### Step C — 驗證
-確認 skill 資料夾內的 `SKILL.md` 存在且可被 `skill_reader.py` 正確解析。
+單層分類省略 `--subcategory`。第一次驗證只確認 skill 是否放對；若數量門檻觸發驗證失敗或警示，仍須繼續執行 Step E，不得直接結束新增流程。
+
+### Step E — 加入後重新評估分類健康度
+
+重新計算目標 category、目標 subcategory 與相鄰分支的 skill 數量和語義分布，檢查：
+
+- 單層 category 是否接近或超過 100 個 skill。
+- subcategory 是否接近或超過 50 個 skill。
+- 是否已形成至少兩到三個穩定、可命名的能力群組。
+- 查詢結果是否混入大量無關候選，或分類描述已寬泛到無法有效路由。
+- 新 skill 是否揭露了未被識別的獨立領域。
+- 現有分支是否出現同義、重疊或邊界不清。
+
+數量只負責觸發重新評估，不得單獨作為分裂理由。若數量偏大但語義仍單純且查詢準確，可以保持現狀；數量未達門檻但語義已明顯混雜，也可以提早分裂。
+
+### Step F — 決定分裂方向
+
+按照以下優先順序選擇分裂方向：
+
+1. **第一層分類向下分裂**：單層 category 仍屬同一上位領域，但內部已有清楚的能力群組時，優先建立多個 subcategory。不得按數量平均切片。
+2. **subcategory 水平分裂**：既有 subcategory 過大或含有多種能力時，拆成兩個以上同層兄弟 subcategory。系統維持雙層結構，不建立第三層。
+3. **第一層分類水平分裂**：只有原 category 已包含本質不同、可被使用者獨立尋找、且各自能長期容納多個 skill 的領域時，才把其中一部分提升為新的第一層 category。不得只因總數超過 100 就使用此方向。
+
+若沒有形成清楚、穩定且能提高查詢精確度的分界，維持目前結構。
+
+### Step G — 執行分類分裂
+
+確定分裂後，先定義新 category 或 subcategory 的 folder ID、display name、包含範圍與排除範圍，再更新 `category-taxonomy.json`、建立實體目錄並重新分類所有受影響 skills。不得只移動剛加入的新 skill；必須處理整個能力群組，並同步更新分類地圖與說明。
+
+### Step H — 第二次驗證
+
+分裂或維持原結構後，再次執行結構驗證、roadmap 查詢、分類查詢與新 skill 精確查詢。最終決策必須記錄為以下其中一種：
+
+- `KEEP_FLAT`：維持單層分類。
+- `KEEP_SUBCATEGORY`：維持目前 subcategory。
+- `CREATE_SUBCATEGORY`：第一層分類向下建立第二層。
+- `SPLIT_SUBCATEGORY`：將一個 subcategory 拆成多個同層分支。
+- `CREATE_CATEGORY`：建立新的第一層分類。
+- `RECLASSIFY_SKILL`：最初落點錯誤，重新歸類 skill。
 
 ---
 
@@ -142,7 +227,7 @@ metadata:
 當需要新增分類資料夾時，**必須依序完成以下步驟**：
 
 ### Step A — 判斷分類名稱
-根據「分類判定規則」確定分類名稱，並確認不與現有分類重複。
+根據「分類判定規則」與「分類與 Skill 命名規範」確定分類名稱，並確認不與現有分類重複。
 ### Step B — 建立資料夾
 > **⚠️ 路徑推導規則：禁止猜測或硬編碼路徑。**
 > 本 `SKILL.md` 所在目錄即為 skill 知識庫的根目錄。
@@ -195,6 +280,8 @@ metadata:
 
 使用 `skill_reader.py` 掃描每個階段選出的分類：
 
+先取得 roadmap。它會提供第一層所有分類的實際描述與各分類的分支數；為避免一次展開過多內容，第二層只提供 subcategory 名稱，不列出 skill。根據第一層描述先選 category，再視 `subcategory_count` 決定是否進入第二層。
+
 > **⚠️ 路徑推導規則：禁止猜測或硬編碼路徑。**
 > `skill_reader.py` 與本 `SKILL.md` 位於同一目錄。
 > 你讀取本檔時已知其完整路徑，將檔名替換為 `skill_reader.py` 即為正確路徑。
@@ -202,13 +289,21 @@ metadata:
 > 則腳本路徑為 `/foo/bar/skill-router-nexus/skill_reader.py`。
 
 ```bash
+# 取得全分類 roadmap：第一層有完整描述，第二層只有名稱與分支數
+python -B "<SKILL_DIR>/skill_reader.py" --roadmap
+
 # 先掃描目前階段的主要分類—— <SKILL_DIR> 替換為本檔所在目錄的實際絕對路徑
 python -B "<SKILL_DIR>/skill_reader.py" --category Video-Generation
 
 # 只有主要分類不足時，才另行掃描第 2 個分類
 python -B "<SKILL_DIR>/skill_reader.py" --category Creative-Video-Generation
+
+# category 啟用第二層時，先列出 subcategory 摘要，再只掃描最直接的 subcategory
+python -B "<SKILL_DIR>/skill_reader.py" --category Science --list-subcategories
+python -B "<SKILL_DIR>/skill_reader.py" --category Science --subcategory bioinformatics-and-omics
 ```
-`skill_reader.py` 會自動解析每個子 skill 的 frontmatter 並輸出 `name`、`description`、`path`。
+`skill_reader.py` 會自動解析每個子 skill 的 frontmatter 並輸出 `name`、`description`、`path`；雙層分類另外輸出 `subcategory`。不知道精確 skill 名稱時，可加 `--query "關鍵詞"` 在目前的 category／subcategory 範圍內搜尋；程式化索引可加 `--json`。
+若 category 出現在 `category-taxonomy.json`，先選 1 個最直接的 subcategory；只有該 subcategory 無合格候選或仍有明確缺口時，才增加第 2 個 subcategory。未登錄於 taxonomy 的分類維持原本單層掃描，不需也不得虛構 subcategory。
 每次掃描只處理目前階段；第一個分類已足夠時停止，不繼續擴張。
 同一任務中已掃描過的分類結果可以直接重用於其他階段，不重跑命令；但仍須按新階段的完成條件重新評分候選。
 掃描全部分類僅限 Router 維護、索引診斷或使用者明確要求的全庫盤點，不屬於一般五階段任務路由。
@@ -221,10 +316,11 @@ python -B "<SKILL_DIR>/skill_reader.py" --category Creative-Video-Generation
 
 1. 每個啟用階段至少保留 1 個、最多 4 個合格候選 skill。
 2. 候選必須直接提供目前階段需要的能力；僅有關鍵字重疊或鄰近用途不算合格。
-3. 先將實體檔解析為 `resolved absolute path`；Windows 路徑以不區分大小寫比較，相同路徑只保留一次。
-4. 跨分類但內容相同的副本以 `SKILL.md` 的 SHA-256 分組，選擇正規化後字典序最小的路徑作為 canonical 代表。Discovery 階段允許為此進行 hash-only 讀取；hash-only 不等於載入 skill 指令。
-5. 同一個 skill 可同時列入多個階段，但要分別說明它如何滿足各階段完成條件。
-6. 第一個分類找不到合格候選時，才掃描第 2 個分類；兩個分類都找不到時，將該階段標記為 `UNRESOLVED` 並明確記錄缺少的能力。
+3. 若分類已啟用第二層，先以 subcategory description 判斷範圍是否直接匹配，再比較該 subcategory 內的 skill；不得跳過父子關係或以未宣告的子分類作捷徑。
+4. 先將實體檔解析為 `resolved absolute path`；Windows 路徑以不區分大小寫比較，相同路徑只保留一次。
+5. 跨分類但內容相同的副本以 `SKILL.md` 的 SHA-256 分組，選擇正規化後字典序最小的路徑作為 canonical 代表。Discovery 階段允許為此進行 hash-only 讀取；hash-only 不等於載入 skill 指令。
+6. 同一個 skill 可同時列入多個階段，但要分別說明它如何滿足各階段完成條件。
+7. 第一個分類找不到合格候選時，才掃描第 2 個分類；兩個分類都找不到時，將該階段標記為 `UNRESOLVED` 並明確記錄缺少的能力。
 
 所有必要階段都有合格候選時，狀態為 `READY` 並正常進入 Step 4。若 `UNDERSTAND`、`EXECUTE`、`VERIFY` 或 `DELIVER` 為 `UNRESOLVED`，依下列降級路徑處理：
 

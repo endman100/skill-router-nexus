@@ -10,8 +10,8 @@ Its core goals are:
 
 - **Single Entry Point**: All agents must route through this router to locate the correct sub-skill before executing any task. Direct access is prohibited.
 - **Structured Classification**: Skills across multiple functional domains (agent planning, execution, verification, skill tooling, cloud, e-commerce, LLM, social media, etc.) are organized into corresponding folders.
-- **Extensible Architecture**: A standardized skill registration process allows the knowledge base to grow on demand, with a cap of 100 skills per category.
-- **Tooling Support**: `skill_reader.py` provides fast scanning of all registered sub-skills and their descriptions for agent querying and indexing.
+- **Extensible Architecture**: Categories stay flat by default; large or semantically mixed categories can opt into a strict `category → subcategory → skill` hierarchy.
+- **Tooling Support**: `skill_reader.py` provides a category roadmap, subcategory discovery, scoped keyword search, structural validation, and JSON output while preserving the original category-only interface.
 
 ### Installation
 
@@ -45,6 +45,10 @@ source .venv/bin/activate
 # List all skills in the knowledge base
 python skill_reader.py
 
+# Show every first-level category with its real description and branch count.
+# Only subcategory names are shown; skills are not expanded.
+python skill_reader.py --roadmap
+
 # List skills under multiple categories (recommended for cross-domain tasks)
 python skill_reader.py -c Agent-Plan -c Agent-Execute -c Coding
 
@@ -53,6 +57,16 @@ python skill_reader.py -c Agent-Plan,Agent-Plan-Review,Coding
 
 # List skills under a specific category (e.g. GitHub)
 python skill_reader.py -c GitHub
+
+# Discover and query subcategories only when a category has opted into level two
+python skill_reader.py -c Science --list-subcategories
+python skill_reader.py -c Science -s bioinformatics-and-omics
+
+# Search within the selected category/subcategory and emit machine-readable output
+python skill_reader.py -c Web-Design -s frontend-and-motion-implementation -q animation --json
+
+# Validate placement before considering a newly added skill complete
+python skill_reader.py --validate -c Science
 ```
 
 ### Knowledge Base Structure
@@ -61,6 +75,9 @@ python skill_reader.py -c GitHub
 skill-router-nexus/
 ├── SKILL.md              ← Mandatory router entry point (must-read for agents)
 ├── skill_reader.py       ← Sub-skill scanning tool
+├── category-taxonomy.json ← Optional second-level taxonomy for selected categories
+├── schemas/
+│   └── category-taxonomy.schema.json
 ├── Agent-Plan/
 ├── Agent-Plan-Review/
 ├── Agent-Execute/
@@ -87,13 +104,17 @@ Each sub-skill resides in its corresponding category folder with a `SKILL.md` de
 
 ```
 skill-router-nexus/<category>/<skill-name>/SKILL.md
+skill-router-nexus/<category>/<subcategory>/<skill-name>/SKILL.md
 ```
+
+Use the first path for ordinary single-level categories and the second path only for categories declared in `category-taxonomy.json`. The second level is a real parent-child hierarchy, not provider metadata. Categories absent from the taxonomy remain single-level.
 
 ### Adding a New Skill
 
-1. Read the "Adding a Skill" section in `SKILL.md`
-2. Copy the new skill folder into the appropriate category directory
-3. Verify that `SKILL.md` exists and can be parsed correctly by `skill_reader.py`
+1. Read the "分類與 Skill 命名規範" and "新增 Skill 與分類分裂決策流程" sections in `SKILL.md`
+2. Choose the first-level category; if it is in `category-taxonomy.json`, also choose one declared subcategory
+3. Copy the skill to `<category>/<skill>` or `<category>/<subcategory>/<skill>` as appropriate
+4. Run `python skill_reader.py --validate -c <category>` and an exact scoped query. Add a new subcategory to the taxonomy before using it
 
 See [SKILL.md](SKILL.md) for details.
 
@@ -250,8 +271,8 @@ Never skip or bypass this router. Never assume sub-skill content without routing
 
 - **統一入口**：所有 agent 在執行任務前，必須先通過本 router 找到正確的子 skill，禁止直接跳過存取。
 - **結構化分類**：將多個功能領域的 skill（Agent 規劃、執行、驗證、skill tooling、雲端、電商、LLM、社群媒體…等）整齊歸類於對應資料夾中。
-- **可擴展架構**：提供標準化的 skill 追加流程，讓知識庫能隨需求持續成長，每個分類上限 100 個 skill。
-- **工具輔助掃描**：透過 `skill_reader.py` 快速列出所有已登錄的子 skill 及其描述，便於 agent 查詢與索引。
+- **可擴展架構**：分類預設維持單層；只有規模過大或語義混雜的分類，才啟用嚴格的 `category → subcategory → skill` 父子結構。
+- **工具輔助掃描**：`skill_reader.py` 支援分類 roadmap、subcategory 探索、範圍搜尋、結構驗證與 JSON 輸出，並保留原本只指定 category 的介面。
 
 ---
 
@@ -287,6 +308,9 @@ source .venv/bin/activate
 # 列出知識庫中所有 skill
 python skill_reader.py
 
+# 顯示所有第一層分類的實際描述與分支數；第二層只列名稱，不展開 skill
+python skill_reader.py --roadmap
+
 # 一次列出多個分類的 skill（跨域任務建議）
 python skill_reader.py -c Agent-Plan -c Agent-Execute -c Coding
 
@@ -295,6 +319,16 @@ python skill_reader.py -c Agent-Plan,Agent-Plan-Review,Coding
 
 # 只列出特定分類的 skill（例如 GitHub）
 python skill_reader.py -c GitHub
+
+# 只有已啟用第二層的分類需要先查看 subcategory，再縮小範圍
+python skill_reader.py -c Science --list-subcategories
+python skill_reader.py -c Science -s bioinformatics-and-omics
+
+# 在指定 category/subcategory 內搜尋，並輸出機器可讀 JSON
+python skill_reader.py -c Web-Design -s frontend-and-motion-implementation -q animation --json
+
+# 新增 skill 後驗證放置位置與父子結構
+python skill_reader.py --validate -c Science
 ```
 
 ---
@@ -305,6 +339,9 @@ python skill_reader.py -c GitHub
 skill-router-nexus/
 ├── SKILL.md              ← 強制路由器入口（agent 必讀）
 ├── skill_reader.py       ← 子 skill 掃描工具
+├── category-taxonomy.json ← 選擇性第二層 taxonomy
+├── schemas/
+│   └── category-taxonomy.schema.json
 ├── Agent-Plan/
 ├── Agent-Plan-Review/
 ├── Agent-Execute/
@@ -331,15 +368,19 @@ skill-router-nexus/
 
 ```
 skill-router-nexus/<分類>/<skill-name>/SKILL.md
+skill-router-nexus/<分類>/<subcategory>/<skill-name>/SKILL.md
 ```
+
+一般單層分類使用第一種路徑；只有登錄於 `category-taxonomy.json` 的分類使用第二種路徑。第二層是實際的父子分類，不代表提供者。未登錄於 taxonomy 的分類繼續使用單層。
 
 ---
 
 ## 新增 Skill
 
-1. 閱讀 `SKILL.md` 中的「追加 Skill 流程」
-2. 將新 skill 資料夾複製至對應分類目錄
-3. 確認 `SKILL.md` 存在且可被 `skill_reader.py` 正確解析
+1. 閱讀 `SKILL.md` 中的「分類與 Skill 命名規範」及「新增 Skill 與分類分裂決策流程」
+2. 選擇第一層分類；若該分類登錄於 `category-taxonomy.json`，再選一個已宣告的 subcategory
+3. 視分類結構將 skill 放到 `<分類>/<skill>` 或 `<分類>/<subcategory>/<skill>`
+4. 執行 `python skill_reader.py --validate -c <分類>` 與精確範圍查詢；需要新 subcategory 時，必須先更新 taxonomy 才能放入
 
 詳細說明請見 [SKILL.md](SKILL.md)。
 

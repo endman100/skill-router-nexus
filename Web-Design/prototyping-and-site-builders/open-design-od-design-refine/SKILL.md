@@ -1,3 +1,8 @@
+---
+name: open-design-od-design-refine
+description: Improve an existing Open Design artifact through focused design refinement.
+---
+
 # Design Refine
 
 Use this plugin when the user wants to improve an existing Open Design artifact rather than create a new one.
