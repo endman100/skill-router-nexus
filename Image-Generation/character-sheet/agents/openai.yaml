@@ -1,4 +1,4 @@
 interface:
   display_name: "Character Sheet"
-  short_description: "Create compact character sheets without rulers"
-  default_prompt: "Use $character-sheet to create a compact three-view sheet with three expressions, preserving my reference character and omitting rulers and body data unless I explicitly request them."
+  short_description: "Create 5x3 character turnaround and detail sheets"
+  default_prompt: "Use $character-sheet to create a 5-column by 3-row sheet with three body views, three design details, two expressions, and one large neutral portrait while preserving my reference character and omitting rulers and body data unless I request them."

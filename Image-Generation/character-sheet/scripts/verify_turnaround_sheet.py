@@ -26,28 +26,39 @@ def verify_unmeasured(image, data):
     from compose_unmeasured_sheet import compose
     require(list(image.size) == data["canvas"], "Canvas size does not match manifest")
     require(data["ruler"] is None and data["body_data"] == [], "Unmeasured mode contains measurement data")
+    grid = data["grid"]
+    require(grid["columns"] == 5 and grid["rows"] == 3, "Expected a 5-column by 3-row grid")
+    column_width = grid["column_width_px"]
+    row_edges = grid["row_edges_px"]
+    require(image.width == column_width * 5, "Canvas width does not match five grid columns")
+    require(row_edges[0] == 0 and row_edges[-1] == image.height, "Grid rows do not span the canvas")
+    require(len(row_edges) == 4 and row_edges == sorted(row_edges), "Invalid grid row edges")
     top, bottom = data["alignment_y"]
-    require(0 < top < bottom < image.height, "Invalid figure margins")
-    require(top == image.height - bottom, "Top and sole margins differ")
-    views, expressions = data["body_views"], data["expressions"]
-    require(len(views) == len(expressions) == 3, "Expected three views and three expressions")
-    previous_right = 0
-    for name, p in views.items():
+    require(row_edges[1] < top < bottom < image.height, "Invalid figure margins")
+    require(top - row_edges[1] == image.height - bottom, "Body-cell top and sole margins differ")
+    views = data["body_views"]
+    details = data["details"]
+    expressions = data["expressions"]
+    neutral = data["neutral_portrait"]
+    require(len(views) == 3, "Expected three body views")
+    require(len(details) == 3, "Expected three design details")
+    require(len(expressions) == 2, "Expected two expression portraits")
+
+    for index, (name, p) in enumerate(views.items()):
         x0, y0, x1, y1 = p["placed_box"]
         l, t, r, b = p["panel_box"]
-        require(l == previous_right and t == 0 and b == image.height, f"{name}: header or gutter gap")
+        require([l, t, r, b] == [index * column_width, row_edges[1], (index + 1) * column_width, image.height], f"{name}: incorrect 1x2 body cell")
         require(l <= x0 < x1 <= r and y0 == top and y1 == bottom, f"{name}: incorrect body fit/alignment")
         require(y1 - y0 == p["height_px"], f"{name}: incorrect height_px")
-        previous_right = r
-    previous_bottom = 0
-    for name, p in expressions.items():
-        l, t, r, b = p["cell"]
-        x0, y0, x1, y1 = p["placed_box"]
-        require(l == previous_right and r == image.width and t == previous_bottom, f"{name}: expression gap")
-        require(l <= x0 < x1 <= r and t <= y0 < y1 <= b, f"{name}: expression clipped")
-        previous_bottom = b
-    require(previous_bottom == image.height, "Expressions do not fill the full column")
-    all_entries = list(views.items()) + list(expressions.items())
+
+    for index, (name, p) in enumerate(details.items()):
+        require(p["cell"] == [index * column_width, 0, (index + 1) * column_width, row_edges[1]], f"{name}: incorrect 1x1 detail cell")
+
+    for offset, (name, p) in enumerate(expressions.items(), start=3):
+        require(p["cell"] == [offset * column_width, 0, (offset + 1) * column_width, row_edges[1]], f"{name}: incorrect 1x1 expression cell")
+
+    require(neutral["cell"] == [3 * column_width, row_edges[1], image.width, image.height], "NORMAL does not occupy the lower-right 2x2 cell")
+    all_entries = list(details.items()) + list(expressions.items()) + list(views.items()) + [("normal", neutral)]
     require(data["rendered_labels"] == [p["label"] for _, p in all_entries], "Unexpected rendered labels")
     for name, p in all_entries:
         raw = Path(p["source"]).read_bytes()
@@ -58,24 +69,23 @@ def verify_unmeasured(image, data):
         # Both axes are rounded independently; tolerate <= half a pixel per axis.
         sw, sh = subject.size
         require(abs((x1-x0) * sh - (y1-y0) * sw) <= (sw+sh) / 2 + 1, f"{name}: distorted aspect ratio")
-        l, t, r, b = p.get("panel_box", p.get("cell"))
+        l, t, r, b = p["panel_box"] if "panel_box" in p else p["cell"]
         a, c, d, e = p["label_box"]
         require(l <= a < d <= r and t <= c < e <= b, f"{name}: label outside cell")
         require(d >= l + (r-l)*0.7 and e >= t + (b-t)*0.8, f"{name}: label is not lower-right")
-    if "normal" in expressions:
-        anchor = data["identity_anchor"]
-        digest = hashlib.sha256(Path(anchor["source"]).read_bytes()).hexdigest()
-        require(digest == anchor["source_sha256"] == expressions["normal"]["source_sha256"], "NORMAL is not the anchor")
+    anchor = data["identity_anchor"]
+    digest = hashlib.sha256(Path(anchor["source"]).read_bytes()).hexdigest()
+    require(digest == anchor["source_sha256"] == neutral["source_sha256"], "NORMAL is not the anchor")
     config = json.loads(Path(data["config"]).read_text(encoding="utf-8"))
     expected, fresh = compose(Path(data["asset_dir"]), config)
     for key in fresh:
         require(fresh[key] == data[key], f"Manifest mismatch: {key}")
     require(expected.size == image.size and ImageChops.difference(expected, image).getbbox() is None, "Exported pixels differ from deterministic source render")
-    print(f"PASS: unmeasured canvas {image.width}x{image.height}; figures {bottom-top}px tall")
-    print("PASS: no metric overlay or header; source aspect ratios and top/sole alignment preserved")
-    print("PASS: three contiguous expressions; all labels lower-right; source hashes match")
-    if "normal" in expressions:
-        print("PASS: NORMAL is byte-identical to the accepted identity anchor")
+    print(f"PASS: unmeasured 5x3 canvas {image.width}x{image.height}; figures {bottom-top}px tall")
+    print("PASS: three 1x2 body views and three 1x1 design details occupy the left grid")
+    print("PASS: two 1x1 expressions and one 2x2 neutral portrait occupy the right grid")
+    print("PASS: source aspect ratios, lower-right labels, hashes, and body alignment are preserved")
+    print("PASS: NORMAL is byte-identical to the accepted identity anchor")
     print("PASS: exported pixels match fresh deterministic rendering")
 
 

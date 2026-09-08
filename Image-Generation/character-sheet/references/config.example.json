@@ -3,8 +3,13 @@
   "canvas_height_px": 1876,
   "body_margin_px": 20,
   "panel_side_padding_px": 16,
-  "expression_column_width_px": 575,
+  "grid_column_width_px": 575,
   "identity_anchor": "identity-anchor.png",
+  "details": [
+    {"name": "hands", "file": "detail-hands.png", "label": "HANDS"},
+    {"name": "feet", "file": "detail-feet.png", "label": "FEET / FOOTWEAR"},
+    {"name": "outfit", "file": "detail-outfit.png", "label": "OUTFIT DETAILS"}
+  ],
   "views": [
     {"name": "front", "file": "front.png", "label": "FRONT"},
     {"name": "profile", "file": "profile.png", "label": "LEFT PROFILE"},
@@ -12,7 +17,7 @@
   ],
   "expressions": [
     {"name": "happy", "file": "expression-1.png", "label": "HAPPY"},
-    {"name": "angry", "file": "expression-2.png", "label": "ANGRY"},
-    {"name": "normal", "file": "expression-3.png", "label": "NORMAL"}
-  ]
+    {"name": "angry", "file": "expression-2.png", "label": "ANGRY"}
+  ],
+  "neutral_portrait": {"name": "normal", "file": "expression-3.png", "label": "NORMAL"}
 }
