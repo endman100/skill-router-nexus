@@ -23,6 +23,7 @@ def test_verifier_accepts_valid_sheet_with_wide_body_views(tmp_path: Path) -> No
         make_subject(tmp_path / filename, (300, 400), (60, 20, 240, 380))
 
     config = {
+        "layout_mode": "measured",
         "height_cm": 160.0,
         "height_source": "default",
         "body_data": [],

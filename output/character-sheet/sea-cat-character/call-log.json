@@ -1,0 +1,13 @@
+{
+  "calls": [
+    {"name":"identity-anchor","inputs":["C:/Users/endma/Downloads/175115607066_n.jpeg"],"prompt_key":"identity-anchor","result":"identity-anchor.png","status":"accepted-first-pass"},
+    {"name":"front","inputs":["C:/Users/endma/Downloads/175115607066_n.jpeg","D:/skills/skill-router-nexus/output/character-sheet/sea-cat-character/identity-anchor.png"],"prompt_key":"front","result":"front.png","status":"accepted-first-pass"},
+    {"name":"left-profile","inputs":["C:/Users/endma/Downloads/175115607066_n.jpeg","D:/skills/skill-router-nexus/output/character-sheet/sea-cat-character/front.png","D:/skills/skill-router-nexus/output/character-sheet/sea-cat-character/identity-anchor.png"],"prompt_key":"left-profile","result":"profile.png","status":"accepted-first-pass"},
+    {"name":"back","inputs":["C:/Users/endma/Downloads/175115607066_n.jpeg","D:/skills/skill-router-nexus/output/character-sheet/sea-cat-character/front.png","D:/skills/skill-router-nexus/output/character-sheet/sea-cat-character/identity-anchor.png"],"prompt_key":"back","result":"back.png","status":"accepted-first-pass"},
+    {"name":"happy-first-pass","inputs":["C:/Users/endma/Downloads/175115607066_n.jpeg","D:/skills/skill-router-nexus/output/character-sheet/sea-cat-character/identity-anchor.png"],"prompt_key":"happy-first-pass","result":"expression-1-failed.png","status":"rejected-wrong-eye-side"},
+    {"name":"happy-eye-repair","inputs":["C:/Users/endma/Downloads/175115607066_n.jpeg","D:/skills/skill-router-nexus/output/character-sheet/sea-cat-character/expression-1-failed.png"],"prompt_key":"happy-eye-repair","result":"expression-1.png","status":"accepted-after-one-targeted-repair"},
+    {"name":"angry","inputs":["C:/Users/endma/Downloads/175115607066_n.jpeg","D:/skills/skill-router-nexus/output/character-sheet/sea-cat-character/identity-anchor.png"],"prompt_key":"angry","result":"expression-2.png","status":"accepted-first-pass"}
+  ],
+  "normal":{"source":"identity-anchor.png","result":"expression-3.png","status":"byte-identical-copy-no-generation-call"},
+  "prompt_text":"See prompt-set.md under matching prompt_key headings."
+}

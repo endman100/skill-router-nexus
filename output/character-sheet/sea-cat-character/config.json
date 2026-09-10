@@ -1,0 +1,18 @@
+{
+  "layout_mode": "unmeasured",
+  "canvas_height_px": 1876,
+  "body_margin_px": 20,
+  "panel_side_padding_px": 16,
+  "expression_column_width_px": 575,
+  "identity_anchor": "identity-anchor.png",
+  "views": [
+    {"name": "front", "file": "front.png", "label": "FRONT"},
+    {"name": "profile", "file": "profile.png", "label": "LEFT PROFILE"},
+    {"name": "back", "file": "back.png", "label": "BACK"}
+  ],
+  "expressions": [
+    {"name": "happy", "file": "expression-1.png", "label": "HAPPY"},
+    {"name": "angry", "file": "expression-2.png", "label": "ANGRY"},
+    {"name": "normal", "file": "expression-3.png", "label": "NORMAL"}
+  ]
+}

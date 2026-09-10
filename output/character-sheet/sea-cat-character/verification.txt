@@ -1,0 +1,5 @@
+PASS: unmeasured canvas 4076x1876; figures 1836px tall
+PASS: no metric overlay or header; source aspect ratios and top/sole alignment preserved
+PASS: three contiguous expressions; all labels lower-right; source hashes match
+PASS: NORMAL is byte-identical to the accepted identity anchor
+PASS: exported pixels match fresh deterministic rendering

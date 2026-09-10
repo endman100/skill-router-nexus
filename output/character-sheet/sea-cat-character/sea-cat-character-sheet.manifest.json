@@ -1,0 +1,198 @@
+{
+  "layout_mode": "unmeasured",
+  "canvas": [
+    4076,
+    1876
+  ],
+  "asset_dir": "D:\\skills\\skill-router-nexus\\output\\character-sheet\\sea-cat-character",
+  "ruler": null,
+  "body_data": [],
+  "rendered_labels": [
+    "FRONT",
+    "LEFT PROFILE",
+    "BACK",
+    "HAPPY",
+    "ANGRY",
+    "NORMAL"
+  ],
+  "alignment_y": [
+    20,
+    1856
+  ],
+  "body_views": {
+    "front": {
+      "source": "D:\\skills\\skill-router-nexus\\output\\character-sheet\\sea-cat-character\\front.png",
+      "source_sha256": "f5c25599a8ddb0f30a29d3f40e36c1435045c8ab89656a15ca58d7a5ba0a8e5d",
+      "source_crop_size": [
+        823,
+        1350
+      ],
+      "panel_box": [
+        0,
+        0,
+        1167,
+        1876
+      ],
+      "placed_box": [
+        24,
+        20,
+        1143,
+        1856
+      ],
+      "height_px": 1836,
+      "label": "FRONT",
+      "label_box": [
+        1066,
+        1847,
+        1153,
+        1866
+      ]
+    },
+    "profile": {
+      "source": "D:\\skills\\skill-router-nexus\\output\\character-sheet\\sea-cat-character\\profile.png",
+      "source_sha256": "b5729dfeb64e02513279a67d54528f3ba36d9872efec23c6fccc0bfae1f6206a",
+      "source_crop_size": [
+        463,
+        1340
+      ],
+      "panel_box": [
+        1167,
+        0,
+        2334,
+        1876
+      ],
+      "placed_box": [
+        1433,
+        20,
+        2067,
+        1856
+      ],
+      "height_px": 1836,
+      "label": "LEFT PROFILE",
+      "label_box": [
+        2155,
+        1847,
+        2320,
+        1866
+      ]
+    },
+    "back": {
+      "source": "D:\\skills\\skill-router-nexus\\output\\character-sheet\\sea-cat-character\\back.png",
+      "source_sha256": "072401e3d22479e76d415cc399f12f15400479c2e204d63b31d487866dea4a07",
+      "source_crop_size": [
+        833,
+        1348
+      ],
+      "panel_box": [
+        2334,
+        0,
+        3501,
+        1876
+      ],
+      "placed_box": [
+        2350,
+        20,
+        3485,
+        1856
+      ],
+      "height_px": 1836,
+      "label": "BACK",
+      "label_box": [
+        3419,
+        1847,
+        3487,
+        1866
+      ]
+    }
+  },
+  "expressions": {
+    "happy": {
+      "source": "D:\\skills\\skill-router-nexus\\output\\character-sheet\\sea-cat-character\\expression-1.png",
+      "source_sha256": "5bf07d6d5453eed4f0eae7503e72220f462f88a4edb22b252742cdffd9280754",
+      "source_crop_size": [
+        1106,
+        1248
+      ],
+      "cell": [
+        3501,
+        0,
+        4076,
+        625
+      ],
+      "placed_box": [
+        3522,
+        8,
+        4055,
+        609
+      ],
+      "label": "HAPPY",
+      "label_box": [
+        3956,
+        580,
+        4062,
+        611
+      ]
+    },
+    "angry": {
+      "source": "D:\\skills\\skill-router-nexus\\output\\character-sheet\\sea-cat-character\\expression-2.png",
+      "source_sha256": "d9827cc97ce043467c644949bf474d68d4eb92c4fb6e9e3efd722ba4402e6b58",
+      "source_crop_size": [
+        1069,
+        1247
+      ],
+      "cell": [
+        3501,
+        625,
+        4076,
+        1250
+      ],
+      "placed_box": [
+        3531,
+        633,
+        4046,
+        1234
+      ],
+      "label": "ANGRY",
+      "label_box": [
+        3951,
+        1205,
+        4062,
+        1236
+      ]
+    },
+    "normal": {
+      "source": "D:\\skills\\skill-router-nexus\\output\\character-sheet\\sea-cat-character\\expression-3.png",
+      "source_sha256": "f2589bbed440f69ec8839b15cd672a21b1ca77c80fb4cfd884f791521d7022f5",
+      "source_crop_size": [
+        998,
+        1162
+      ],
+      "cell": [
+        3501,
+        1250,
+        4076,
+        1876
+      ],
+      "placed_box": [
+        3530,
+        1258,
+        4047,
+        1860
+      ],
+      "label": "NORMAL",
+      "label_box": [
+        3928,
+        1831,
+        4062,
+        1862
+      ]
+    }
+  },
+  "identity_anchor": {
+    "source": "D:\\skills\\skill-router-nexus\\output\\character-sheet\\sea-cat-character\\identity-anchor.png",
+    "source_sha256": "f2589bbed440f69ec8839b15cd672a21b1ca77c80fb4cfd884f791521d7022f5"
+  },
+  "asset_generation": "Reused accepted source assets; deterministic layout only.",
+  "output": "D:\\skills\\skill-router-nexus\\output\\character-sheet\\sea-cat-character\\sea-cat-character-sheet.png",
+  "config": "D:\\skills\\skill-router-nexus\\output\\character-sheet\\sea-cat-character\\config.json"
+}
