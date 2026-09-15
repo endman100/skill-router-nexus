@@ -246,41 +246,19 @@ python -B "<SKILL_DIR>/skill_reader.py" --category <category> --subcategory <sub
 
 ## 路由流程（強制執行，禁止跳步）
 
-### Step 1 — 建立五階段路由帳本
+### Step 1 — 準備最小任務摘要
 
-先將任務拆成以下生命週期階段，逐階段記錄狀態、候選分類、候選 skill、已載入 skill、覆蓋理由與缺口：
+主 Agent 只整理路由所需的目標、成品與限制。移除密鑰、私人資料、完整對話及無關內容。
 
-| 階段 | 必要性 | 完成條件 |
-|------|--------|----------|
-| `UNDERSTAND` | 必要 | 已用 skill 確認目標、輸入、限制與完成標準 |
-| `PLAN` | 條件式 | 若啟用，已有可執行步驟、依賴與風險；若跳過，已記錄理由 |
-| `EXECUTE` | 必要 | 已用 skill 產出使用者要求的結果或採取所需行動 |
-| `VERIFY` | 必要 | 已用 skill 取得足以支持結果狀態的新鮮證據 |
-| `DELIVER` | 必要 | 已用 skill 按成品類型整理可讀、可用、可追溯的交付內容 |
+### Step 2 — 啟動一個 Router Sub-agent
 
-當使用者明確要求計畫，或任務仍有重大歧義、高風險、不可逆操作、跨系統依賴時，啟用 `PLAN`。對目標清楚、低風險且可直接完成的任務，將 `PLAN` 標記為 `SKIPPED` 並記錄理由。
+需要搜尋時，主 Agent 只啟動 **一個** fresh／isolated internal Sub-agent，標記 `role=skill-router-scout`，並傳入最小任務摘要。這個 Sub-agent 一次找齊任務需要的所有 skills，不得再次委派、修改檔案、執行候選 skill 或產生外部副作用。
 
-同一個 skill 可以覆蓋多個階段；在帳本中逐階段記錄，但只載入一次。Router 本身只負責路由，不得被計為任何階段的執行 skill。
+只有三種情況不啟動：使用者已指定且主 Agent 已知確切路徑；當前 Agent 已是 `skill-router-scout`；環境沒有可用 Sub-agent。最後一種情況才由主 Agent 本地搜尋。
 
-### Step 2 — 每階段搜尋 1 到 2 個分類
+### Step 3 — 搜尋並回傳路徑
 
-對每個必要階段及已啟用的 `PLAN` 分別搜尋：
-
-1. 先選 1 個最直接的主要分類。
-2. 只有主要分類沒有合格候選，或仍有明確能力缺口時，才增加第 2 個相關分類。
-3. 不得為整個任務預先設定固定分類總數；分類數量由各階段的覆蓋需求決定。
-
-分類方向：
-
-- `UNDERSTAND`：優先選任務領域分類；需要研究或需求釐清時再選相鄰分類。
-- `PLAN`：優先選 `Agent-Plan`；需要壓力測試時再選 `Agent-Plan-Review` 或任務領域分類。
-- `EXECUTE`：優先選能直接產生成品或操作目標系統的領域／平台分類；需要通用執行方法時再選 `Agent-Execute`、`Coding` 等相關分類。
-- `VERIFY`：先選 `Agent-Verification`；需要成品專屬 QC 時再選任務領域或品質分類。
-- `DELIVER`：先選 `Agent-Delivery`；成品需要專屬格式、發布或傳送規則時，再選 `Writing-and-Content`、`Document-Generation`、`PPT-Design`、`Communication` 或該成品的領域分類。
-
-使用 `skill_reader.py` 掃描每個階段選出的分類：
-
-先取得 roadmap。它會提供第一層所有分類的實際描述與各分類的分支數；為避免一次展開過多內容，第二層只提供 subcategory 名稱，不列出 skill。根據第一層描述先選 category，再視 `subcategory_count` 決定是否進入第二層。
+Router Sub-agent 先完整讀取本 Router，再用與本檔同目錄的 `skill_reader.py` 搜尋。先查最直接的分類，只有仍缺能力時才擴大範圍。
 
 > **⚠️ 路徑推導規則：禁止猜測或硬編碼路徑。**
 > `skill_reader.py` 與本 `SKILL.md` 位於同一目錄。
@@ -289,104 +267,28 @@ python -B "<SKILL_DIR>/skill_reader.py" --category <category> --subcategory <sub
 > 則腳本路徑為 `/foo/bar/skill-router-nexus/skill_reader.py`。
 
 ```bash
-# 取得全分類 roadmap：第一層有完整描述，第二層只有名稱與分支數
 python -B "<SKILL_DIR>/skill_reader.py" --roadmap
-
-# 先掃描目前階段的主要分類—— <SKILL_DIR> 替換為本檔所在目錄的實際絕對路徑
-python -B "<SKILL_DIR>/skill_reader.py" --category Video-Generation
-
-# 只有主要分類不足時，才另行掃描第 2 個分類
-python -B "<SKILL_DIR>/skill_reader.py" --category Creative-Video-Generation
-
-# category 啟用第二層時，先列出 subcategory 摘要，再只掃描最直接的 subcategory
-python -B "<SKILL_DIR>/skill_reader.py" --category Science --list-subcategories
-python -B "<SKILL_DIR>/skill_reader.py" --category Science --subcategory bioinformatics-and-omics
-```
-`skill_reader.py` 會自動解析每個子 skill 的 frontmatter 並輸出 `name`、`description`、`path`；雙層分類另外輸出 `subcategory`。不知道精確 skill 名稱時，可加 `--query "關鍵詞"` 在目前的 category／subcategory 範圍內搜尋；程式化索引可加 `--json`。
-若 category 出現在 `category-taxonomy.json`，先選 1 個最直接的 subcategory；只有該 subcategory 無合格候選或仍有明確缺口時，才增加第 2 個 subcategory。未登錄於 taxonomy 的分類維持原本單層掃描，不需也不得虛構 subcategory。
-每次掃描只處理目前階段；第一個分類已足夠時停止，不繼續擴張。
-同一任務中已掃描過的分類結果可以直接重用於其他階段，不重跑命令；但仍須按新階段的完成條件重新評分候選。
-掃描全部分類僅限 Router 維護、索引診斷或使用者明確要求的全庫盤點，不屬於一般五階段任務路由。
-
-### Step 3 — 每階段保留 1 到 4 個合格候選
-
-比對 `description` 與目前階段的完成條件，依直接性排序並建立 shortlist：
-
-若掃描結果的 description 缺失，不得直接淘汰或只靠 skill 名稱猜測。針對該候選讀取 `SKILL.md` 的 frontmatter、標題與開頭用途段落後再評分，並將缺少有效 frontmatter 記為 metadata debt；這種針對性 discovery 不等於載入完整 skill 指令。
-
-1. 每個啟用階段至少保留 1 個、最多 4 個合格候選 skill。
-2. 候選必須直接提供目前階段需要的能力；僅有關鍵字重疊或鄰近用途不算合格。
-3. 若分類已啟用第二層，先以 subcategory description 判斷範圍是否直接匹配，再比較該 subcategory 內的 skill；不得跳過父子關係或以未宣告的子分類作捷徑。
-4. 先將實體檔解析為 `resolved absolute path`；Windows 路徑以不區分大小寫比較，相同路徑只保留一次。
-5. 跨分類但內容相同的副本以 `SKILL.md` 的 SHA-256 分組，選擇正規化後字典序最小的路徑作為 canonical 代表。Discovery 階段允許為此進行 hash-only 讀取；hash-only 不等於載入 skill 指令。
-6. 同一個 skill 可同時列入多個階段，但要分別說明它如何滿足各階段完成條件。
-7. 第一個分類找不到合格候選時，才掃描第 2 個分類；兩個分類都找不到時，將該階段標記為 `UNRESOLVED` 並明確記錄缺少的能力。
-
-所有必要階段都有合格候選時，狀態為 `READY` 並正常進入 Step 4。若 `UNDERSTAND`、`EXECUTE`、`VERIFY` 或 `DELIVER` 為 `UNRESOLVED`，依下列降級路徑處理：
-
-- 已解析階段仍可進入 Step 4，僅執行不依賴缺口的安全工作；跳過依賴未解析能力的行動。
-- 已取得部分可用結果時標記 `PARTIAL`；無法產生可用結果時標記 `BLOCKED`。
-- 不得宣告 `COMPLETED`，也不得用鄰近 skill 冒充缺少的能力。
-- `DELIVER` 未解析時仍允許輸出最小阻塞報告，只包含真實狀態、缺少能力與需要的下一步；此例外不代表 `DELIVER` 已覆蓋。
-
-### Step 4 — On-demand 載入並依序執行
-
-依 `UNDERSTAND → PLAN（若啟用）→ EXECUTE → VERIFY → DELIVER` 的順序處理：
-
-1. 每個階段先完整讀取排名最高的 1 個主 skill。
-2. 只有主 skill 留下明確能力缺口時，才讀取第 2 個輔助 skill。
-3. 候選 shortlist 只是比較集合，不等於全部載入；每階段通常載入 1 個、最多 2 個 skill。
-4. 若已載入的 skill 能覆蓋後續階段，直接重用並在帳本中註明，不重複讀取。
-5. 依選定 skill 的指令完成該階段，達成完成條件後才移至下一階段。
-
-不得使用固定的全任務 skill 配額。以必要階段全部被直接覆蓋為停止條件，而不是以載入數量作為完成標準。
-
-#### 複合 workflow 的 dependency 載入
-
-若已選中的主 skill 明確宣告內部階段或 reference dependency，可由該主 skill 在執行到對應階段時按需載入：
-
-1. workflow controller 是 Router shortlist 中的一級候選；內部 dependency 不得再冒充新的獨立候選或增加分類命中數。
-2. dependency 必須由主 skill 以明確相對路徑及載入條件宣告；禁止靠名稱猜測、全目錄掃描或一次全部預載。
-3. 每個 dependency 只能在流程到達其階段時讀取，並記錄在同一份路由帳本；未實際讀取的 dependency 不得宣稱已使用。
-4. 每階段最多 2 個 skill 的限制仍適用於 Router 選出的獨立 skill；主 skill 內的 reference dependency 屬 progressive disclosure，不另計為 skill。
-5. dependency 不得繞過必要階段、權限、安全規則或完成門檻，也不得取代 Router 的通用 VERIFY 與 DELIVER。
-
-#### 有界修訂循環
-
-若專用 VERIFY skill 產生具體失敗條件，且已選 workflow 明確提供 targeted revision，可在交付前執行：
-
-```text
-EXECUTE(revision) → VERIFY → EXECUTE(revision) → VERIFY
+python -B "<SKILL_DIR>/skill_reader.py" --category <category>
+python -B "<SKILL_DIR>/skill_reader.py" --category <category> --query "<keywords>"
+python -B "<SKILL_DIR>/skill_reader.py" --category <category> --list-subcategories
+python -B "<SKILL_DIR>/skill_reader.py" --category <category> --subcategory <subcategory> --query "<keywords>"
 ```
 
-- 每輪沿用穩定的 criterion／issue ID，只處理已驗證的缺口。
-- 進入循環前必須有使用者指定或 workflow 宣告的最大輪數；沒有指定時採用主 skill 的較小安全預設。
-- 每輪修改後都要取得較新的驗證證據，不得因檔案已變更就視為通過。
-- 通過、耗盡預算、使用者停止或缺口不可行時立即結束，並把真實狀態交給 DELIVER。
+Sub-agent 只依主 Agent 應讀取的順序回傳去重後的 `SKILL.md` 絕對路徑：
 
-### Step 5 — 驗證、交付並回報來源路徑
+```json
+{"skill_paths":["<absolute-path-to-SKILL.md>"]}
+```
 
-交付前重新檢查路由帳本。只有所有必要階段都有 skill 覆蓋，且 `VERIFY` 已取得充分的新鮮證據時，才可宣告 `COMPLETED`。
+搜尋細節留在 Sub-agent。不得回傳 roadmap、分類清單、落選候選、manifest、hash、評分或搜尋紀錄；找不到合格 skill 時回傳空陣列。
 
-`VERIFY` 證據至少記錄：檢查命令或資料來源、執行時間或 revision、exit code／斷言結果、失敗數與未檢項。證據必須晚於最後一次修改；檢查失敗、證據過舊或缺少必要檢查時，只能回報 `PARTIAL` 或 `BLOCKED`。
+### Step 4 — 主 Agent 讀取 Skills
 
-最終回覆依序包含：
+主 Agent 確認每個回傳路徑存在、位於本 Router 所在的知識庫內且指向 `SKILL.md`，再親自完整讀取每個選中的 skill。Sub-agent 的搜尋不能代替這一步。
 
-1. **結果**：先說明完成了什麼或目前真實狀態。
-2. **交付物**：提供答案、預覽、可點擊檔案路徑或必要操作資訊。
-3. **驗證**：列出實際檢查、關鍵證據與未通過項目。
-4. **缺口／下一步**：只在仍有阻塞或需要使用者決策時提供。
-5. **路由來源**：按階段列出使用的分類與 skill；`PLAN` 跳過時一併說明理由。
+### Step 5 — 主 Agent 執行任務
 
-簡短任務可以合併前四項，但仍須保持「結果先行、證據可見、缺口誠實」。來源格式例如：
-
-> 狀態：`<COMPLETED|PARTIAL|BLOCKED>`
-> 已使用 `skill-router-nexus` 處理任務：
-> - `UNDERSTAND`：`<分類> → <skill-name>`
-> - `PLAN`：`SKIPPED（目標明確且低風險）`
-> - `EXECUTE`：`<分類> → <skill-name>`
-> - `VERIFY`：`<分類> → <skill-name>`
-> - `DELIVER`：`<分類> → <skill-name>`
+理解、規劃、執行、驗證與交付都由主 Agent 依選中的 skills 及更高優先級指令完成。Router 到 Step 4 即完成職責，不管理後續任務生命週期，也不要求主 Agent 回報搜尋細節。
 
 ---
 
@@ -394,13 +296,10 @@ EXECUTE(revision) → VERIFY → EXECUTE(revision) → VERIFY
 
 | 禁止行為 | 原因 |
 |---------|------|
-| 假設任何子 skill 已載入 | 每次 session 必須重新路由 |
-| 直接進入子資料夾而不讀此檔 | 此檔是強制入口，不可繞過 |
-| 直接查詢或搜尋子 skill 而不先讀此檔 | 查詢行為同樣必須經由路由流程 |
-| 為整個任務固定分類或 skill 總數 | 數量不能證明生命週期覆蓋完整 |
-| 為填滿配額選擇旁支 skill | 關鍵字相關不等於能完成目前階段 |
-| 將 1 到 4 個候選全部載入 | 候選用於比較，實際載入應按缺口逐一增加 |
-| 將同一 skill 的跨分類副本重複計數或載入 | 會製造虛假的多樣性並浪費 context |
-| 必要階段仍為 `UNRESOLVED` 卻宣告完整完成 | 應揭露能力缺口並限制完成聲明 |
-| 沒有新鮮驗證證據便宣告完成 | 完成狀態必須由實際檢查支持 |
-| 一次性 pre-load 整個分類 | 浪費 token，違反最小載入原則 |
+| 未先讀取本 Router 就查詢或載入子 skill | 本檔是強制入口 |
+| 需要搜尋時啟動多個 Router Sub-agent | 一個 Sub-agent 應一次找齊所有路徑 |
+| `skill-router-scout` 再啟動 Sub-agent | 避免無限遞迴 |
+| 將完整對話、密鑰或私人資料傳給 Router Sub-agent | 路由只需要最小任務摘要 |
+| Router Sub-agent 完整讀取或執行最終 skill | 它只負責搜尋路徑 |
+| Router Sub-agent 回傳路徑以外的搜尋資料 | 避免污染主 Agent context |
+| 主 Agent 未完整讀取所選 skill 就開始使用 | 路徑回報不能取代 skill 指令 |
