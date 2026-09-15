@@ -59,6 +59,10 @@ Separate stages only when users can meaningfully branch, inspect, edit, reuse, o
 
 Use core preview and save nodes for terminal media when they accept the native output. Preserve batch dimensions, timing, sample rate, frame rate, coordinate systems, color ranges, channel layouts, and device or dtype contracts appropriate to the modality.
 
+When a model-specific intermediate must remain an object rather than a native scalar or media type, keep tensor and token internals opaque. If users are expected to change that state, provide a focused editor node with stable public fields and a readable preview such as text or a dictionary. Do not require users to copy opaque serialized internals between widgets.
+
 ## UX contract
 
 Give nodes, sockets, and non-obvious widgets short English descriptions. Use labels and placeholders that explain what users should enter, not internal variable names. Example workflows should demonstrate the recommended graph and one meaningful alternate path, without requiring disconnected outputs or unexplained fields.
+
+In each workflow, visually distinguish the few nodes users normally edit from model plumbing. Add a short workflow note where a custom parameter group needs context. A parameterless sampler, schedule, latent, or adapter provider normally needs no separate note when its node title and description already state its role. Include role words such as `Sampler`, `Schedule`, `Encoder`, or `Decoder` in display names when that makes the native connection obvious.

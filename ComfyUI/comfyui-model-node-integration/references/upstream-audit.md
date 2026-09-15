@@ -11,9 +11,11 @@ Record:
 - required weight files, auxiliary encoders, decoders, tokenizers, and expected directory layout;
 - supported operating systems, accelerators, compute dtypes, quantization formats, and memory guidance;
 - upstream installation constraints and dependency pins; and
-- at least one executable official example with its inputs, seed or configuration, outputs, and timing.
+- at least one executable official example with its inputs, seed or configuration, outputs, stopping condition, and timing.
 
 Use the actual official code as the parity oracle. A hosted demo, screenshot, marketing claim, or third-party wrapper is not an executable specification.
+
+Keep a fast reduced baseline for iteration when necessary, but also run a representative example with upstream-default or recommended quality and duration settings. If completion is model-controlled, let it stop naturally and record the result instead of treating a short test cap as the normal output.
 
 ## Build a capability matrix
 

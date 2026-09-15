@@ -14,6 +14,7 @@ Build the smallest native node surface that preserves upstream behavior and qual
 - Except for the versioned `comfy_api` namespace and immutable upstream or model revisions needed for reproducibility, target and test the newest released dependency versions. Avoid stale pins and unnecessary upper bounds. In `pyproject.toml`, use minimum-only `>=` constraints wherever possible. Actively remove the need for `<` or `!=` by updating the adapter or upstream compatibility fork; retain either constraint only when safe compatibility cannot be achieved, the failure is reproduced, and the reason is documented.
 - Treat the installed ComfyUI runtime as the dependency authority. If an official upstream inference package or SDK conflicts with current ComfyUI dependencies and a narrow adapter cannot resolve it, fork only that upstream package and make the smallest compatibility update needed for current packages. Never fork or modify ComfyUI to accommodate the upstream package. Preserve model behavior and verify parity against the official implementation.
 - Prefer native ComfyUI types and existing loaders, conditioning, samplers, schedules, codecs, preview, and save nodes. Add a custom node only for model-specific work.
+- Decide the node surface from a capability matrix before implementation. Separate nodes only at stages users can meaningfully edit, branch, replace, inspect, or reuse; do not mirror every upstream function as a node.
 - Reuse ComfyUI's established input names, meanings, defaults, ranges, widgets, and socket types whenever the upstream parameter is equivalent. Do not add aliases or rename a different concept merely to look native.
 - Keep released node IDs, input IDs, output types, and output order stable. Change labels or add search aliases for presentation without silently breaking saved workflows.
 - For diffusion or flow models, use the native `MODEL`, `CONDITIONING`, `LATENT`, `GUIDER`, `SAMPLER`, and `SIGMAS` graph wherever the update equations and tensor contracts match. Customize only the incompatible part.
@@ -25,7 +26,11 @@ Build the smallest native node surface that preserves upstream behavior and qual
 - Declare dependencies at install time; never use `eval`, `exec`, obfuscation, or runtime package installation. When programmatic access is available, implement first-use automatic weight download from an explicit model-loader execution, limited to a fixed revision and file manifest; verify available checksums, write through a temporary target, and publish files atomically. Cancellation or failure must not leave a valid-looking partial artifact.
 - Resolve models through ComfyUI `folder_paths`, including paths configured by `extra_model_paths.yaml`; do not hardcode a single model directory or build a separate path system. Revalidate every path-like value at the actual read or write boundary instead of trusting a combo widget.
 - Prefer schema descriptions, English input tooltips, labels, and node help over custom JavaScript. Add frontend code only when the native schema cannot express the required interaction; then test the newest frontend and declare a minimum `comfyui-frontend-package` version when needed.
+- Make the editable path obvious in the UI. Add concise English help or workflow notes for custom nodes with non-obvious parameters; keep parameterless plumbing providers compact. If a custom structured object is necessary, provide a safe editor and a human-readable preview when users are expected to modify it.
 - Ship multiple ready-to-run workflows covering the recommended path and other genuinely supported, tested modes or graph compositions. Do not count trivial parameter-only copies or unsupported features.
+- Treat short capped generations as regression fixtures, not showcase evidence. In addition to fast tests, run representative upstream-default or recommended-length cases through their natural completion and retain matched Official/ComfyUI outputs for review.
+- Keep the repository README user-first: explain the result, installation, shortest successful workflow, and which inputs to edit before implementation details. Link dense schemas and metrics to focused docs. When outputs are reviewable media, embed clearly labeled Official/ComfyUI pairs using a GitHub-renderable format and verify the rendered page in a browser.
+- Keep every README workflow entry clickable and advertise only hardware, dtype, backend, and Manager paths that were actually executed; move implemented-but-untested paths and exact revision detail to focused docs.
 - Do not add GitHub Actions or other hosted CI workflows for automated custom-node testing. Run required tests locally or manually and record the commands, environment, and results. Add publishing automation only when the user explicitly requests it.
 
 ## Checklist
@@ -37,6 +42,7 @@ Build the smallest native node surface that preserves upstream behavior and qual
 - [ ] Pin the upstream code and model revisions and confirm required hardware.
 - [ ] If an official upstream inference package or SDK conflicts with current ComfyUI, first try a narrow adapter; otherwise fork only that upstream package, never ComfyUI, and test its changed paths against upstream.
 - [ ] Run one official baseline and document supported versus unsupported capabilities.
+- [ ] Include at least one representative official case at normal upstream settings and natural completion; keep any short or reduced case explicitly labeled as a fast regression fixture.
 - [ ] Read [upstream-audit.md](references/upstream-audit.md).
 
 ### Design and implement
@@ -56,6 +62,8 @@ Build the smallest native node surface that preserves upstream behavior and qual
 - [ ] Revalidate model and output paths at the read or write boundary, including combo values and `extra_model_paths.yaml` locations.
 - [ ] Confirm imports and execution contain no `eval`, `exec`, code obfuscation, or runtime pip/conda/subprocess installer.
 - [ ] Add short English descriptions and tooltips for non-obvious nodes and inputs; use frontend JavaScript only for interactions the native schema cannot provide.
+- [ ] Identify the few nodes and widgets most users should edit. Explain them with native descriptions or workflow notes; do not add note clutter to parameterless plumbing nodes.
+- [ ] When editable model-specific state cannot use a native type, expose a stable custom object plus a safe editor and readable preview instead of forcing users to edit tensor tokens or undocumented JSON.
 - [ ] Read [node-surface.md](references/node-surface.md) and, when loading models or weights, [runtime-integration.md](references/runtime-integration.md).
 
 ### Verify and release
@@ -63,14 +71,16 @@ Build the smallest native node surface that preserves upstream behavior and qual
 - [ ] Test registration and each deterministic intermediate boundary before end-to-end generation.
 - [ ] Run matched official and ComfyUI cases with the same revisions, weights, inputs, seed, dtype, device, and generation settings.
 - [ ] Compare intermediate and final outputs with metrics and acceptance thresholds defined before execution; pass only when every measured difference is within its threshold.
+- [ ] Maintain two evidence layers when generation is expensive: fast deterministic regression cases and representative natural-length or full-quality cases. Do not present token-, step-, frame-, or duration-capped fixtures as normal model output.
 - [ ] Test claimed dtype, device, memory, unload, cancellation, and failure behavior.
 - [ ] Test against the newest released dependencies and frontend; declare tested minimum versions with `>=` and eliminate `<` or `!=` through compatibility work wherever safely possible.
-- [ ] Provide at least two ready-to-run workflows: a recommended minimal graph plus genuinely distinct supported modes or useful compositions, with labeled inputs and terminal outputs.
-- [ ] Validate and queue every shipped workflow against the target schemas and confirm its terminal output; do not use trivial parameter-only duplicates to satisfy the count.
+- [ ] Provide at least two ready-to-run workflows: a recommended minimal graph plus genuinely distinct supported modes or useful compositions, with labeled editable inputs and terminal outputs.
+- [ ] Register workflows so they appear in ComfyUI's Template Browser. Open, inspect, and queue every shipped workflow against the target frontend and schemas; confirm its terminal output and do not use trivial parameter-only duplicates to satisfy the count.
 - [ ] Verify dependency, weight, code, and asset provenance; test the documented installation path.
 - [ ] Install the built artifact in a clean environment and test install, update, removal, backend registration, and any declared frontend compatibility without modifying ComfyUI core.
 - [ ] Keep automated custom-node tests out of GitHub Actions and other hosted CI; retain reproducible local test commands and captured results instead.
 - [ ] Write the repository README using [readme-template.md](references/readme-template.md), filling every required section with verified project-specific information.
+- [ ] Open the published or locally rendered README in the target browser. Verify relative links, media playback, paired-result labels, collapsed sections, and that development evidence excluded by `.comfyignore` remains available where the README references it.
 - [ ] Read [validation-and-release.md](references/validation-and-release.md) before claiming parity or Manager/Registry compatibility.
 
 ## Definition of done
@@ -80,10 +90,12 @@ Do not declare the node pack complete until every applicable item has direct evi
 - [ ] A capability matrix links the authoritative upstream repository and identifies supported, composable, external, and intentionally unsupported features.
 - [ ] A final node map lists every custom node, its stable schema, and the native ComfyUI nodes and types it composes with.
 - [ ] The built package installs in a clean environment with the newest tested dependencies, registers without errors, and does not modify ComfyUI core.
-- [ ] Every shipped workflow loads from `example_workflows`, queues successfully, and produces its documented terminal output.
+- [ ] Every shipped workflow appears in the Template Browser from `example_workflows`, queues successfully, and produces its documented terminal output.
 - [ ] Runtime evidence covers model discovery, `extra_model_paths.yaml`, automatic download or manual fallback, lazy branches, fingerprints, lists versus batches, supported dtype/device paths, memory release, cancellation, and actionable failures.
 - [ ] A reproducible upstream-versus-ComfyUI report records revisions, weights, inputs, seeds, settings, hardware, metrics, thresholds, hashes or artifacts, and shows every required comparison within its predefined tolerance.
-- [ ] The README follows [readme-template.md](references/readme-template.md) and covers the original repository, project goal and features, wrapping method, installation and use, nodes, workflows, and reproducible official-versus-ComfyUI results.
+- [ ] Parity evidence includes fast regression coverage and representative normal-output cases for each materially distinct claimed mode; showcased outputs are not artificially shortened for test speed.
+- [ ] The README follows [readme-template.md](references/readme-template.md), leads a first-time user from install to a working template, keeps implementation noise in linked docs, and covers the original repository, project goal, wrapping method, nodes, workflows, and reproducible Official/ComfyUI results.
+- [ ] Reviewable output pairs are clearly labeled and playable or viewable from the rendered README when the modality supports it; detailed metrics remain in the validation report instead of overwhelming the quick start.
 - [ ] Required tests were run locally or manually with recorded evidence; the repository contains no GitHub Actions or other hosted CI workflow for automated custom-node testing.
 - [ ] The release artifact, installation instructions, and any claimed Registry or Manager status are tested directly rather than inferred from source-tree execution or upload success.
 
