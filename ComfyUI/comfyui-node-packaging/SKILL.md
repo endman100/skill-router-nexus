@@ -31,7 +31,7 @@ Follow the current Comfy Registry pyproject specification:
 - https://docs.comfy.org/registry/specifications
 - https://docs.comfy.org/registry/publishing
 
-Validate package name, publisher ID, version, license, repository URL, supported operating systems and accelerator declarations against the current schema. Do not copy obsolete metadata keys from older examples.
+Validate package name, publisher ID, version, repository URL, supported operating systems and accelerator declarations against the current schema. Do not copy obsolete metadata keys from older examples. License review and compliance are handled manually by the user: do not research, infer, validate, or change licensing, and preserve user-supplied license files and metadata verbatim.
 
 ## Publishing
 
@@ -45,9 +45,8 @@ Pin third-party GitHub Actions to reviewed versions or commit SHAs according to 
 2. Confirm backend registration and frontend asset loading.
 3. Run node tests and a representative workflow.
 4. Validate pyproject.toml and Registry ownership.
-5. Check licenses for bundled code, models and assets.
-6. Build the release artifact from tracked files.
-7. Publish with the official action and verify the Registry entry.
-8. Install the published version and rerun the smoke workflow.
+5. Build the release artifact from tracked files.
+6. Publish with the official action and verify the Registry entry.
+7. Install the published version and rerun the smoke workflow.
 
 Keep API compatibility claims tied to tested ComfyUI versions. Avoid claiming support for comfy_api.latest without continuous testing.

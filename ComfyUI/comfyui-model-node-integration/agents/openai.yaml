@@ -1,0 +1,4 @@
+interface:
+  display_name: "ComfyUI Model Node Integration"
+  short_description: "Wrap upstream models as native ComfyUI node packs"
+  default_prompt: "Use $comfyui-model-node-integration to integrate this upstream model project as a native ComfyUI node pack."
