@@ -1,0 +1,75 @@
+flowchart TD
+  start([遊戲研發啟動])
+
+  subgraph P1["① 立項階段"]
+    direction TB
+    research[市場調研] --> concept[遊戲概念]
+    concept --> feasibility["可行性分析<br/>技術｜玩法｜IP／架構"]
+    feasibility --> approve{"是否立項？"}
+    approve -- "否：調整定位" --> research
+  end
+
+  subgraph P2["② 前期製作"]
+    direction TB
+    team[組建團隊＋專案計畫] --> m1[["里程碑 1｜正式立項"]]
+    m1 --> define["核心玩法｜美術風格｜商業模式"]
+    define --> prototype[快速原型]
+    prototype --> proto_gate{"玩法成立且可實作？"}
+    proto_gate -- "否：修正設計" --> define
+    proto_gate -- 是 --> first_playable[首次可玩版／Vertical Slice]
+    first_playable --> m2[["里程碑 2｜首次可玩版"]]
+  end
+
+  subgraph P3["③ 正式開發"]
+    direction TB
+    docs["GDD＋TDD＋時程＋資源"] --> production[跨職能製作]
+    production --> alpha["Alpha<br/>核心功能完成、主流程可跑通"]
+    alpha --> m3[["里程碑 3｜Alpha"]]
+  end
+
+  subgraph P4["④ 測試階段"]
+    direction TB
+    qa["QA<br/>阻斷缺陷｜流程｜相容性｜回歸"] --> stable{"達到 Beta 穩定度？"}
+    stable -- 否 --> rework[製作修復＋玩法調整]
+    rework --> qa
+    stable -- 是 --> beta[內部 Beta]
+    beta --> closed[多輪封閉／限量測試]
+    closed --> release_gate{"品質、數據、營運準備達標？"}
+    release_gate -- "否：繼續修正" --> rework
+    closed -. "可選" .-> ea[Early Access]
+  end
+
+  subgraph P5["⑤ 發布與持續研發"]
+    direction TB
+    launch[公測／Gold／正式上線] --> m4[["里程碑 4｜正式發布"]]
+    m4 --> game_type{"產品營運型態"}
+    game_type -- 單機 --> single[補丁＋DLC／擴充包]
+    game_type -- 長線／網路 --> validate[技術＋時間可行性]
+    validate --> iterate[玩法／內容／活動迭代]
+    iterate --> test[版本測試] --> release[新版本上線]
+    release --> feedback[社群回饋＋營運數據]
+    feedback --> iterate
+  end
+
+  start --> research
+  approve -- 是 --> team
+  m2 --> docs
+  m3 --> qa
+  release_gate -- 是 --> launch
+  ea --> launch
+
+  classDef init fill:#F8C98B,stroke:#9A5B18,color:#1F2937;
+  classDef pre fill:#B9DFA6,stroke:#4E7C3C,color:#1F2937;
+  classDef dev fill:#BFD8F2,stroke:#426C94,color:#1F2937;
+  classDef testc fill:#D8C2EB,stroke:#765493,color:#1F2937;
+  classDef live fill:#F2BFC0,stroke:#984C4F,color:#1F2937;
+  classDef gate fill:#FFE29A,stroke:#9A761B,color:#1F2937,stroke-width:2px;
+  classDef milestone fill:#FFF5A8,stroke:#8C7A00,color:#1F2937,stroke-width:2px;
+
+  class research,concept,feasibility init;
+  class team,define,prototype,first_playable pre;
+  class docs,production,alpha dev;
+  class qa,rework,beta,closed,ea testc;
+  class launch,single,validate,iterate,test,release,feedback live;
+  class approve,proto_gate,stable,release_gate,game_type gate;
+  class m1,m2,m3,m4 milestone;
