@@ -1,13 +1,13 @@
 ---
-name: seedance-prompt
+name: seedance-product-video
 description: |
   为 Seedance 2.0 视频生成模型撰写产品宣传动画提示词（Motion Graphics Prompt）。
   生成 15 秒一镜到底的动态影像提示词，支持 4 种美学风格（Apple/Microsoft/Bauhaus/Vercel）。
   支持垫图（参考图）模式，自动标注图片占位符。
   生成提示词后可通过即梦 Dreamina CLI 直接生成视频（自动检测安装状态）。
-  TRIGGER when: 用户需要生成 Seedance 视频提示词、产品宣传动画提示词、motion graphics prompt，
-  或提到 "Seedance"、"视频提示词"、"产品动画"、"宣传视频提示词"、"video prompt"。
-  Keywords: Seedance, 视频提示词, video prompt, motion graphics, 产品动画, 宣传动画, 垫图, Dreamina
+  TRIGGER when: 用户明确需要产品宣传动画、product reveal、motion graphics prompt、15 秒一镜到底产品片，
+  或明确提到产品动画、宣传视频、垫图产品广告；一般 Seedance 提示词请使用 seedance-prompt-library。
+  Keywords: product promo, product reveal, motion graphics, 产品动画, 宣传动画, 垫图, Dreamina
 ---
 
 # Seedance 2.0 产品宣传动画提示词生成器

@@ -1,9 +1,7 @@
 ---
 name: seedance-20
-description: "This skill should be used when creating, improving, or troubleshooting Seedance 2.0 video on any surface - Dreamina, Jimeng, CapCut, Doubao, Volcengine/Ark, BytePlus, Runway's Seedance route, fal, or third-party provider/router surfaces such as EvoLink, OpenRouter, Kie.ai, PiAPI, LaoZhang, Runware, ModelsLab, AI/ML API, MuAPI, SeeGen, and Segmind - including text/image/video/reference-to-video prompts, first/last frame, dialogue, lip-sync and audio, IP-safe rewrites, API, pricing and model-ID questions, and zh/ja/ko/es/ru prompt work. Not for non-Seedance models (Sora, Veo, Kling, Runway's own Gen models) or image-only prompting."
+description: "Use for Seedance 2.0 platform operations and production troubleshooting across Dreamina, Jimeng, CapCut, Doubao, Volcengine/Ark, BytePlus, Runway, fal, and third-party providers: API/model IDs/pricing, surface constraints, reference-role setup, first/last frame, continuation, multi-clip continuity, prompt linting, audio/lip-sync troubleshooting, localization, QC, and delivery. For ordinary template-driven Seedance prompt drafting, use seedance-prompt-library or the matching seedance-* content-type Skill."
 license: MIT
-user-invocable: true
-tags: [seedance]
 metadata:
   version: "6.6.0"
 ---
