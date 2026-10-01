@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-10-01",
+  "profiles": {
+    "quality": [
+      "milmmt-12b",
+      "index-9b",
+      "milmmt-4b",
+      "index-2b",
+      "hy-mt2",
+      "milmmt-1b"
+    ],
+    "instructions": [
+      "index-9b",
+      "index-2b",
+      "hy-mt2"
+    ],
+    "fast": [
+      "index-2b",
+      "hy-mt2",
+      "milmmt-1b"
+    ],
+    "cpu": [
+      "hy-mt2"
+    ]
+  },
+  "models": {
+    "milmmt-12b": {
+      "model_id": "xiaomi-research/MiLMMT-46-12B-v1.0",
+      "family": "milmmt"
+    },
+    "milmmt-4b": {
+      "model_id": "xiaomi-research/MiLMMT-46-4B-v1.0",
+      "family": "milmmt"
+    },
+    "milmmt-1b": {
+      "model_id": "xiaomi-research/MiLMMT-46-1B-v1.0",
+      "family": "milmmt"
+    },
+    "index-9b": {
+      "model_id": "IndexTeam/Index-Translate-9B",
+      "family": "index"
+    },
+    "index-2b": {
+      "model_id": "IndexTeam/Index-Translate-2B",
+      "family": "index"
+    },
+    "hy-mt2": {
+      "model_id": "tencent/Hy-MT2-1.8B-GGUF",
+      "family": "hy",
+      "quantizations": [
+        "Q8_0",
+        "Q6_K",
+        "Q4_K_M"
+      ]
+    }
+  }
+}

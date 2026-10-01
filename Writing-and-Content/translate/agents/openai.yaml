@@ -1,0 +1,4 @@
+interface:
+  display_name: "Translate — 統一翻譯與審校"
+  short_description: "本地翻譯模型選擇、文章精翻、術語與格式驗收"
+  default_prompt: "Use $translate to translate this content, choose an available backend, and verify meaning and formatting."
