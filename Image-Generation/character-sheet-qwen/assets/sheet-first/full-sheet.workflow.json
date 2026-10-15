@@ -259,13 +259,13 @@
         "Node name for S&R": "EmptyLatentImage"
       },
       "widgets_values": [
-        1024,
-        672,
+        1536,
+        1008,
         1
       ],
       "widgets_values_named": {
-        "width": 1024,
-        "height": 672,
+        "width": 1536,
+        "height": 1008,
         "batch_size": 1
       }
     },
@@ -320,7 +320,7 @@
       "widgets_values": [
         20261015,
         "fixed",
-        25,
+        40,
         3.0,
         "deis",
         "beta",
@@ -328,7 +328,7 @@
       ],
       "widgets_values_named": {
         "seed": 20261015,
-        "steps": 25,
+        "steps": 40,
         "cfg": 3.0,
         "sampler_name": "deis",
         "scheduler": "beta",

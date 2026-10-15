@@ -58,8 +58,8 @@
   "6": {
     "class_type": "EmptyLatentImage",
     "inputs": {
-      "width": 1024,
-      "height": 672,
+      "width": 1536,
+      "height": 1008,
       "batch_size": 1
     }
   },
@@ -83,7 +83,7 @@
         0
       ],
       "seed": 20261015,
-      "steps": 25,
+      "steps": 40,
       "cfg": 3.0,
       "sampler_name": "deis",
       "scheduler": "beta",
