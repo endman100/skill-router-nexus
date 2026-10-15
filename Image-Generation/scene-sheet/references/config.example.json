@@ -1,0 +1,21 @@
+{
+  "assets": {
+    "B": "B.png",
+    "A": "A.png",
+    "C": "C.png",
+    "detail_object": "detail_object.png",
+    "detail_feature": "detail_feature.png",
+    "detail_material": "detail_material.png"
+  },
+  "labels": {
+    "B": "B | LEFT CORNER",
+    "A": "A | REVERSE",
+    "C": "C | RIGHT CORNER",
+    "detail_object": "OBJECT DETAIL",
+    "detail_feature": "SCENE FEATURE",
+    "detail_material": "MATERIAL DETAIL"
+  },
+  "cell_width": 800,
+  "view_height": 800,
+  "detail_height": 400
+}
