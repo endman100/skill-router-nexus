@@ -6,12 +6,12 @@
   "vae": "qwen_image_2.1_vae_bf16.safetensors",
   "cache_device": "auto",
   "cache_dtype": "default",
-  "steps": 25,
+  "steps": 40,
   "cfg": 3.0,
   "sampler": "deis",
   "scheduler": "beta",
   "resolution": 1024,
-  "width": 1024,
-  "height": 672,
+  "width": 1536,
+  "height": 1008,
   "seed": 20261015
 }
