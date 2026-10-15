@@ -1,0 +1,9 @@
+{
+  "retained_on": "2026-10-15",
+  "skill": "character-sheet-qwen",
+  "default_mode": "full-sheet-first",
+  "user_acceptance": "User accepted the demonstrated version for retention and reuse.",
+  "case_archive": "D:\\skills\\skill-router-nexus\\.releases\\character-sheet-qwen\\2026-10-15-quality\\character-sheet-qwen-quality-20261015.zip",
+  "archive_sha256": "c131b4748688ac776bfbda3dfeb6039fcee307e233c291bec4aa80c520c3997c",
+  "scope": "Single demonstrated character; masks are case-specific; no universal likeness guarantee."
+}

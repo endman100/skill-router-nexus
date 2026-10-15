@@ -1,0 +1,19 @@
+# Full sheet first
+
+Use local Qwen Image 2.1 for an entire sheet in one inference, then inspect and repair. Do not generate a separate anchor first or assemble the first pass from assets. All original references remain identity authority, including on repair calls. Preserve the raw first pass, exact prompts, configuration, ordered reference hashes, API graph, prompt ID and successful history.
+
+Use `scripts/qwen_sheet.py --backend <case-backend.json> --references <originals...> --prompt-file <full-sheet.txt> --negative-file <negative.txt> --output <case>/sheet-first.png --run`. Omit --run for live schema validation without upload or inference. After timeout use --resume with the same output; never resubmit uncertain jobs. Explicit prompts bypass the isolated-asset templates. Describe each reference's role and image index in the prompt.
+
+Start at 1920x1248, 25 steps, CFG 3, DEIS/Beta with the installed base-model backend. These settings completed real inference on the tested RTX 5090 32 GB; recheck current node/model availability. Do not silently change checkpoints. Keep the user's original derivative as an explicit selectable alternative, not an automatic fallback.
+
+Request the entire white sheet, original identity/rendering/outfit/proportions, all distinctive appendages, and exactly nine regions: top hands/feet/outfit/happy/angry; lower front/left-profile/back and one large neutral portrait across the final two columns. Explicitly mention wings, tails or other salient features rather than relying only on “preserve accessories.” Preserve shorts when present. Ask for exactly two shoes, full silhouettes, opposite wink states for happy/angry, and both eyes open for NORMAL.
+
+Inspect every region. A successful history proves execution only. Check identity against the original rather than an intermediate; check extra/missing regions, labels, appendages, neutral eye state, hidden-design inference, clipping and consistency. Generated borders/labels do not have deterministic geometry. Do not apply the split compositor's manifest verifier to this mode or claim it guarantees resemblance.
+
+For repair, attach all originals plus the actual full-sheet target, asking for bounded changes. If full-sheet editing preserves wrong structure, crop only the failed region and use originals plus that crop as an explicit edit target. Record crop coordinates and source hashes. Match its aspect ratio with dimensions divisible by 32. Composite only inspected Qwen-generated repairs back into the original sheet, preserving pixels outside the repair rectangle; record any uniform scaling and insertion box. Keep the unmodified first pass. At most two targeted quality retries; deliver remaining defects plainly instead of treating inference success as quality acceptance.
+
+The 2026-10-15 angel test completed a 1920x1248 whole-sheet first pass from the sole original. It drew three views and details, but omitted wings, added two portraits, misplaced labels and gave NORMAL a wink. A whole-sheet edit restored wings while retaining wrong portrait structure/labels and clipping a front wing. This establishes working full-sheet inference and imperfect instruction following, not equivalence to another model. Case evidence is retained at `D:/temp/character-sheet-qwen-sheet-first-20261015`. Do not advertise this branch as a validated replacement for the archived split variant.
+
+## Quality follow-up
+
+Read [sheet-first-quality.md](sheet-first-quality.md) before calling this mode quality-checked. The subsequent original-checkpoint case improved the usable sheet; it did not establish automatic repeatability. Use the user's supplied checkpoint when the controlled comparison supports it, keeping the base-model configuration as a distinct option. Do not accept a technically successful repair that changes ponytail count, sleeve construction, eye state or identity.

@@ -1,0 +1,17 @@
+{
+  "base_url": "http://127.0.0.1:1120",
+  "unet": "qwen_image_2.1_int8_convrot.safetensors",
+  "clip": "qwen3vl_8b_bf16_heretic.safetensors",
+  "clip_type": "qwen_image",
+  "vae": "qwen_image_2.1_vae_bf16.safetensors",
+  "cache_device": "auto",
+  "cache_dtype": "default",
+  "steps": 25,
+  "cfg": 3.0,
+  "sampler": "deis",
+  "scheduler": "beta",
+  "resolution": 1024,
+  "width": 1024,
+  "height": 1024,
+  "seed": 20261015
+}
