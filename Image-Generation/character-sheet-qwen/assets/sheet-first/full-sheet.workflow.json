@@ -259,13 +259,13 @@
         "Node name for S&R": "EmptyLatentImage"
       },
       "widgets_values": [
-        2240,
-        1472,
+        1024,
+        672,
         1
       ],
       "widgets_values_named": {
-        "width": 2240,
-        "height": 1472,
+        "width": 1024,
+        "height": 672,
         "batch_size": 1
       }
     },

@@ -11,7 +11,7 @@
   "sampler": "deis",
   "scheduler": "beta",
   "resolution": 1024,
-  "width": 2240,
-  "height": 1472,
+  "width": 1024,
+  "height": 672,
   "seed": 20261015
 }
