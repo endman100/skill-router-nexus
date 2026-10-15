@@ -1,0 +1,128 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "redqw21UNLOCKEDV2TI2I_redqw21UNLOCKEDV2_fp8.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_8b_bf16_heretic.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    }
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    }
+  },
+  "4": {
+    "class_type": "QwenImage21Cache",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "device": "auto",
+      "dtype": "default"
+    }
+  },
+  "5": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ],
+      "prompt": "<image1> 是唯一角色与画风参考。<image2> 是九个空格的排版模板，只提供格线位置，没有角色，不是身份参考。请直接把 image2 的九个空格填成一整张完整角色设定表，一次生成全部九个区域。严格照 image2 的格线，不增加任何分格或额外头像。纯白底，无文字、无标题、无标签、无水印。\n保留 image1 的原作者画法、清晰深色线条、细腻有层次的明暗与饱和度，忠实保留同一张脸、眼睛、粉发青色发梢、双马尾、黑色蝴蝶结、金色光环、白色羽毛翅膀、白色蓝边水手服和短裤。不要重新设计人物、不要换画风、不要淡化成扁平粉彩，不要改变原有身体比例。\n第一行五格从左到右：1左右双手与袖口；2严格正面的一对鞋子，只画一左一右两只；3原服装的领口领结袖口细节；4开心头像，张嘴大笑，画面左眼完全闭合、右眼睁开；5生气头像，嘴闭合、眉头明显皱起，画面右眼完全闭合、左眼睁开。闭眼画成一条眼睑弧线，闭合眼不可再出现紫色虹膜。\n下方三大竖格从左到右：全身正面、朝画面左方的严格全身左侧面、严格全身背面。三个人站直、双臂放松，完整双脚鞋底入画。每个人都有金色光环与一对白色羽毛翅膀，翅膀自然向下收拢，完整包含在自己的格子内，左右都留明显白边，不能触碰画布或格线。三视图头顶与鞋底对齐，原图短裤不能改成裙子，背面服装与翅膀结构合理一致。\n右下最后一个大格：只画一张大型正面中性头像，双眼全部睁开，嘴闭合放松、眉毛放松，不眨眼，不生气，不微笑张嘴，完整光环、头发与短颈入画，不画胸部。\n严格只画这九格：三种细节、三张全身、三张头像；不要多画表情。所有格子使用同一角色，同样的画风。未展示的鞋与背部只做简洁一致补全。",
+      "negative_prompt": "extra panel, extra portrait, missing wings, clipped wings, clipped halo, cropped feet, skirt, text, labels, different character, changed art style, flat pastel shading, extra shoes, extra limbs, watermark",
+      "resolution": 1024,
+      "images.image_1": [
+        "101",
+        0
+      ],
+      "images.image_2": [
+        "102",
+        0
+      ]
+    }
+  },
+  "6": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 2240,
+      "height": 1472,
+      "batch_size": 1
+    }
+  },
+  "7": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "4",
+        0
+      ],
+      "positive": [
+        "5",
+        0
+      ],
+      "negative": [
+        "5",
+        1
+      ],
+      "latent_image": [
+        "6",
+        0
+      ],
+      "seed": 20261015,
+      "steps": 25,
+      "cfg": 3.0,
+      "sampler_name": "deis",
+      "scheduler": "beta",
+      "denoise": 1.0
+    }
+  },
+  "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "7",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    }
+  },
+  "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "8",
+        0
+      ],
+      "filename_prefix": "character-sheet-qwen/sheet-20d6663d366647a48aa62bc58a489258"
+    }
+  },
+  "101": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "reference-original.png"
+    }
+  },
+  "102": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "character-sheet-qwen-layout-guide.png"
+    }
+  }
+}
