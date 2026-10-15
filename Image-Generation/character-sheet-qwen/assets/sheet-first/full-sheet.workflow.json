@@ -260,12 +260,12 @@
       },
       "widgets_values": [
         1536,
-        1008,
+        1024,
         1
       ],
       "widgets_values_named": {
         "width": 1536,
-        "height": 1008,
+        "height": 1024,
         "batch_size": 1
       }
     },
