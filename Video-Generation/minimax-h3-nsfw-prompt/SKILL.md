@@ -60,4 +60,4 @@ lifecycle: active
 | prone bone | 躺著後入 |
 | standing leg-up | 站立單腿高抬 |
 
-詳細模組化變數與完整模板請參考本地版本。
+完整模板請參考 `template.txt`。
