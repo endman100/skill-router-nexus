@@ -41,20 +41,6 @@ lifecycle: active
 - `<Picture 3>` 固定使用 skill 內的 `assets/penetration-reference.png`
 - 若有提供 `<Picture 1>` 或 `<Picture 2>`，必須從中確認角色特徵與服裝資訊
 
-## 性愛姿勢術語參考
-
-| 術語 | 說明 |
-|------|------|
-| missionary | 傳教士體位，女性仰躺，男性在上方 |
-| mating press | 交配壓制，女性仰躺雙腿被推起壓向胸口 |
-| doggy style | 後入，女性跪躺或躺著 |
-| cowgirl | 女上位，女性跨坐在男性上方 |
-| reverse cowgirl | 反向女上位，女性背對男性跨坐 |
-| spooning | 側躺後入，兩人側躺 |
-| standing rear | 站立後入 |
-| prone bone | 躺著後入，女性完全躺平 |
-| standing leg-up | 站立單腿高抬，背靠牆 |
-
 ## 模組化變數
 
 | 變數 | 用途 | 填寫原則 | 範例 |
@@ -63,13 +49,13 @@ lifecycle: active
 | `{{female_outfit_exposure}}` | 女性服裝與露出程度 | 寫服裝類型＋顏色＋哪些部位露出；未暴露部位必須寫上服裝與顏色。必須從 `<Picture 1>` 確認 | She wears a blue top with pink ribbon, blue skirt, black thigh-high socks, and red shoes, with breasts fully exposed and pussy exposed |
 | `{{male_outfit_exposure}}` | 男性服裝與露出程度 | 必須從 `<Picture 2>` 確認服裝（不可預設裸體），並說明哪些部位拉下或露出 | He wears a blue t-shirt and dark pants pulled down, with his cock fully exposed and already inside her |
 | `{{background}}` | 場景背景 | 純文字描述，只寫想要的場景元素，不要提到不想出現的物品 | a simple room with white walls and light wooden floor |
-| `{{pose_description}}` | 身體放置位置 | 靜態描述：身體怎麼擺、手在哪、視線方向、生殖器是否插入及放在哪、哪些部位是可視的、男性是否部分可見。必須使用專業性愛姿勢術語（參考下方術語表）。必須明確寫男性臉部不在畫面中（male face out of frame）。手部描述需明確：掌心貼牆、手背貼牆、或手指抓住物件 | standing in a standing leg-up position, back pressed against the wall, one leg raised high, hands raised near shoulders with back of hands pressed against the wall, male face out of frame |
+| `{{pose_description}}` | 身體放置位置 | 靜態描述：身體怎麼擺、手在哪、視線方向、生殖器是否插入及放在哪、哪些部位是可視的、男性是否部分可見。必須使用專業性愛姿勢術語（missionary、mating press、doggy style、cowgirl、reverse cowgirl、spooning、standing rear、prone bone、standing leg-up）。必須明確寫男性臉部不在畫面中（male face out of frame）。手部描述需明確：掌心貼牆、手背貼牆、或手指抓住物件 | standing in a standing leg-up position, back pressed against the wall, one leg raised high, hands raised near shoulders with back of hands pressed against the wall, male face out of frame |
 | `{{character_position}}` | 角色所在位置 | 描述與四周物件的空間關係，必須明確寫身體是否接觸地面或物件（lying on / sitting on / pressed against），避免角色浮空 | pressed against the white wall, body in contact with the wall |
 | `{{camera_angle}}` | 鏡頭角度 | 不可留白；只寫觀看角度，不寫移動；必須指定焦點部位（focused on XX）；必須與身體位置在物理上合理 | Side view, focused on her pussy and the penetration |
 | `{{camera_movement}}` | 鏡頭動作 | 預設包含輕微旋轉與位移；寫晃動、平移、旋轉等 | Camera side view with slight handheld movement |
 | `{{motion_type}}` | 動作類型簡稱 | 用短詞概括動作類別，必須使用專業性愛姿勢術語 | fast standing leg-up |
 | `{{motion_description}}` | 動作過程 | 動態描述：如何移動、抽插方式、身體如何隨動作晃動、插入是否全程保持連接 | He holds her raised leg with one hand, thrusting hard and fast from the front. Penetration stays connected throughout |
-| `{{female_expression}}` | 表情 | 必須有至少兩種動態並在影片中輪替出現：開合單眼或雙眼、舌頭伸出收回、咬嘴唇、翻白眼等。不可只寫靜態表情 | tongue sticking out and retracting alternating with biting her lip, eyes half-closed then opening |
+| `{{female_expression}}` | 表情 | 必須有至少兩種動態並在影片中輪替出現：開合單眼或雙眼、微微吐出舌尖後快速收回、咬嘴唇、翻白眼等。不可只寫靜態表情。舌頭不要全吐出 | tongue tip slightly sticking out then quickly retracting, alternating with biting her lip, eyes half-closed then opening |
 | `{{female_body_reaction}}` | 身體反應 | 預設包含胸部晃動、臀部晃動；若可見則加入 pussy 一開一合 | breasts bouncing, ass bouncing, pussy opening and closing with each thrust |
 | `{{dialogue}}` | 語音內容 | 一定要中日英文混合；預設擬聲詞為主，除非有指定臺詞 | 嗯……ah……嗯啊……んっ……ah…… |
 
