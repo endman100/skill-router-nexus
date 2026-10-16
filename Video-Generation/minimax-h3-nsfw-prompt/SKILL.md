@@ -27,6 +27,10 @@ lifecycle: active
 5. `overall_soundscape` — 聲音總結
 6. `non_diegetic_music` — 通常寫 `N/A`
 
+## 注意事項
+
+- **不要上傳圖片到這個 skill 專案中**（包含生殖器參考圖、角色參考圖等）。圖片應由使用者自行管理。
+
 ## 參考圖規則
 
 | 參考 | 用途 | 權重 |
