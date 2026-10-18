@@ -18,7 +18,7 @@
 | camera_movement | Camera side view with slight handheld movement |
 | motion_type | fast standing leg-up |
 | motion_description | He holds her raised leg with one hand, thrusting hard and fast from the front. Penetration stays connected throughout |
-| female_expression | ahegao with tongue tip slightly sticking out then quickly retracting, alternating with half-closed eyes and blush |
+| female_expression | ahegao with half-closed eyes and blush |
 | female_body_reaction | breasts bouncing, ass bouncing, pussy opening and closing with each thrust |
 | dialogue | 嗯……ah……嗯啊……んっ……ah…… |
 
