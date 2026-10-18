@@ -59,7 +59,7 @@ lifecycle: active
 | `{{camera_movement}}` | 鏡頭動作 | 預設包含輕微旋轉與位移；寫晃動、平移、旋轉等 | Camera side view with slight handheld movement |
 | `{{motion_type}}` | 動作類型簡稱 | 用短詞概括動作類別，必須使用專業性愛姿勢術語 | fast standing leg-up |
 | `{{motion_description}}` | 動作過程 | 動態描述：如何移動、抽插方式、身體如何隨動作晃動、插入是否全程保持連接 | He holds her raised leg with one hand, thrusting hard and fast from the front. Penetration stays connected throughout |
-| `{{female_expression}}` | 表情 | 必須先選擇一個主要表情：happy、scared、sad、angry、horrified、ahegao、exciting、estrus、naughty、moaning。再加上至少兩種動態輪替：pout、raised eyebrow、nose blush、blush、half-closed eyes、tongue tip slightly sticking out then quickly retracting、biting lip、eyes briefly rolling up。鼓勵自行追加其他動作與輪替，不俟限在範例。不可只寫靜態表情。舌頭不要全吐出 | ahegao with tongue tip slightly sticking out then quickly retracting, alternating with half-closed eyes and blush |
+| `{{female_expression}}` | 表情 | 必須先選擇一個主要表情：happy、scared、sad、angry、horrified、ahegao、exciting、estrus、naughty、moaning。再加上至少兩種動態輪替：pout、raised eyebrow、nose blush、blush、half-closed eyes、biting lip、eyes briefly rolling up。鼓勵自行追加其他動作與輪替，不俟限在範例。不可只寫靜態表情。不要寫吐舌頭（tongue）相關描述 | ahegao with half-closed eyes and blush |
 | `{{female_body_reaction}}` | 身體反應 | 預設包含胸部晃動、臀部晃動；若可見則加入 pussy 一開一合 | breasts bouncing, ass bouncing, pussy opening and closing with each thrust |
 | `{{dialogue}}` | 語音內容 | 一定要中日英文混合；預設擬聲詞為主，除非有指定臺詞 | 嗯……ah……嗯啊……んっ……ah…… |
 
