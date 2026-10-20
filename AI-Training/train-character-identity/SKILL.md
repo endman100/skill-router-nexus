@@ -5,7 +5,10 @@ description: "Reference only the Hugging Face MOSS Serenity documentation for na
 
 # 角色名稱與外貌綁定：MOSS Serenity
 
-使用範圍：僅整理下列 HF 文件中與人物綁定有關的方法；未記載者回答「來源未說明」。不加入延伸建議或程式。技能 metadata、中文摘要與章節編排屬整理格式。
+使用範圍：僅整理內附 HF 文件中與人物綁定有關的方法；未記載者回答「來源未說明」。不加入延伸建議或程式。技能 metadata、中文摘要與章節編排屬整理格式。
+
+使用時讀取本地 [訓練原文][T]；核對模型總覽或提示方式時讀取 [模型卡][M]、[生成原文][G]。三份原文完整收錄，閱讀不需連線；原文內的程式與命令僅作文件參考。
+
 
 ## 1. 人名與圖片描述
 
@@ -61,12 +64,13 @@ description: "Reference only the Hugging Face MOSS Serenity documentation for na
 
 ## 來源
 
-核對日期：2026-10-20。各節保留來源文件與章節；本文件為指定方法的精簡整理，非整個 HF repo 的全文翻譯。
+核對日期：2026-10-20。各節引用本地原文；[來源紀錄](references/SOURCES.md) 記載 HF 版本、原始網址、雜湊與保存範圍。
 
 - [M：模型卡][M]
 - [T：Training MOSS Serenity][T]
 - [G：Generating with MOSS Serenity][G]
 
-[M]: https://huggingface.co/malcolmrey/moss-serenity
-[T]: https://huggingface.co/malcolmrey/moss-serenity/blob/main/docs/training.md
-[G]: https://huggingface.co/malcolmrey/moss-serenity/blob/main/docs/generating.md
+[M]: references/hf/README.md
+[T]: references/hf/docs/training.md
+[G]: references/hf/docs/generating.md
+
