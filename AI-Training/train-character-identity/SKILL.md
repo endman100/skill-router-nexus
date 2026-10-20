@@ -1,179 +1,93 @@
 ---
 name: train-character-identity
-description: "Plan and review text-to-image character identity training that binds a name or trigger to appearance. Use for 人名與長相綁定、角色一致性、anime character personalization、multi-character finetuning、DreamBooth-style training、prior preservation、EMA, or adapting the MOSS Serenity recipe. Produce a Markdown training brief and evaluation plan; do not generate code or launch training."
+description: "Reference the name-to-appearance training method documented in the Hugging Face malcolmrey/moss-serenity repository. Use for 人名與長相綁定、角色名稱觸發詞、MOSS Serenity 訓練、prior preservation、EMA. Summarize only that repository's documented methods in Markdown; do not add training advice, code, or unsupported adaptations."
 ---
 
-# 角色名稱與外貌綁定訓練
+# 角色名稱與外貌綁定：MOSS Serenity 原文件整理
 
-將「名字對應特定角色」轉成可驗證的訓練方案。以 MOSS Serenity 為案例，涵蓋真人與動漫角色；輸出純 Markdown，不產生程式、命令列、設定檔或訓練作業。
+本 skill 僅以文末三份 HF 文件為方法來源。以下為中文摘要，並非逐字翻譯；技能名稱、觸發說明及章節編排屬整理格式。
 
-## 使用原則
+## 使用範圍
 
-- 區分三種證據：**原專案事實**、**通用機制解釋**、**待驗證的延伸建議**。
-- 先讀本文件的來源及適用邊界；需要精確重現時重新查閱來源版本。
-- 將「角色身分」「服裝／髮型變體」「畫風」「姿勢與場景」分開定義。
-- 將跨圖片身分保持、多人身分分離、影片時間一致性分別評估。
-- 將缺少的資料寫成待確認項；不要補造照片數、最佳學習率或成功率。
+- 依本文件回覆原專案的資料標註、微調、先驗保留與續訓方法。
+- 技術內容限於來源已記載的事項；未記載者註明「來源未說明」。
+- 不自行補入動漫遷移、資料切分、replay、評估矩陣、其他論文或新的訓練建議。
+- 只輸出 Markdown 說明，不產生程式或設定檔。
 
-## 1. 確認任務邊界
+## 1. 原專案目標與更新範圍
 
-先從使用者已提供的資訊整理：
+依 [模型卡的 Training 章節][M]：
 
-| 項目 | 必須辨識的內容 |
+- 以 MOSS-Image Base 微調，使模型透過名字生成已訓練的人物，同時保留底座原有能力。
+- 更新 42 個 joint blocks 的 Linear 權重，約為主幹 5.08B 參數中的 4.76B。
+- 凍結 text adapter、norms、embedders。
+
+## 2. 將人物名字放入照片描述
+
+依 [訓練文件的 Dataset 章節][T]：
+
+- 每位人物一個資料夾，以該人物的 trigger 命名。
+- 透過 prefix.txt，將資料夾名稱加入每張圖片的 caption 前方。
+- Caption 使用自然語句描述人物、表情、構圖、姿勢、服裝、背景與光線。
+- 以 folder_repeats 平衡人物曝光；作者對學得較慢的人物使用每 epoch 3 倍，對兩位學得較快的人物使用 0.5 倍。
+
+依 [生成文件的 Prompting 章節][G]，trigger 使用小寫、移除姓名空格；其後接訓練時使用的類別詞 a woman 或 a man。
+
+## 3. 以原模型預測保留一般類別行為
+
+依 [訓練文件的 What was trained／Why these choices 章節][T]：
+
+- 訓練前，將 caption 內的人物 trigger 換成類別詞，記錄原模型的預測。
+- 每次訓練同時要求模型在這些類別 caption 上接近原模型預測，使一般類別詞維持底座行為。
+- Prior preservation 權重為 1.0，每張圖片記錄 8 組輸入，每步使用。
+- 額外使用一般女性與男性的真實照片作 regularisation，原配置的 reg_lr_multiplier 為 0.2。
+
+## 4. 原專案訓練配置
+
+依 [模型卡的 Training 章節][M]：
+
+| 項目 | 作者記載 |
 |---|---|
-| 目標 | 單角色、多角色、特定畫風，或通用動漫模型 |
-| 底座 | 模型版本、既有動漫／寫實能力、文字條件格式 |
-| 身分定義 | 必須保持的臉部、輪廓、配色、髮飾或其他標誌 |
-| 可變因素 | 可更換的服裝、表情、姿勢、髮型、背景與畫風 |
-| 資料 | 各角色獨立圖片數、來源、重複程度、可用描述 |
-| 資源 | 訓練器支援、顯存、可接受實驗規模 |
-| 驗收 | 使用場景、容許的身分偏差及通用能力退化 |
+| 訓練步數 | 24,000 |
+| Batch size | 1，約 25 epochs |
+| 解析度 | 原文記為 512 px aspect buckets |
+| Optimizer | Automagic3，fused into backward |
+| 學習率 | 固定 1e-5 |
+| EMA | 0.999，每 4 步更新，不設 warmup |
+| 發布權重 | EMA 平均後的權重 |
+| Timesteps | logit-normal，mean 1.09、std 0.95、cutoff 0.95，混入 1% uniform |
 
-只有會改變方案的未知條件才詢問。資訊不足時仍可產出附假設的概念方案，不宣稱可直接重現。
+依 [訓練文件的 Why these choices 章節][T]，作者保持 text adapter 凍結，以免少量 caption 改變整體提示理解；使用 EMA 平滑 batch size 1 時的權重游移。
 
-選擇最小可驗證路線：
+## 5. 追加人物與繼續訓練
 
-- 已有足夠底座能力、只新增少量身分：比較角色 LoRA 與範圍受控的主幹微調。
-- 多角色共用模型：加入角色採樣平衡、無 trigger 對照與角色互相污染測試。
-- 寫實轉動漫：先處理領域適應，再驗證身分綁定；不要假定保留寫實輸出的約束適合所有動漫目標。
-- 通用動漫模型：另規劃廣泛的角色、構圖、動作、背景與畫風資料；少量角色綁定不足以證明通用能力。
+依 [訓練文件的 Continuing it 章節][T]：
 
-以上為工程選擇建議，不是 Serenity 已驗證的動漫訓練結果。
-
-## 2. 理解連結如何形成
-
-將同一角色的不同圖片，持續配對同一個文字 trigger。讓 caption 描述各張圖中變動的因素，讓生成主幹學會在該文字條件下預測對應的視覺內容。
-
-依一般生成模型機制理解：跨圖片反覆出現的身分標記提供共同條件；多樣資料與準確 caption 有助於減少背景、服裝與身分的糾纏。這種分離需要驗證，並非自動成立。
-
-Serenity 使用固定人名觸發詞，並更新圖像主幹的 Linear 權重；文字編碼器沒有在這次身分微調中更新。將「生成器如何回應名字的文字表示」作為主要理解方式。[S1][S2]
-
-不要假定一個名字等於 tokenizer 中的一個 token，也不要假定此方法需要新增詞彙或訓練新的文字 embedding。
-
-DreamBooth 提供「識別標記與主體綁定，搭配類別先驗保留」的相關原理；將其作為概念參考，不把 Serenity 說成 DreamBooth 原始實作。[S4]
-
-## 3. 設計 trigger 與資料標註
-
-以下為延伸至未來角色訓練的建議：
-
-1. 建立角色清單：正式名稱、唯一 trigger、類別詞、身分特徵、可變因素。
-2. 統一別名與拼寫；檢查底座對 trigger 是否已有強烈既有含義。
-3. 將近重複圖、相鄰動畫影格與同一原圖裁切視為同一來源群組；按來源群組切分訓練與保留集。
-4. 覆蓋目標中的表情、角度、景別、姿勢及場景，避免單一服裝／背景壟斷。
-5. 描述實際可見內容；對遮擋或無法判定的細節不猜測。
-6. 依角色驗證結果調整採樣，不只按原始資料量決定曝光次數。
-7. 固定角色 trigger；依底座既有規則選自然語言、標籤或混合描述。
-8. 若要讓衣服可更換，應有相應資料變化並標註服裝；若服裝本身是身分定義的一部分，先記錄這項取捨。
-
-原專案使用每人一個資料夾，以資料夾名稱加入 caption 前綴；它的照片描述包含人物、表情、構圖、服裝、背景及光線。[S2]
-
-動漫標註示意（自行設計，非來源範例）：
-
-| 同一虛構角色 | Caption |
+| 起點 | 作者記載的方法 |
 |---|---|
-| 圖片 A | illustration of arinchar, a woman with teal hair and amber eyes, wearing a white coat, smiling in a library |
-| 圖片 B | illustration of arinchar, a woman with teal hair and amber eyes, wearing a travel cloak, side view in a forest |
+| 完整 resume state | 加入新人物資料夾與 prior.classes 對應；維持原始 Base 作新圖片先驗來源，增加 max_steps 並續訓。該狀態僅原訓練者持有。 |
+| 發布的 BF16 權重 | 從 Serenity 權重開始；optimizer 與 EMA 重新建立，先驗取自 Serenity，因此保留的是 Serenity 當前行為。 |
 
-只有底座本來接受這類自然語言時才沿用示意格式。用可見變體及保留集測試身分泛化，不靠 caption 本身推定已解耦。
+## 6. 作者記載的提示方式與限制
 
-## 4. 分開設計三種訓練訊號
+依 [生成文件的 Prompting／What works 章節][G]：
 
-| 訊號 | 要達成的行為 | 主要檢查 |
-|---|---|---|
-| 身分學習 | 含 trigger 時呈現目標角色 | 新場景下仍可辨認 |
-| 先驗保留 | 一般類別提示維持參考模型行為 | 無 trigger 不大量生成已學角色 |
-| 通用資料正則化 | 維持資料涵蓋範圍內的生成能力 | 構圖、提示遵循與多樣性退化 |
+- 提示以 photo of 開頭，接人物 trigger、類別詞及外觀、表情、構圖、服裝、場景、光線。
+- 胸像或更近的臉部效果較好；全身照中太小的臉可能失去相似度。
+- 以服裝、髮型及場景描述角色外觀，不只提供影視作品名稱。
+- 多人同框時，各自提供名字、類別詞、位置及描述；同類別人物可能混合臉部特徵。
+- 相似度會隨 seed 變動，作者建議嘗試多個 seed。
 
-Serenity 的先驗保留：將 trigger 換成類別詞，預存原模型在相應加噪輸入與時間條件下的預測，再約束微調模型接近這些預測；每圖預存 8 組、每步使用、權重 1.0。[S2]
+以上為作者對該模型的觀察。
 
-保留的是模型預測行為；不要把這項約束誤寫成一定要重新生成一整批完整圖片。計算比較時必須對齊輸入、時間條件與類別 caption，不能拿不同條件的輸出直接相比。
+## 來源
 
-按目的選擇參考模型及約束範圍：
+核對日期：2026-10-20。各節均標示來源文件與對應章節；方法內容限於這三份文件。
 
-- 新增角色：優先測試保留現有底座的一般人物與非人物能力。
-- 動漫領域適應：檢查參考模型是否具備要保留的能力；先驗權重過強可能阻礙預期的風格變化，需做消融。
-- 追加新角色：保留舊角色的驗證案例；若需要抗遺忘，另測舊角色資料 replay 或明確的身分保留約束。一般類別先驗不保證保住所有舊角色。
+[M]: https://huggingface.co/malcolmrey/moss-serenity
+[T]: https://huggingface.co/malcolmrey/moss-serenity/blob/main/docs/training.md
+[G]: https://huggingface.co/malcolmrey/moss-serenity/blob/main/docs/generating.md
 
-上述調整屬延伸建議。先驗保留與通用圖片正則化目的相關，但訓練訊號不相同；也不要將資料採樣倍率、更新倍率直接當成 loss 係數。
-
-## 5. 參考 Serenity 設定，避免照抄
-
-下表僅記錄來源中的實際配置，不作跨模型預設值。[S1][S2]
-
-| 項目 | 原專案配置 |
-|---|---|
-| 底座 | MOSS-Image Base |
-| 更新範圍 | 42 個 joint blocks 的 Linear 權重，約 4.76B／5.08B |
-| 凍結部分 | 包含 text adapter、norms、embedders |
-| 更新步數／批次 | 24,000 steps；batch size 1 |
-| 學習率／最佳化器 | 固定 1e-5；Automagic3 |
-| 訓練解析度 | 以 512 × 512 像素面積為基準，依長寬比分桶 |
-| EMA | 0.999，每 4 步更新；發布平均後權重 |
-
-將 EMA 理解為平滑權重更新的措施，不當成建立身分連結的唯一原因，也不承諾它能修復錯誤 caption 或資料偏差。
-
-更換底座、LoRA rank、有效 batch、訓練器或資料量時，重新做小規模比較。以多個 checkpoint 的身分、可控性與退化表現選模型，不只看 training loss。
-
-從發布權重繼續訓練與載入完整訓練狀態不同；前者會重新建立 optimizer／EMA。若先驗由當前權重錄製，保留目標也會隨之改變。[S2]
-
-## 6. 建立角色一致性驗證矩陣
-
-以下為建議驗收方法，不代表原專案已完成這些實驗。
-
-固定比較條件：底座／checkpoint、提示詞、seed 集合、解析度、步數、guidance 與額外 LoRA。多個 seed 用於觀察穩定性；相同 seed 只用來控制比較條件，不是身分保證。
-
-| 測試 | 觀察目標 |
-|---|---|
-| trigger 單人近景 | 核心外貌、輪廓與標誌正確 |
-| 未見服裝／背景／姿勢 | 保持身分且回應新條件 |
-| 全身、側臉、遮擋 | 檢查身分退化及細節失真 |
-| 無 trigger 的類別提示 | 檢查角色外貌是否外溢 |
-| 非人物提示 | 檢查通用能力是否退化 |
-| 相似配色／同類別雙角色 | 檢查臉、髮型、服裝是否互換或融合 |
-| 增加新角色後重測舊角色 | 檢查遺忘 |
-| 不同畫風 | 只有目標要求跨畫風時，才檢查身分與風格控制 |
-
-先定義接受標準，再選 checkpoint。逐角色記錄身分辨識、提示遵循、變體可控性、多樣性與外溢情況，保留失敗案例，不只挑最好看的樣本。
-
-可使用與目標風格相符的 embedding 相似度輔助檢查，但需以人工判讀交叉驗證。不要假定真人臉辨識器能可靠衡量動漫角色，也不要只靠通用圖文相似度宣稱身分一致。
-
-來源的生成觀察指出，小臉與多人身分混合仍可能失敗；因此必須把多人分離與單人身分學習分開驗收。[S1][S3]
-
-## 7. 依失敗現象選擇下一個實驗
-
-以下均為待驗證的診斷方向，不能由現象直接斷定根因。
-
-| 現象 | 優先檢查／最小改動 |
-|---|---|
-| 角色不像 | trigger 拼寫、資料身分是否混雜、有效曝光及更新幅度 |
-| 換服裝就不像 | 角色與服裝是否共現過強；補充目標變體資料 |
-| 一般人物都像已學角色 | 類別 caption、先驗條件對齊與保留強度 |
-| 多角色混臉 | 分角色描述與位置條件；再評估區域控制或分開生成 |
-| 名字反應弱 | 底座既有語義、分詞及標註衝突；不要先假定需訓練文字編碼器 |
-| 畫風固定、構圖重複 | 資料多樣性、近重複、過度曝光及更新幅度 |
-| 追加人物後舊角色退化 | 舊角色保留集、replay 與身分約束 |
-| 動漫轉換學不動 | 底座能力、目標資料覆蓋與參考模型約束是否衝突 |
-
-每次改動記錄假設、單一主要變因、預期改善與副作用；優先比較基線、加入先驗、加入通用正則化、使用 EMA 等條件。維持其餘條件一致，避免將同時更動多項的結果歸因給單一方法。
-
-## 8. 輸出純 Markdown 訓練備忘錄
-
-按下列順序交付，不附程式或可執行設定：
-
-1. **目標與假設**：底座、角色、身分邊界與缺少資訊。
-2. **資料與 caption**：角色清單、trigger、類別、變體覆蓋、切分原則。
-3. **更新與保留策略**：可訓練範圍、參考模型、先驗、正則化、EMA 的理由。
-4. **實驗比較**：最小基線、主要變因、checkpoint 比較方式。
-5. **驗證矩陣**：成功標準、失敗樣本及通用能力回歸。
-6. **來源與限制**：區分已知配置、機制解釋、建議、未完成驗證。
-
-## 來源與適用邊界
-
-核對日期：2026-10-20。下列動態文件的內容可能變動；精確重現時記錄當時的 commit／revision。
-
-- [S1：MOSS Serenity 模型卡](https://huggingface.co/malcolmrey/moss-serenity)：模型定位、更新範圍、EMA、多人及小臉限制。
-- [S2：Training MOSS Serenity](https://huggingface.co/malcolmrey/moss-serenity/blob/main/docs/training.md)：資料標註、預測先驗、訓練配置與續訓差異。
-- [S3：Generating with MOSS Serenity](https://huggingface.co/malcolmrey/moss-serenity/blob/main/docs/generating.md)：提示格式與生成限制。
-- [S4：DreamBooth 原始論文](https://arxiv.org/abs/2208.12242)：主體個人化及類別先驗保留的概念來源。
-
-原專案文件未提供足以量化各措施貢獻的消融實驗。動漫遷移、角色解耦、replay 及本文件的驗收流程是工程延伸，未由 Serenity 的真人結果證明；也不能據此宣稱可重現通用 Anima 模型或保證動畫逐格一致。
+- [模型卡][M]
+- [Training MOSS Serenity][T]
+- [Generating with MOSS Serenity][G]
