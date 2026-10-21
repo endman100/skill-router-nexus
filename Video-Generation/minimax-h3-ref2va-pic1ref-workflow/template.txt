@@ -1,0 +1,24 @@
+subject_definitions:
+<Subject 1> is the adult woman as she appears in <Picture 1>: {{female_appearance}}. {{female_outfit_exposure}}.
+<Subject 2> is the adult man as he appears in <Picture 2>. {{male_outfit_exposure}}.
+<Subject 3> is {{background}}.
+<Picture 1> is the source for the woman's identity, face, hair, body, and outfit.
+<Picture 2> is a weak reference for the man's general appearance only. Do not emphasize his face or upper body.
+<Picture 3> is the third reference image: the opening frame, exact first and last frame, for composition, poses, framing, and camera angle.
+<Audio 1> is the voice-timbre reference only for <Subject 1>. Use the breathy vocal quality and speaking style. Do not copy any unrelated words or dialogue from it.
+summary:
+[reference generation + first-frame lock + audio reference] 2d anime style, dynv2, continuation with bright lighting, high saturation, and vivid colors. {{background}}. She is {{pose_description}} {{character_position}} with {{female_expression}}. {{camera_angle}}. {{motion_description}}. {{camera_movement}}. Soft high-pitched breathy moans with onomatopoeia matching <Audio 1> timbre.
+retention_analysis:
+<Subject 1> (appears throughout [Shot 1]): fully_preserved - exact face, hair, body, and exposure from <Picture 1>.
+<Subject 2> (appears throughout [Shot 1]): weak_reference.
+<Subject 3> (appears throughout [Shot 1]): fully_preserved - {{background}}.
+<Picture 1> (identity): fully_preserved.
+<Picture 2> (identity): weak_reference - general appearance only, do not focus on face.
+<Picture 3> (opening frame): fully_preserved.
+<Audio 1>: reference - breathy vocal quality and speaking style only.
+detailed_description:
+[Shot 1] 2d anime style, dynv2, bright lighting, high saturation, vivid and colorful. {{background}}. {{camera_angle}} of the woman {{pose_description}} {{character_position}}. {{female_outfit_exposure}}. {{female_expression}}. {{motion_description}}. {{female_body_reaction}}. Continuous {{motion_type}}. {{camera_movement}}. It opens and ends on <Picture 3>. She produces soft high-pitched breathy moans mixed with onomatopoeia matching <Audio 1> timbre. She says: <d>[Chinese] {{dialogue}}</d>
+overall_soundscape:
+Quiet room tone, clear wet thrusting, skin slapping, and impact sounds synced to the fast motion. Soft high-pitched breathy moans, onomatopoeia, and short spoken lines using <Audio 1> timbre.
+non_diegetic_music:
+N/A
