@@ -1,0 +1,80 @@
+{
+ "_doc": "範例（高根やす子 / takane_yasuko，2026-10-22 實跑的對應）。只供參考：trait 名是當時 vocab 用的名稱（hair_ornament_x、teeth、body、body_arms…），配件清單含角色專屬的 electric guitar。實跑時的 approved_values（height short、skin fair skin、chest small breasts）在新流程改寫進 vocab 的 height / skin_color / chest trait，已從 params 移除。",
+ "field_traits": {
+  "age_of_this_character": [
+   "age"
+  ],
+  "length_of_the_hair": [
+   "hair_length"
+  ],
+  "color_of_the_hair": [
+   "hair_color"
+  ],
+  "color_of_the_eyes": [
+   "eye_color"
+  ],
+  "style_of_the_hair": [
+   "hair_style",
+   "bangs"
+  ],
+  "character_head_features_tags": [
+   "teeth"
+  ],
+  "character_accessories_tags": [
+   "hair_ornament_x",
+   "hair_ornament_rabbit"
+  ],
+  "body_type_of_his_character": [
+   "body"
+  ],
+  "character_body_characteristics_tags": [
+   "body_arms",
+   "body_legs",
+   "body_waist",
+   "body_collarbone"
+  ],
+  "height_of_this_character": [
+   "height"
+  ],
+  "color_of_the_skin": [
+   "skin_color"
+  ],
+  "size_of_the_chest": [
+   "chest"
+  ]
+ },
+ "outfit_accessory_tags": [
+  "black choker",
+  "choker",
+  "necklace",
+  "armlet",
+  "sunglasses",
+  "wrist scrunchie",
+  "brooch",
+  "fake animal ears",
+  "electric guitar"
+ ],
+ "template_vars": {
+  "height_of_this_character": "height_options",
+  "body_type_of_his_character": "body_type_options",
+  "age_of_this_character": "age_options",
+  "style_of_the_hair": "hair_style_options",
+  "length_of_the_hair": "hair_length_options",
+  "color_of_the_hair": "hair_color_options",
+  "color_of_the_eyes": "eye_color_options",
+  "color_of_the_skin": "skin_color_options",
+  "size_of_the_chest": "chest_options",
+  "character_head_features_tags": "head_feature_options",
+  "character_clothing_tags": "clothing_options",
+  "character_accessories_tags": "accessory_options",
+  "character_body_characteristics_tags": "body_feature_options"
+ },
+ "keep_outfit_groups": [
+  "gen_codex_keep",
+  "gen_grok_keep"
+ ],
+ "change_outfit_groups": [
+  "gen_codex_change"
+ ],
+ "collected_group": "collected"
+}
