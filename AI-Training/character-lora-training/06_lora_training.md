@@ -68,5 +68,5 @@ python scripts/train_lora.py \
 ## 注意
 
 - 開跑後看 `train.log` 的每步速度：**訓練明顯變慢或記憶體溢出，就停掉，降 `--batch` 或 `--max-bucket` 後重跑**（同一個 work-dir 會續訓）。
-- checkpoint 對照測試 prompt：`anime style, <trigger>, ` + `main_outfit.json` 的主要服裝 tag + 詞表的角色特徵 tag。
-- 結果（各 epoch LoRA、對照圖、`train.log`、`kwargs_train.json`、`config.toml`）放到 `<run 資料夾>/train_results/`，由使用者挑 checkpoint。
+- checkpoint 對照測試與固定 prompt 檔案：照 [07_lora_validation.md](07_lora_validation.md) 執行。
+- 訓練結果保留在原輸出資料夾；對照圖由步驟 07 產生，使用者從圖中挑 checkpoint。
