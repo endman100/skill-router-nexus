@@ -59,8 +59,8 @@
  "7": {
   "class_type": "EmptyLatentImage",
   "inputs": {
-   "width": 1320,
-   "height": 760,
+   "width": 720,
+   "height": 1280,
    "batch_size": 1
   }
  },
