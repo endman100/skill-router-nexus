@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """整理訓練集：把已調整尺寸（resize_prep.py + 放大結果併回）的各組圖依序編號成 0001.png…，寫 manifest.json。
+編號前自動核對來源旁 resize_manifest.json 的 needs_upscale 項目：同名圖已併回、可讀且長邊達標才繼續。
 
 NSFW 隔離在這一步完成（Codex 打標程式不再檢查 NSFW）：
   - 一般群組（group=dir）→ <訓練資料夾>/，這個資料夾整個交給 codex_caption_v2.py（Codex）。
@@ -18,6 +19,7 @@ codex_caption_v2.py 依 manifest 的 source_group 決定模板。
 import argparse, hashlib, json, math, shutil, sys
 from collections import Counter
 from pathlib import Path
+from ws import parse_args
 from PIL import Image
 
 EXT = {".png", ".jpg", ".jpeg", ".webp"}
@@ -39,6 +41,34 @@ def sha256(p):
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 
 
+def check_upscales(specs):
+    """編號前核對 resize manifest：每張待放大圖都必須可讀且已併回來源群組。"""
+    dirs = {d.resolve() for _, _, d in specs}
+    manifests = sorted({d.parent / "resize_manifest.json" for d in dirs})
+    failed = []
+    for manifest in manifests:
+        if not manifest.is_file():
+            continue
+        for entry in json.loads(manifest.read_text("utf-8")):
+            if entry["action"] != "needs_upscale":
+                continue
+            folder = manifest.parent / entry["group"]
+            dest = folder / Path(entry["output"]).name
+            if folder not in dirs:
+                failed.append(f"{dest}: 群組未傳入，無法進入後續流程")
+                continue
+            try:
+                with Image.open(dest) as im:
+                    im.load()
+                    target = max(768, entry.get("target_long", 768))
+                    if max(im.size) < target:
+                        failed.append(f"{dest}: 長邊 {max(im.size)} < {target}")
+            except Exception as e:
+                failed.append(f"{dest}: 缺少或無法讀取圖片（{type(e).__name__}: {e}）")
+    if failed:
+        sys.exit("放大檢查失敗，停止編號：\n" + "\n".join(failed))
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("out", type=Path)
@@ -47,8 +77,9 @@ def main(argv=None):
     p.add_argument("--trigger", required=True)
     p.add_argument("--nsfw-out", type=Path, help="NSFW 圖的資料夾（預設 <訓練資料夾>_nsfw）")
     p.add_argument("--repeat-target", type=int, default=480, help="num_repeats 建議值 = ceil(target / 圖數)")
-    a = p.parse_args(argv)
+    a = parse_args(p, "build", argv)
     specs = [parse_spec(s) for s in a.groups]
+    check_upscales(specs)
     out = a.out.resolve()
     nsfw_out = (a.nsfw_out or a.out.parent / f"{a.out.name}_nsfw").resolve()
     if nsfw_out == out or out in nsfw_out.parents or nsfw_out in out.parents:

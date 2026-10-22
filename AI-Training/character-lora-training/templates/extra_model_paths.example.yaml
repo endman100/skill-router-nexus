@@ -1,3 +1,4 @@
+# 設定檔存於 <WS>/07_validate/extra_model_paths.yaml；LoRA 路徑仍為 <WS>/06_train/models/。
 lora_validation:
   base_path: "<WS>/06_train"
   loras: models

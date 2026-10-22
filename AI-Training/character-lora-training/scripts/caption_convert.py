@@ -7,9 +7,11 @@ txt 以 `anime style, <trigger>, ` 開頭。不做其他過濾。
 codex_caption_v2.py 使用本檔；也可單獨重轉一個資料夾的 JSON：
 
   python3 caption_convert.py <json資料夾> <txt輸出資料夾> --trigger <trigger> [--stage-out <stage_txt資料夾>]
+      [--validate-with <codex_caption_v2 --dry-run 輸出資料夾>]
 """
 import argparse, json, sys
 from pathlib import Path
+from ws import parse_args
 
 
 def json_to_string(json_data):
@@ -74,19 +76,48 @@ def convert(data, trigger):
     return stage_txt(clean), final_txt(clean, trigger)
 
 
+def validated_captions(json_dir, plan):
+    """重用 codex_caption_v2 --dry-run 的 assignment 與逐組 schema，整批通過才轉換。"""
+    import jsonschema
+    jobs = json.loads((plan / "assignment.json").read_text("utf-8"))
+    by_stem = {Path(j["name"]).stem: j for j in jobs}
+    files = set(json_dir.glob("*.json")) | {json_dir / f"{stem}.json" for stem in by_stem}
+    captions, errors = [], []
+    for f in sorted(files):
+        try:
+            j = by_stem[f.stem]
+            schema_file = plan / "schemas" / f"{j['group']}_{j['outfit']}.schema.json"
+            schema = json.loads(schema_file.read_text("utf-8"))
+            data = json.loads(f.read_text("utf-8-sig"))
+            errs = list(jsonschema.Draft202012Validator(schema).iter_errors(data))
+            if errs:
+                errors.extend(f"{f.name}: {e.json_path}: {e.message}" for e in errs)
+            else:
+                captions.append((f, {k: data[k] for k in schema["properties"]}))
+        except Exception as e:
+            errors.append(f"{f.name}: {type(e).__name__}: {e}")
+    if errors:
+        sys.exit("JSON 驗證失敗，停止轉換：\n" + "\n".join(errors))
+    return captions
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("json_dir", type=Path)
     p.add_argument("txt_out", type=Path)
     p.add_argument("--trigger", required=True)
     p.add_argument("--stage-out", type=Path)
-    a = p.parse_args(argv)
+    p.add_argument("--validate-with", type=Path,
+                   help="codex_caption_v2 --dry-run 的輸出資料夾；依 assignment.json 與 schemas/ 驗證整批 JSON")
+    a = parse_args(p, "convert", argv)
+    captions = validated_captions(a.json_dir, a.validate_with) if a.validate_with else (
+        (f, json.loads(f.read_text("utf-8-sig"))) for f in sorted(a.json_dir.glob("*.json")))
     a.txt_out.mkdir(parents=True, exist_ok=True)
     if a.stage_out:
         a.stage_out.mkdir(parents=True, exist_ok=True)
     n = 0
-    for f in sorted(a.json_dir.glob("*.json")):
-        stage, final = convert(json.loads(f.read_text("utf-8-sig")), a.trigger)
+    for f, data in captions:
+        stage, final = convert(data, a.trigger)
         (a.txt_out / f"{f.stem}.txt").write_text(final, "utf-8")
         if a.stage_out:
             (a.stage_out / f"{f.stem}.txt").write_text(stage, "utf-8")

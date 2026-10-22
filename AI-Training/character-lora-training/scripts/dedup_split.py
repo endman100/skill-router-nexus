@@ -4,11 +4,13 @@
 
 用法：
   python3 dedup_split.py <輸出資料夾> codex=<codex收集資料夾> grok=<grok收集資料夾> [--phash-dist 6] [--model-dir DIR]
-輸出：<輸出>/dedup/、<輸出>/sfw/、<輸出>/nsfw/（檔名 <來源>_<原檔名>，非 png/jpg/webp 轉 png）、
+輸出：<輸出>/dedup/、<輸出>/sfw/、<輸出>/nsfw/（統一流水號檔名，非 png/jpg/webp 轉 png）、
+      <輸出>/input_mapping.json（全部輸入圖片的新檔名與原始路徑）、
       <輸出>/dedup.json（保留／去掉的圖與原因）、<輸出>/rating.json（每張 rating 分數與分流）。
 """
 import argparse, hashlib, json, os, shutil, sys
 from pathlib import Path
+from ws import parse_args
 from PIL import Image
 import imagehash
 sys.path.insert(0, str(Path(__file__).parent))
@@ -22,15 +24,16 @@ KEEP_EXT = {".png", ".jpg", ".jpeg", ".webp"}
 def load(sources):
     items, skipped = [], []
     for src, d in sources:
-        for f in sorted(Path(d).iterdir()):
+        for f in sorted(Path(d).rglob("*")):
             if not f.is_file() or f.suffix.lower() in SIDE:
                 continue
             try:
                 with Image.open(f) as im:
                     fmt, (w, h), frames, rgb = im.format, im.size, getattr(im, "n_frames", 1), first_rgb(im)
             except Exception as e:
-                skipped.append(dict(file=f"{src}/{f.name}", reason=f"{type(e).__name__}: {e}")); continue
-            items.append(dict(source=src, path=f, orig=f"{src}/{f.name}", name=f"{src}_{f.name}", ext=f.suffix.lower(),
+                skipped.append(dict(file=f"{src}/{f.relative_to(d)}", reason=f"{type(e).__name__}: {e}")); continue
+            items.append(dict(source=src, path=f, orig=f"{src}/{f.relative_to(d)}",
+                              name=f"{len(items) + 1:06d}{f.suffix.lower()}", ext=f.suffix.lower(),
                               fmt=fmt, w=w, h=h, frames=frames, sha=hashlib.sha256(f.read_bytes()).hexdigest(),
                               phash=imagehash.phash(rgb), rgb=rgb))
     return items, skipped
@@ -65,12 +68,15 @@ def main(argv=None):
     p.add_argument("sources", nargs="+", help="name=dir，例如 codex=collect/codex grok=collect/grok")
     p.add_argument("--phash-dist", type=int, default=6)
     p.add_argument("--model-dir", default=DEFAULT_MODEL_DIR)
-    a = p.parse_args(argv)
+    a = parse_args(p, "dedup", argv)
     sources = [s.split("=", 1) for s in a.sources]
     items, skipped = load(sources)
     kept, dropped = dedup(items, a.phash_dist)
     for sub in ("dedup", "sfw", "nsfw"):
         (a.out / sub).mkdir(parents=True, exist_ok=True)
+    mapping = [dict(filename=k["name"], source=k["source"], original=k["orig"],
+                    original_path=str(k["path"].resolve())) for k in items]
+    (a.out / "input_mapping.json").write_text(json.dumps(mapping, ensure_ascii=False, indent=1), "utf-8")
     for k in kept:
         shutil.copy2(k["path"], a.out / "dedup" / k["name"])
     (a.out / "dedup.json").write_text(json.dumps(dict(

@@ -7,6 +7,7 @@ import json
 import math
 import os
 from pathlib import Path
+from ws import parse_args
 import shlex
 import shutil
 import stat
@@ -418,7 +419,7 @@ def build_parser():
 
 
 def main(argv=None):
-    args = build_parser().parse_args(argv)
+    args = parse_args(build_parser(), "clean", argv)
     try:
         return clean(**vars(args))
     except (OSError, ValueError, KeyError, TypeError) as exc:

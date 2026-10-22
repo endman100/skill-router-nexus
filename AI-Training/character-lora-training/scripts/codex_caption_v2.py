@@ -5,8 +5,9 @@
   A        固定模板，主要服裝：主要服裝的收集圖 + 維持服裝生成圖（Codex keep、Grok keep）
   B_fixed  固定模板，套該造型的清單：收集圖中其他造型
   B_free   自由模板：Codex 換裝圖；服裝／配件自由，但 character_clothing_tags 不准用主要服裝 tag
-只讀 --images 資料夾內的圖片（manifest 只用來查 source_group）。資料夾內的圖一律交給 Codex，
-本程式不做 NSFW 判斷：NSFW 圖由 build_train_set.py 放在另一個資料夾（<訓練資料夾>_nsfw），不會出現在這裡。
+正式打標只讀 --images 資料夾內的圖片（manifest 只用來查 source_group），全部交給 Codex。
+本程式不做 NSFW 判斷：正式打標只能指定 SFW 資料夾；NSFW 資料夾僅能搭配 --dry-run 在本機建立 schema，
+此模式只列檔名、不開啟圖片、不呼叫 Codex，供 Grok 打標及 caption_convert 驗證使用。
 每張圖的 schema：固定欄位 = 該組選項的 enum，看不到可留空（陣列 []、字串 ""）；自由欄位必填；NSFW 欄位不輸出。
 Codex 寫 ./output/<stem>.json → jsonschema 驗證 → 失敗重試（--retries）。
 JSON → txt：caption_convert.py（drop_empty → 刪 detailed_description → json_to_string →
@@ -22,6 +23,7 @@ merge_all_caption([only_prefix(['anime style', trigger]), …])，即原 repo �
 import argparse, hashlib, json, os, re, shutil, sys, threading, time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from ws import parse_args
 import jsonschema
 sys.path.insert(0, str(Path(__file__).parent))
 from codex_isolated import run_isolated
@@ -153,18 +155,18 @@ def run_one(job, a, attempt, results):
     try:
         data = parse_json(f)
         errs = [f"{e.json_path}: {e.message}" for e in jsonschema.Draft202012Validator(job["schema"]).iter_errors(data)]
+        if not errs:
+            data = {k: data[k] for k in job["schema"]["properties"]}          # schema 欄位順序
+            stage, final = convert(data, a.trigger)
+            for sub in ("json", "stage_txt", "txt"):
+                (a.out / sub).mkdir(exist_ok=True)
+            (a.out / "json" / f"{stem}.json").write_text(json.dumps(data, ensure_ascii=False), "utf-8")
+            (a.out / "stage_txt" / f"{stem}.txt").write_text(stage, "utf-8")
+            (a.out / "txt" / f"{stem}.txt").write_text(final, "utf-8")
     except Exception as e:
-        data, errs = None, [f"no/invalid json: {type(e).__name__}: {e}"]
+        data, errs = None, [f"caption failed: {type(e).__name__}: {e}"]
     rec["errors"] = errs
-    if not errs:
-        data = {k: data[k] for k in job["schema"]["properties"]}          # schema 欄位順序
-        for sub in ("json", "stage_txt", "txt"):
-            (a.out / sub).mkdir(exist_ok=True)
-        (a.out / "json" / f"{stem}.json").write_text(json.dumps(data, ensure_ascii=False), "utf-8")
-        stage, final = convert(data, a.trigger)
-        (a.out / "stage_txt" / f"{stem}.txt").write_text(stage, "utf-8")
-        (a.out / "txt" / f"{stem}.txt").write_text(final, "utf-8")
-    elif f.is_file():
+    if errs and f.is_file():
         d = a.out / "failed_raw"; d.mkdir(exist_ok=True)
         shutil.copyfile(f, d / f"{label}.json")
     shutil.rmtree(root, ignore_errors=True)
@@ -193,8 +195,9 @@ def main(argv=None):
     p.add_argument("--timeout", type=float, default=1800)
     p.add_argument("--only", nargs="*", help="只打這些檔名（測試用）")
     p.add_argument("--dry-run", action="store_true", help="只寫 prompts/schemas，不呼叫 Codex")
-    p.add_argument("--final-dir", type=Path, help="把圖片與 txt 複製到這裡（核對 sha256）")
-    a = p.parse_args(argv)
+    p.add_argument("--final-dir", type=Path, help="僅複製 JSON 與 txt 均成功的圖片及 txt（核對 sha256）")
+    p.add_argument("--nsfw-schema", action="store_true", help="搭配 --workspace：使用 NSFW 的 --images 與 --out 預設路徑（images_nsfw、captions_nsfw；不預設 --final-dir）")
+    a = parse_args(p, "caption", argv)
     a.out.mkdir(parents=True, exist_ok=True)
     params = json.loads(a.params.read_text("utf-8"))
     vocab = json.loads(a.vocab.read_text("utf-8"))
@@ -237,7 +240,9 @@ def main(argv=None):
             recs = list(ex.map(lambda j: run_one(j, a, attempt, results), todo))
         failed = {r["name"] for r in recs if r["errors"]}
         todo = [j for j in todo if j["name"] in failed]
-    ok = {r["name"] for r in results if not r["errors"]}
+    ok = {r["name"] for r in results if not r["errors"]
+          and (a.out / "json" / f"{Path(r['name']).stem}.json").is_file()
+          and (a.out / "txt" / f"{Path(r['name']).stem}.txt").is_file()}
     groups = {}
     for r in results:
         g = groups.setdefault(r["group"], dict(start=r["start"], end=r["end"], calls=0, images=set()))
@@ -254,15 +259,20 @@ def main(argv=None):
     print(json.dumps(summary, ensure_ascii=False, indent=1))
     if a.final_dir:
         a.final_dir.mkdir(parents=True, exist_ok=True)
+        if a.manifest.resolve() != (a.final_dir / "manifest.json").resolve():
+            shutil.copyfile(a.manifest, a.final_dir / "manifest.json")
         bad = []
         for j in jobs:
             src, dst = a.images / j["name"], a.final_dir / j["name"]
+            t = a.out / "txt" / f"{Path(j['name']).stem}.txt"
+            if j["name"] not in ok:
+                dst.unlink(missing_ok=True)
+                (a.final_dir / t.name).unlink(missing_ok=True)
+                continue
             shutil.copy2(src, dst)
             if sha(src) != sha(dst):
                 bad.append(j["name"])
-            t = a.out / "txt" / f"{Path(j['name']).stem}.txt"
-            if t.is_file():
-                shutil.copyfile(t, a.final_dir / t.name)
+            shutil.copyfile(t, a.final_dir / t.name)
         print(f"final dir {a.final_dir}: sha mismatches={bad}")
     return 0 if not summary["failed"] else 1
 
