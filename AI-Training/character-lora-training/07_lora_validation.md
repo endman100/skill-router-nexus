@@ -31,11 +31,11 @@ python scripts/eval_lora.py --workspace "<WS>"
 - `reconstruction`：重現訓練資料。預設挑選 4 組訓練 PNG 與同名 caption，依檔名長度、檔名字序排序，略過缺少 caption 的圖片，複製至 `reconstruction/reference/`；不足時依序循環複製補齊。reference 已足夠時直接沿用，否則補入尚未存在的檔案。每個案例預設僅使用 seed `31415926`，共 4 欄，對照圖集中於一張；可用 `--seeds` 指定多個逗號分隔的 seeds。
 - `scenario`：換裝情境測試。將 `templates/validate_scenarios.txt` 逐行去除首尾空白、略過空行，依序編為 s00、s01 等，以 `templates/validate_scenario_prompt.tmpl` 的 `{trigger}`、`{character_features}`、`{scenario}` 組成 prompt。第 i 個情境（從 0 起算）的 seed 固定為 `31415926 + i*10000`，每列每個情境各生成一張。
 
-角色特徵預設由 `<WS>/05_caption/vocab/vocab.json` 的 `character_features`，依 vocab-params 的 `field_traits` 順序與共用 trait 映射組成，包含身高、體型、年齡、髮型／長度／顏色、眼色、膚色、胸部、頭部與身體特徵，不受 visibility 影響；排除配件欄位與 `main_outfit.json` 的 tags，去重後以逗號連接。若存在 `<WS>/07_validate/prompts/character_features.txt`，則改用該檔內容。兩項測試共用 `<WS>/07_validate/prompts/negative.txt`，未提供時為空。
+角色特徵預設由 `<WS>/05_caption/vocab/vocab.json` 的 `character_features`，依 vocab-params 的 `field_traits` 順序與共用 trait 映射組成，包含身高、體型、年齡、髮型／長度／顏色、眼色、膚色、胸部、頭部與身體特徵，不受 visibility 影響；排除配件欄位與 `main_outfit.json` 的 tags，去重後以逗號連接。若存在 `<WS>/07_validate/prompts/character_features.txt`，則改用該檔內容。兩項測試的負向 prompt 均原樣使用 workflow 中 KSampler negative 所連接節點的文字（模板為 node 12）；如需調整，請編輯 `<WS>/07_validate/workflow.json`。
 
 可選參數：
 
-- 路徑：`--checkpoints`、`--out-dir`、`--workflow`、`--negative-file`、`--scenario-template`、`--scenarios`、`--character-features`、`--vocab-params`。預設 workflow 優先使用 `<WS>/07_validate/workflow.json`，vocab-params 優先使用 `<WS>/05_caption/vocab/caption_vocab_params.json`，否則各自使用技能內模板。
+- 路徑：`--checkpoints`、`--out-dir`、`--workflow`、`--scenario-template`、`--scenarios`、`--character-features`、`--vocab-params`。預設 workflow 優先使用 `<WS>/07_validate/workflow.json`，vocab-params 優先使用 `<WS>/05_caption/vocab/caption_vocab_params.json`，否則各自使用技能內模板。
 - 案例：`--trigger`、`--num-reconstruction`、`--seeds`（逗號分隔整數，僅用於 reconstruction）、`--no-base`。
 - 生成：`--strength` 預設 0.8；`--unet` 預設 `novaAnimeAM_v6029B.safetensors`；`--width`／`--height` 預設 720×1280；`--steps` 預設 40；`--cfg` 預設 4；`--sampler`／`--scheduler` 預設 `er_sde`／`simple`。
 - 連線：`--comfy-url` 預設 `http://127.0.0.1:1121`，`--timeout` 為每張圖片的秒數，預設 600。
@@ -51,7 +51,7 @@ python scripts/eval_lora.py --workspace "<WS>" --dry-run
 兩項測試各自存於 `<WS>/07_validate/reconstruction/` 與 `<WS>/07_validate/scenario/`：
 
 - `lora_test/{label}_{case}_seed{seed}.png`：base／各 epoch／final 的生成圖。
-- `test_meta.json`：每項工作的 prompt、負向檔案與文字、seeds、strength、workflow、模型與生成參數，以及各圖的 sha256、檔案大小與尺寸；reconstruction 另列 reference 檔案。
+- `test_meta.json`：每項工作的 prompt、workflow 中實際使用的負向文字（`negative`）、seeds、strength、workflow、模型與生成參數，以及各圖的 sha256、檔案大小與尺寸；reconstruction 另列 reference 檔案。
 - `checkpoint_comparison_01.png` 等：列為 base／各 epoch／final，欄為案例與 seed（reconstruction 先按案例再按 seed）；兩軸均有標籤，每張最多 6 欄，24 個情境會產生 4 張。reconstruction 最上方另有 `reference` 列，顯示縮至格子內的訓練原圖。
 - reconstruction 的 `reference/` 保留選定的 PNG 與同名 caption；scenario 的 `prompts.json` 保留 trigger、角色特徵及來源、模板與情境檔路徑，以及各情境、seed 和完整 prompt。
 
