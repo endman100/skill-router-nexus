@@ -2,21 +2,22 @@
 """Anima character LoRA training launcher (Linux / Windows, Python stdlib only).
 
 Builds kwargs_train.json + config.toml in --work-dir, then runs
-sd-scripts-wrap/train_with_resume.py (auto-resume from the newest saved state)
-with the given venv / python. sd-scripts must be cloned at <sd-scripts-wrap>/sd-scripts.
+sd-scripts/anima_train_network.py through accelerate in the given venv / python
+environment, automatically resuming from the newest saved state.
 
 Layout of --work-dir:
   kwargs_train.json, config.toml       generated training settings
   models/                              <trigger>-0000NN.safetensors, *-state dirs, train.log
-  cache_dir/, images_regularization_1to1/ (only with --reg-dir)
+  images_regularization_1to1/           regularization subset (only if needed)
 
 Example:
   python train_lora.py --train-dir run/train_set --trigger takane_yasuko --work-dir run/lora_work \
-      --sd-scripts-wrap repos/sd-scripts-wrap --venv repos/.venv \
+      --sd-scripts repos/sd-scripts --venv repos/.venv \
       --model models/novaAnimeAM_v6029B.safetensors --qwen3 models/qwen_3_06b_base.safetensors \
       --vae models/qwen_image_vae_train.safetensors
 """
 import argparse
+from contextlib import redirect_stderr, redirect_stdout
 import json
 import math
 import os
@@ -27,20 +28,21 @@ import sys
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 TARGET_TRAIN_SAMPLES = 480
 
-# Runs inside the training python (needs `toml`, which sd-scripts installs).
-DRIVER = r"""
-import importlib.util, json, os, sys
-kwargs_path, name, out_dir, wandb_dir, wrap_dir = sys.argv[1:6]
-spec = importlib.util.spec_from_file_location("train_with_resume", os.path.join(wrap_dir, "train_with_resume.py"))
-twr = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(twr)
-twr.venv_activate_path = ""  # accelerate is resolved from PATH (set by train_lora.py)
-with open(kwargs_path, encoding="utf-8") as f:
-    kwargs = json.load(f)
-twr.train_with_resume(name, out_dir, wandb_dir, **kwargs)
-epoch, state = twr.find_last_checkpoint(out_dir, name, kwargs["save_every_n_epochs"])
-print(f"training finished: last epoch {epoch}, state {state}", flush=True)
-"""
+
+class Tee:
+    """Send launcher and piped child output to both the console and the log."""
+
+    def __init__(self, console, log):
+        self.console = console
+        self.log = log
+
+    def write(self, text):
+        self.console.write(text)
+        return self.log.write(text)
+
+    def flush(self):
+        self.console.flush()
+        self.log.flush()
 
 
 def list_images(d):
@@ -77,7 +79,7 @@ def toml_value(v):
 
 
 def write_config_toml(path, kw, class_tokens):
-    """Same structure as sd-scripts-wrap create_toml_file (it rewrites this file when training starts)."""
+    """Write the sd-scripts dataset configuration without a TOML dependency."""
     subsets = [{"image_dir": kw["train_dir"], "class_tokens": class_tokens,
                 "num_repeats": kw["num_repeats"], "caption_extension": "txt"}]
     if kw.get("regularization_dir"):
@@ -85,7 +87,9 @@ def write_config_toml(path, kw, class_tokens):
                         "num_repeats": kw["num_repeats_regularization"], "caption_extension": "txt",
                         "is_reg": True})
     lines = ["[[datasets]]", f"resolution = {kw['resolution']}", f"batch_size = {kw['batch_size']}"]
-    for s in subsets:
+    for i, s in enumerate(subsets):
+        if i:
+            lines.append("")
         lines.append("[[datasets.subsets]]")
         lines += [f"{k} = {toml_value(v)}" for k, v in s.items()]
     lines += ["", "", "[general]"]
@@ -159,9 +163,6 @@ def build_kwargs(args, work):
         "learning_rate": args.lr,
         "network_dim": args.dim,
         "network_module": "networks.lori_D_anima",
-        "train_method": "get_command_anima",
-        "cache_dir": os.path.join(work, "cache_dir"),
-        "cache_dir_regularization": os.path.join(work, "cache_dir_regularization"),
         "keep_tokens": args.keep_tokens,
         "caption_tag_dropout_rate": args.tag_dropout,
         "enable_bucket": True,
@@ -174,12 +175,145 @@ def build_kwargs(args, work):
     return kw
 
 
+def read_state_epoch(state_dir):
+    try:
+        with open(os.path.join(state_dir, "train_state.json"), encoding="utf-8") as f:
+            state = json.load(f)
+    except (OSError, ValueError):
+        return None
+    epoch = state.get("current_epoch") if isinstance(state, dict) else None
+    return epoch if type(epoch) is int else None
+
+
+def find_last_checkpoint(models, trigger):
+    """Choose the highest epoch for this trigger, preferring saved metadata."""
+    last_epoch, resume = -1, ""
+    prefix, suffix = trigger + "-", "-state"
+    for name in os.listdir(models):
+        state_dir = os.path.join(models, name)
+        if not os.path.isdir(state_dir):
+            continue
+        numbered_epoch = None
+        if name != trigger + suffix:
+            if not (name.startswith(prefix) and name.endswith(suffix)):
+                continue
+            number = name[len(prefix):-len(suffix)]
+            if not number.isdigit():
+                continue
+            numbered_epoch = int(number)
+        epoch = read_state_epoch(state_dir)
+        if epoch is None:
+            epoch = numbered_epoch
+        if epoch is not None and epoch > last_epoch:
+            last_epoch, resume = epoch, state_dir
+    return last_epoch, resume
+
+
+def build_command(accelerate, sd_scripts, kw, trigger, models, last_epoch, resume):
+    """Keep the established Anima argument order; paths are single argv items."""
+    cmd = [accelerate, "launch", "--mixed_precision", "bf16", "--num_cpu_threads_per_process", "1",
+           os.path.join(sd_scripts, "anima_train_network.py"),
+           f"--pretrained_model_name_or_path={kw['pretrained_model_name_or_path']}",
+           f"--qwen3={kw['qwen3_path']}", f"--vae={kw['vae_path']}",
+           f"--dataset_config={kw['toml_path']}", f"--output_dir={models}", f"--output_name={trigger}",
+           "--save_model_as=safetensors", f"--network_module={kw['network_module']}",
+           f"--network_dim={kw['network_dim']}", f"--learning_rate={kw['learning_rate']}",
+           "--optimizer_type=AdamW8bit", "--lr_scheduler=constant", "--timestep_sampling=sigmoid",
+           "--discrete_flow_shift=1.0", f"--max_train_epochs={kw['max_train_epochs']}",
+           f"--save_every_n_epochs={kw['save_every_n_epochs']}", "--save_precision", "bf16",
+           "--mixed_precision", "bf16", "--gradient_checkpointing", "--cache_latents", "--cache_latents_to_disk"]
+    shuffle_caption = True
+    dropout = kw["caption_tag_dropout_rate"]
+    # Text encoder output caching is incompatible with caption augmentation.
+    if not (shuffle_caption or dropout > 0):
+        cmd += ["--cache_text_encoder_outputs", "--cache_text_encoder_outputs_to_disk"]
+    cmd += ["--vae_chunk_size=64", "--vae_disable_cache", "--persistent_data_loader_workers",
+            "--max_data_loader_n_workers", "1", "--network_train_unet_only", "--attn_mode", "sdpa"]
+    if shuffle_caption:
+        cmd += ["--shuffle_caption", f"--keep_tokens={kw['keep_tokens']}"]
+    if dropout > 0:
+        cmd.append(f"--caption_tag_dropout_rate={dropout}")
+    if kw["enable_bucket"]:
+        cmd += ["--enable_bucket", f"--min_bucket_reso={kw['min_bucket_reso']}",
+                f"--max_bucket_reso={kw['max_bucket_reso']}"]
+    cmd.append("--save_state")
+    if resume:
+        cmd += [f"--initial_epoch={last_epoch + 1}", "--skip_until_initial_step", f"--resume={resume}"]
+    return cmd
+
+
+def run(args, work):
+    kw = build_kwargs(args, work)
+    kwargs_path = os.path.join(work, "kwargs_train.json")
+    with open(kwargs_path, "w", encoding="utf-8") as f:
+        json.dump(kw, f, ensure_ascii=False, indent=4)
+    write_config_toml(kw["toml_path"], kw, args.trigger)
+    print(f"wrote {kwargs_path}\nwrote {kw['toml_path']}", flush=True)
+
+    missing = [p for p in (kw["pretrained_model_name_or_path"], kw["qwen3_path"], kw["vae_path"]) if not os.path.exists(p)]
+    if args.prepare_only:
+        for p in missing:
+            print(f"WARNING: not found: {p}")
+        return 0
+
+    sd_scripts = os.path.abspath(args.sd_scripts)
+    for rel in ("anima_train_network.py", os.path.join("networks", "lori_D_anima.py")):
+        if not os.path.isfile(os.path.join(sd_scripts, rel)):
+            sys.exit(f"missing {os.path.join(sd_scripts, rel)}\n"
+                     "Get the required sd-scripts checkout:\n"
+                     "  git clone https://github.com/endman100/sd-scripts\n"
+                     "  git -C sd-scripts checkout 08d86febb0f9f2fba06517a1983647d02b1337bc\n"
+                     "Pass that folder as --sd-scripts.")
+    if missing:
+        sys.exit(f"model files not found: {missing}")
+    if not (args.venv or args.python):
+        sys.exit("--venv or --python is required for training")
+    _, bin_dir = resolve_python(args)
+    env = dict(os.environ)
+    env["PATH"] = bin_dir + os.pathsep + env.get("PATH", "")
+    if args.venv:
+        env["VIRTUAL_ENV"] = os.path.abspath(args.venv)
+    env.update(PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
+    accelerate = shutil.which("accelerate", path=env["PATH"])
+    if not accelerate:
+        sys.exit(f"accelerate not found in {bin_dir}")
+
+    models = os.path.join(work, "models")
+    for attempt in range(args.max_retries + 1):
+        last_epoch, resume = find_last_checkpoint(models, args.trigger)
+        if last_epoch >= args.epochs:
+            print(f"last epoch {last_epoch} >= final epoch {args.epochs}; no need to train again", flush=True)
+            return 0
+        if resume:
+            print(f"resuming from epoch {last_epoch}: {resume}", flush=True)
+        cmd = build_command(accelerate, sd_scripts, kw, args.trigger, models, last_epoch, resume)
+        print(f"run_command (attempt {attempt + 1}/{args.max_retries + 1}): {json.dumps(cmd, ensure_ascii=False)}", flush=True)
+        with subprocess.Popen(cmd, cwd=sd_scripts, env=env, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace", bufsize=1) as proc:
+            try:
+                for line in proc.stdout:
+                    sys.stdout.write(line)
+                    sys.stdout.flush()
+                returncode = proc.wait()
+            except KeyboardInterrupt:
+                proc.terminate()
+                raise
+        if returncode == 0:
+            print("training finished", flush=True)
+            return 0
+        print(f"accelerate exited with status {returncode}", flush=True)
+        if attempt == args.max_retries:
+            print(f"max retries exhausted ({args.max_retries}); stopping", flush=True)
+            return returncode if returncode > 0 else 128 - returncode
+        print(f"retry {attempt + 1}/{args.max_retries}: re-checking newest state", flush=True)
+
+
 def main():
-    ap = argparse.ArgumentParser(description="Anima character LoRA training (sd-scripts-wrap auto-resume)")
+    ap = argparse.ArgumentParser(description="Anima character LoRA training (accelerate, auto-resume)")
     ap.add_argument("--train-dir", required=True, help="images + same-name .txt captions")
     ap.add_argument("--trigger", required=True, help="output_name and class_tokens")
     ap.add_argument("--work-dir", required=True, help="config, cache, models/ (checkpoints + train.log)")
-    ap.add_argument("--sd-scripts-wrap", required=True, help="sd-scripts-wrap checkout (sd-scripts inside it)")
+    ap.add_argument("--sd-scripts", required=True, help="sd-scripts checkout containing anima_train_network.py")
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--venv", help="venv dir (has accelerate + sd-scripts requirements)")
     g.add_argument("--python", help="python executable of the training env (alternative to --venv)")
@@ -197,61 +331,38 @@ def main():
     ap.add_argument("--keep-tokens", type=int, default=2)
     ap.add_argument("--tag-dropout", type=float, default=0.2)
     ap.add_argument("--reg-dir", help="regularization images (default: none)")
+    ap.add_argument("--max-retries", type=int, default=3, help="retries after a failed run (default: 3; 0 disables retries)")
     ap.add_argument("--prepare-only", action="store_true", help="only write kwargs_train.json and config.toml")
     args = ap.parse_args()
+    if args.max_retries < 0:
+        ap.error("--max-retries must be >= 0")
 
     work = os.path.abspath(args.work_dir)
     os.makedirs(work, exist_ok=True)
-    kw = build_kwargs(args, work)
-    kwargs_path = os.path.join(work, "kwargs_train.json")
-    with open(kwargs_path, "w", encoding="utf-8") as f:
-        json.dump(kw, f, ensure_ascii=False, indent=4)
-    write_config_toml(kw["toml_path"], kw, args.trigger)
-    print(f"wrote {kwargs_path}\nwrote {kw['toml_path']}", flush=True)
-
-    missing = [p for p in (kw["pretrained_model_name_or_path"], kw["qwen3_path"], kw["vae_path"]) if not os.path.exists(p)]
     if args.prepare_only:
-        for p in missing:
-            print(f"WARNING: not found: {p}")
-        return
-    if missing:
-        sys.exit(f"model files not found: {missing}")
-
-    wrap = os.path.abspath(args.sd_scripts_wrap)
-    for rel in ("train_with_resume.py", os.path.join("sd-scripts", "anima_train_network.py"),
-                os.path.join("sd-scripts", "networks", "lori_D_anima.py")):
-        if not os.path.exists(os.path.join(wrap, rel)):
-            sys.exit(f"missing {os.path.join(wrap, rel)} (clone sd-scripts into <sd-scripts-wrap>/sd-scripts)")
-    if not (args.venv or args.python):
-        sys.exit("--venv or --python is required for training")
-    py, bin_dir = resolve_python(args)
-    env = dict(os.environ)
-    env["PATH"] = bin_dir + os.pathsep + env.get("PATH", "")
-    if args.venv:
-        env["VIRTUAL_ENV"] = os.path.abspath(args.venv)
-    env.update(PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
-    if not shutil.which("accelerate", path=env["PATH"]):
-        sys.exit(f"accelerate not found in {bin_dir}")
+        return run(args, work)
 
     models = os.path.join(work, "models")
     os.makedirs(models, exist_ok=True)
     log_path = os.path.join(models, "train.log")
-    cmd = [py, "-u", "-c", DRIVER, kwargs_path, args.trigger, models, os.path.join(work, "wandb"), wrap]
-    print(f"training log: {log_path}", flush=True)
-    with open(log_path, "a", encoding="utf-8") as log:
-        proc = subprocess.Popen(cmd, cwd=os.path.join(wrap, "sd-scripts"), env=env, stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace", bufsize=1)
+    # Python open() allows shared reading/writing on Windows, including from children.
+    with open(log_path, "a", encoding="utf-8", buffering=1) as log, \
+            redirect_stdout(Tee(sys.stdout, log)), redirect_stderr(Tee(sys.stderr, log)):
+        print(f"training log: {log_path}", flush=True)
         try:
-            for line in proc.stdout:
-                sys.stdout.write(line)
-                sys.stdout.flush()
-                log.write(line)
-                log.flush()
-        except KeyboardInterrupt:
-            proc.terminate()
+            return run(args, work)
+        except SystemExit as exc:
+            if isinstance(exc.code, str):
+                print(exc.code, file=sys.stderr, flush=True)
+                return 1
             raise
-        sys.exit(proc.wait())
+        except OSError as exc:
+            print(f"training error: {exc}", file=sys.stderr, flush=True)
+            return 1
+        except KeyboardInterrupt:
+            print("training interrupted", file=sys.stderr, flush=True)
+            return 130
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
