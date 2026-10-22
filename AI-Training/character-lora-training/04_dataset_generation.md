@@ -2,6 +2,8 @@
 
 路徑請參照 [00_workspace.md](00_workspace.md)；`<WS>` 為本案 workspace。
 
+`--workspace` 預設使用本案角色設定圖與輸出路徑；補圖模式的資料夾與目標張數預設為 `change_outfit/` 與 2N（補圖未給 N 時為 30）。仍可明確傳入路徑、`--reference`、`--fill-existing <資料夾>` 或 `--target` 覆寫。
+
 N 預設為 30，若使用者有指定則依指定數量。
 
 | 來源 | 維持服裝（keep） | 換服裝（change） |
@@ -12,7 +14,7 @@ N 預設為 30，若使用者有指定則依指定數量。
 ## Codex
 
 ```
-python3 -B scripts/codex_batch_image_gen.py N <WS>/03_sheet/character-sheet.png <WS>/04_generate/codex
+python -B scripts/codex_batch_image_gen.py --workspace <WS> N
 ```
 
 執行一次即可在 `<WS>/04_generate/codex/` 生成 `keep_outfit/` N 張與 `change_outfit/` 2N 張（檔名為 `01.png`、`02.png`…，接續既有編號），預設使用 `gpt-6.1-sol`、effort 為 `medium`。各組數量不足時僅補足缺額張數，最多重試 3 輪；若仍不足則寫入 `<WS>/04_generate/codex/missing.json`（記錄各組缺額張數與最後錯誤），並回報使用者。
@@ -22,10 +24,8 @@ python3 -B scripts/codex_batch_image_gen.py N <WS>/03_sheet/character-sheet.png 
 當 `<WS>/04_generate/codex/missing.json` 顯示 `change_outfit` 不足 2N 時，僅補換裝圖（不重新生成既有圖，亦不生成維持服裝圖）：
 
 ```
-python3 -B scripts/codex_batch_image_gen.py --fill-existing <WS>/04_generate/codex/change_outfit --target 2N \
-    --reference <WS>/03_sheet/character-sheet.png --dry-run      # 先看計畫：既有有效 PNG 數、要補幾張、下一個檔名
-python3 -B scripts/codex_batch_image_gen.py --fill-existing <WS>/04_generate/codex/change_outfit --target 2N \
-    --reference <WS>/03_sheet/character-sheet.png
+python -B scripts/codex_batch_image_gen.py --workspace <WS> N --fill-existing --dry-run      # 先看計畫：既有有效 PNG 數、要補幾張、下一個檔名
+python -B scripts/codex_batch_image_gen.py --workspace <WS> N --fill-existing
 ```
 
 - 計算資料夾內有效的 PNG（檢查 PNG 結構；損壞檔案不計，列於 `existing_invalid`），僅向 Codex 請求 `2N − 有效張數` 張，並使用換裝 prompt。

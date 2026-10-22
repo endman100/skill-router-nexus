@@ -2,6 +2,8 @@
 
 路徑依 [00_workspace.md](00_workspace.md)：`<WS>` 為本案 workspace，`<ENV>` 為共用環境。
 
+`--workspace` 從本案與共用環境取得訓練集、trigger、輸出、sd-scripts、venv 與上述模型檔案；明確指定的原有參數一律優先，`--python` 可覆寫預設 venv。
+
 由 Grok Bot 直接執行訓練。訓練集為 `<WS>/05_caption/train_set`（`0001.png…` + 同名 txt + `manifest.json`）。
 
 ## 環境設定（首次才需要）
@@ -17,10 +19,10 @@ git clone https://github.com/endman100/sd-scripts "<ENV>/sd-scripts"
 git -C "<ENV>/sd-scripts" checkout 08d86febb0f9f2fba06517a1983647d02b1337bc
 ```
 
-venv（Python 3.12；torch 先單獨安裝 cu130 版本，再安裝 sd-scripts 的 requirements，最後固定為已驗證版本）：
+venv（需要 Python 3.12，先確認 `python` 指向此版本；torch 先單獨安裝 cu130 版本，再安裝 sd-scripts 的 requirements，最後固定為已驗證版本）：
 
 ```bash
-python3.12 -m venv "<ENV>/.venv"     # Windows: py -3.12 -m venv "<ENV>\.venv"
+python -m venv "<ENV>/.venv"     # Windows 亦使用 Python 3.12 的 python
 . "<ENV>/.venv/bin/activate"          # Windows: "<ENV>\.venv\Scripts\activate"
 pip install torch==2.10.0 torchvision --index-url https://download.pytorch.org/whl/cu130
 cd "<ENV>/sd-scripts"
@@ -36,12 +38,7 @@ pip install accelerate==1.12.0 transformers==5.2.0 diffusers==0.36.0 bitsandbyte
 ## 訓練
 
 ```bash
-python scripts/train_lora.py \
-  --train-dir "<WS>/05_caption/train_set" --trigger <trigger> --work-dir "<WS>/06_train" \
-  --sd-scripts "<ENV>/sd-scripts" --venv "<ENV>/.venv" \
-  --model "<ENV>/models/novaAnimeAM_v6029B.safetensors" \
-  --qwen3 "<ENV>/models/qwen_3_06b_base.safetensors" \
-  --vae "<ENV>/models/qwen_image_vae_train.safetensors"
+python -B scripts/train_lora.py --workspace <WS>
 ```
 
 - `--prepare-only`：僅寫入 `<WS>/06_train/kwargs_train.json` 與 `<WS>/06_train/config.toml`，先檢查圖片數量、num_repeats、caption 是否齊全。

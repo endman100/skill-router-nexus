@@ -24,6 +24,7 @@ import os
 import shutil
 import subprocess
 import sys
+from ws import parse_args
 
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 TARGET_TRAIN_SAMPLES = 480
@@ -308,7 +309,7 @@ def run(args, work):
         print(f"retry {attempt + 1}/{args.max_retries}: re-checking newest state", flush=True)
 
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser(description="Anima character LoRA training (accelerate, auto-resume)")
     ap.add_argument("--train-dir", required=True, help="images + same-name .txt captions")
     ap.add_argument("--trigger", required=True, help="output_name and class_tokens")
@@ -333,7 +334,7 @@ def main():
     ap.add_argument("--reg-dir", help="regularization images (default: none)")
     ap.add_argument("--max-retries", type=int, default=3, help="retries after a failed run (default: 3; 0 disables retries)")
     ap.add_argument("--prepare-only", action="store_true", help="only write kwargs_train.json and config.toml")
-    args = ap.parse_args()
+    args = parse_args(ap, "train", argv)
     if args.max_retries < 0:
         ap.error("--max-retries must be >= 0")
 

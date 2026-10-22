@@ -6,6 +6,7 @@ import json
 import math
 import os
 from pathlib import Path, PurePosixPath
+from ws import parse_args
 import shlex
 import shutil
 import subprocess
@@ -297,7 +298,7 @@ def build_parser():
 
 
 def main(argv=None):
-    args = build_parser().parse_args(argv)
+    args = parse_args(build_parser(), "collect", argv)
     try:
         return collect(**vars(args))
     except (OSError, ValueError, KeyError, TypeError) as exc:

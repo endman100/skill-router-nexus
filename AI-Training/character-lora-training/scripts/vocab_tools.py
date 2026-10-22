@@ -14,6 +14,7 @@
 """
 import argparse, json, sys
 from pathlib import Path
+from ws import parse_args
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).resolve().parent
@@ -199,7 +200,7 @@ def main(argv=None):
     c = sub.add_parser("check")
     c.add_argument("--vocab", type=Path, required=True); c.add_argument("--names", type=Path, required=True)
     c.add_argument("--params", type=Path, default=DEFAULT_PARAMS); c.add_argument("--main-outfit")
-    a = p.parse_args(argv)
+    a = parse_args(p, {"sheets": s, "check": c}, argv)
     return cmd_sheets(a) if a.cmd == "sheets" else cmd_check(a)
 
 

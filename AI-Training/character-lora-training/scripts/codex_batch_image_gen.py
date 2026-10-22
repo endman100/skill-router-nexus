@@ -14,6 +14,7 @@ an existing image is discarded. Updates <folder>/missing.json when present.
 """
 
 import argparse
+from ws import parse_args
 import base64
 import binascii
 from dataclasses import dataclass
@@ -406,7 +407,7 @@ def positive_int(value):
 def main_fill(argv):
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--fill-existing", type=Path, required=True,
+    parser.add_argument("--fill-existing", type=Path, nargs="?", const=True, required=True,
                         help="Existing change_outfit folder to top up")
     parser.add_argument("--target", type=positive_int, required=True,
                         help="Wanted number of valid change_outfit images (2N)")
@@ -414,7 +415,8 @@ def main_fill(argv):
     parser.add_argument("--max-rounds", type=positive_int, default=DEFAULT_MAX_ROUNDS)
     parser.add_argument("--dry-run", action="store_true",
                         help="Only count existing images and print the plan; no Codex call")
-    args = parser.parse_args(argv)
+    parser.add_argument("n", type=positive_int, nargs="?", default=DEFAULT_COUNT, help="N (workspace top-up target defaults to 2N)")
+    args = parse_args(parser, "fill", argv)
     try:
         plan, result = fill_existing(args.fill_existing, args.target, args.reference,
                                      dry_run=args.dry_run, max_rounds=args.max_rounds)
@@ -440,7 +442,7 @@ def main(argv=None):
                         help="keep_outfit N images, change_outfit 2N images")
     parser.add_argument("reference", type=Path, help="Character sheet image path")
     parser.add_argument("folder", type=Path, help="Save folder")
-    args = parser.parse_args(argv)
+    args = parse_args(parser, "generate", argv)
     try:
         folder = args.folder.expanduser().resolve()
         reference = args.reference
