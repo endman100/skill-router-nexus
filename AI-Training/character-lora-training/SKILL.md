@@ -26,6 +26,7 @@ description: >-
 - [ ] 4. 資料集生成
 - [ ] 5. 整理訓練集與打標
 - [ ] 6. LoRA 訓練
+- [ ] 7. LoRA 驗證
 ```
 
 1. **資料收集**：讀 [01_data_collection.md](01_data_collection.md)。
@@ -34,5 +35,6 @@ description: >-
 4. **資料集生成**：讀 [04_dataset_generation.md](04_dataset_generation.md)。
 5. **整理訓練集與打標**：讀 [05_captioning.md](05_captioning.md)。
 6. **LoRA 訓練**：讀 [06_lora_training.md](06_lora_training.md)。
+7. **LoRA 驗證**：讀 [07_lora_validation.md](07_lora_validation.md)。
 
 `scripts/` 裡的程式直接執行，不需要讀內容；指令與參數寫在各步驟的 md。`templates/` 是打標用的 prompt 模板、欄位設定與 schema。
