@@ -1,29 +1,32 @@
 # 02. 清理
 
-順序：去重 → WD Tagger 分流（Grok VM 本機）→ SFW 給 Codex 清理 → NSFW 與 Codex 拒絕／失敗者由 Grok 處理。
+路徑依 [00_workspace.md](00_workspace.md) 規範：`<WS>` 為本案 workspace，`<ENV>` 為共用環境。
+
+執行順序：去重 → WD Tagger 分流（Grok VM 本機）→ SFW 交由 Codex 清理 → NSFW 與 Codex 拒絕／失敗者交由 Grok 處理。
 
 ## 1–2. 去重與分流（不呼叫 Codex）
 
 ```
-python3 scripts/dedup_split.py <清理資料夾> codex=<收集資料夾>/codex grok=<收集資料夾>/grok
+python3 -B scripts/dedup_split.py <WS>/02_clean codex=<WS>/01_collect/codex grok=<WS>/01_collect/grok \
+    --model-dir <ENV>/models/wd-eva02-large-tagger-v3
 ```
 
-- sha256 去掉完全相同的圖，再用 pHash（距離 ≤ 6）去近似圖，保留面積大的。
-- WD Tagger（`wd-eva02-large-tagger-v3`，CPU；路徑 `--model-dir` 或 `WD_TAGGER_DIR`）的 rating：`general`、`sensitive` → `sfw/`；`questionable`、`explicit` → `nsfw/`。
-- 輸出 `dedup/`、`sfw/`、`nsfw/`、`dedup.json`、`rating.json`。
+- 先以 sha256 移除完全相同的圖片，再以 pHash（距離 ≤ 6）去除近似圖片，並保留面積較大者。
+- 依 WD Tagger（`wd-eva02-large-tagger-v3`，CPU；本案路徑 `<ENV>/models/wd-eva02-large-tagger-v3`，以 `--model-dir` 指定）的 rating 進行分流：`general`、`sensitive` → `<WS>/02_clean/sfw/`；`questionable`、`explicit` → `<WS>/02_clean/nsfw/`。
+- 輸出結果至 `<WS>/02_clean/` 目錄下的 `dedup/`、`sfw/`、`nsfw/`、`dedup.json` 與 `rating.json`。
 
 ## 3. Codex 清理 SFW
 
 ```
-python3 scripts/codex_clean.py "<作品名> <角色名>" <清理資料夾>/sfw <清理資料夾>/codex_clean
+python3 -B scripts/codex_clean.py "<作品名> <角色名>" <WS>/02_clean/sfw <WS>/02_clean
 ```
 
-一次隔離 `codex exec`（預設 `gpt-6.1-sol`、effort `high`、可用圖像生成去字）。Codex 依角色名與整包圖判斷角色長相：先 8 張一組拼圖初篩（角色在不在、線稿／黑白、太糊；拿不準開原圖），再逐張處理：角色檢測、品質檢查、剔除線稿與黑白圖、裁到只剩目標角色、去文字／對白框／浮水印並與原圖比對。
+執行單次隔離的 `codex exec`（預設 `gpt-6.1-sol`、effort `high`，並可使用圖像生成去除文字）。Codex 會依據角色名與整批圖片判斷角色外觀：先以 8 張一組拼圖進行初篩（確認角色是否存在、是否為線稿／黑白圖、畫面是否過於模糊；若無法確定則開啟原圖檢視），接著逐張處理：角色檢測、品質檢查、剔除線稿與黑白圖、裁切至僅保留目標角色、去除文字／對白框／浮水印並與原圖進行比對。
 
-輸出清理後的圖、`summary.json`（檔名對照）與 `rejected.json`（問題圖與原因：角色不在、品質過低、線稿或黑白、裁切失敗、去字走樣、拒絕處理）。
+處理結果會自動輸出至 `<WS>/02_clean/codex_clean/`，包含清理後的圖片、`summary.json`（檔名對照表）與 `rejected.json`（問題圖片與原因：角色不存在、品質過低、線稿或黑白圖、裁切失敗、去字走樣、拒絕處理）。
 
 ## 4. Grok 處理
 
-`nsfw/` 的圖，以及 `rejected.json` 中 Codex 拒絕處理或失敗的圖，由 Grok Bot 照第 3 步的標準處理（需要時用 `python3 scripts/wdtag.py <圖>` 看 tag）。可疑內容（例如外觀未成年的性化圖）直接排除並列給 使用者。
+針對 `<WS>/02_clean/nsfw/` 中的圖片，以及 `<WS>/02_clean/codex_clean/rejected.json` 內 Codex 拒絕處理或失敗的圖片，由 Grok Bot 依照第 3 步的標準進行處理（需要時可使用 `python3 -B scripts/wdtag.py --model-dir <ENV>/models/wd-eva02-large-tagger-v3 <WS>/02_clean/nsfw/<檔名>` 查看 tag）。可疑內容（例如外觀未成年的性化圖片）直接排除並列給使用者。
 
-清理後的收集圖 = Codex 清理輸出 + Grok 處理通過的圖（NSFW 另放一個資料夾，05 的 `build_train_set.py` 以 `collected:nsfw=` 傳入，放到 `<訓練資料夾>_nsfw/`，不進 Codex 打標資料夾）。之後的 Codex 腳本不再做 SFW 檢查。
+將 `<WS>/02_clean/codex_clean/` 中的 PNG 檔案複製至 `<WS>/02_clean/collected_sfw/`，經 Grok 處理通過的 SFW 圖片亦存入此處；NSFW 圖片則存入 `<WS>/02_clean/collected_nsfw/`。步驟 05 會以 `collected:nsfw=` 傳入後者，編號後的圖片會存放到 `<WS>/05_caption/images_nsfw/`，不進入 Codex 打標資料夾。後續的 Codex 腳本亦不再進行 SFW 檢查。
