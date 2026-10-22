@@ -1,0 +1,8 @@
+{
+ "name": "gazai_av",
+ "lora": "20261001_AV_character-000015.safetensors",
+ "strength": 0.8,
+ "source": "self-trained",
+ "character": "anime style, GAZAI, pink hair, long hair, straight hair, blunt bangs, sidelocks, green eyes, fair skin, large breasts, curvy, red choker",
+ "outfit": "blue happi coat, open clothes, short sleeves, wave pattern, blue sailor collar, red neckerchief, cleavage, midriff, red suspenders, blue pleated miniskirt, black thighhighs, red high heels"
+}
