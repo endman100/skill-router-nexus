@@ -4,13 +4,12 @@ Grok Bot 直接訓練。訓練集是 `<訓練集輸出資料夾>`（`0001.png…
 
 ## 環境（第一次才需要）
 
-三個 repo 固定在下列 commit：
+兩個 repo 固定在下列 commit：
 
 | repo | commit | 用途 |
 |---|---|---|
 | https://github.com/endman100/sd-scripts | `08d86febb0f9f2fba06517a1983647d02b1337bc` | `anima_train_network.py`、`networks/lori_D_anima.py`、`library/anima_utils.py`（從 checkpoint 自動判斷 DiT block 數） |
 | https://github.com/endman100/sd-scripts-wrap | `0fb250e184bbab2a8d704d7af3309c8113e43589` | `train_with_resume.py`：組 accelerate 指令、寫 config.toml、從最新 state 自動續訓 |
-| https://github.com/endman100/AI-Server | `00a236bad9f004ecf3c670ea0f76c85c126f8dcc` | 只當預設值參考（`method/lora_train/inference.py` 的 `character_end_to_end_anima`），訓練不需要 |
 
 sd-scripts **必須 clone 在 sd-scripts-wrap 裡面、資料夾名 `sd-scripts`**（wrap 固定用 `<wrap>/sd-scripts/anima_train_network.py`；不是 submodule，wrap 的 `.gitignore` 已忽略它）：
 
