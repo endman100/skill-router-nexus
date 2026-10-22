@@ -23,6 +23,7 @@ from vocab_tools import feature_options, trait_field
 ROW_HEADER = 80
 COLUMN_HEADER = 32
 TEMPLATES = Path(__file__).resolve().parent.parent / 'templates'
+TEST_NAMES = ('reconstruction', 'scenario', 'showcase')
 
 
 def parse_args():
@@ -33,14 +34,25 @@ def parse_args():
     parser.add_argument('--comfy-url', default='http://127.0.0.1:1121')
     parser.add_argument('--workflow', type=Path)
     parser.add_argument('--trigger')
+    parser.add_argument('--tests', default=','.join(TEST_NAMES),
+                        help='Comma-separated tests: reconstruction, scenario, showcase (default: all)')
     parser.add_argument('--num-reconstruction', type=int, default=4)
     parser.add_argument('--scenario-template', type=Path,
                         default=TEMPLATES / 'validate_scenario_prompt.tmpl')
     parser.add_argument('--scenarios', type=Path,
                         default=TEMPLATES / 'validate_scenarios.txt')
+    parser.add_argument('--outfit', choices=('change', 'keep'), default='change')
+    parser.add_argument('--showcase-template', type=Path,
+                        default=TEMPLATES / 'showcase_prompt.tmpl')
+    parser.add_argument('--showcase-change', type=Path,
+                        default=TEMPLATES / 'showcase_change_outfit.txt')
+    parser.add_argument('--showcase-keep', type=Path,
+                        default=TEMPLATES / 'showcase_keep_outfit.txt')
     parser.add_argument('--character-features', type=Path)
     parser.add_argument('--vocab-params', type=Path)
     parser.add_argument('--seeds', default='31415926')
+    parser.add_argument('--showcase-seed-base', type=int, default=31415926,
+                        help='showcase seed = base + case_index*10000')
     parser.add_argument('--strength', type=float, default=0.8)
     parser.add_argument('--unet', default='novaAnimeAM_v6029B.safetensors')
     parser.add_argument('--width', type=int, default=720)
@@ -54,6 +66,10 @@ def parse_args():
                         help='Seconds per image (default: 600)')
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
+    args.tests = list(dict.fromkeys(t.strip() for t in args.tests.split(',') if t.strip()))
+    unknown = [t for t in args.tests if t not in TEST_NAMES]
+    if unknown or not args.tests:
+        parser.error(f'--tests must be a comma-separated subset of {", ".join(TEST_NAMES)}; got {unknown or "(empty)"}')
     try:
         args.seeds = list(dict.fromkeys(int(s.strip()) for s in args.seeds.split(',')))
     except ValueError:
@@ -196,6 +212,9 @@ def workspace_defaults(args):
         else TEMPLATES / 'caption_vocab_params.json')).resolve()
     args.scenario_template = args.scenario_template.resolve()
     args.scenarios = args.scenarios.resolve()
+    args.showcase_template = args.showcase_template.resolve()
+    args.showcase_change = args.showcase_change.resolve()
+    args.showcase_keep = args.showcase_keep.resolve()
 
 
 def infer_trigger(train):
@@ -285,6 +304,45 @@ def scenario_cases(args):
             'scenarios': str(args.scenarios), 'cases': cases}
 
 
+def showcase_cases(args):
+    features, source = character_features(args)
+    template = args.showcase_template.read_text(encoding='utf-8').strip()
+    data_file = args.showcase_change if args.outfit == 'change' else args.showcase_keep
+    metadata = {'trigger': args.trigger, 'character_features': features,
+                'character_features_source': str(source), 'outfit': args.outfit,
+                'template': str(args.showcase_template), 'data_file': str(data_file),
+                'showcase_seed_base': args.showcase_seed_base}
+    if args.outfit == 'keep':
+        outfit_source = args.workspace / '07_validate' / 'prompts' / 'main_outfit_tags.txt'
+        outfit_json = args.workspace / '05_caption' / 'vocab' / 'main_outfit.json'
+        if outfit_source.exists():
+            outfit_tags = [tag.strip() for tag in re.split(
+                r'[,\n]', outfit_source.read_text(encoding='utf-8')) if tag.strip()]
+        elif outfit_json.exists():
+            outfit_source = outfit_json
+            tags = json.loads(outfit_source.read_text(encoding='utf-8'))['tags']
+            outfit_tags = [item['tag'] if isinstance(item, dict) else item for item in tags]
+        else:
+            raise ValueError(f'Missing outfit tags: {outfit_source} or {outfit_json}')
+        metadata.update(outfit_tags=outfit_tags, outfit_source=str(outfit_source))
+    with args.showcase_keep.open(encoding='utf-8') as lines:
+        scenes = [line.strip() for line in lines if line.strip()]
+    with data_file.open(encoding='utf-8') as lines:
+        rows = [line.strip() for line in lines if line.strip()]
+    cases = []
+    for index, (row, scene) in enumerate(zip(rows, scenes)):
+        cloth = (', '.join(outfit_tags) if args.outfit == 'keep'
+                 else row[:-len(scene)].strip().rstrip(',').strip())
+        other = 'solo_focus, human focus, ' + scene
+        prompt = template.replace('{trigger}', args.trigger).replace(
+            '{character_features}', features.strip().rstrip(',')).replace(
+            '{cloth_feature}', cloth).replace('{other}', other)
+        seed = args.showcase_seed_base + index * 10000
+        cases.append({'index': index, 'case': f'c{index:02d}', 'showcase': row,
+                      'cloth_feature': cloth, 'other': other, 'seed': seed, 'prompt': prompt})
+    return {**metadata, 'cases': cases}
+
+
 def comparison(args, rows, test_dir, columns, references=None):
     display_rows = ([('reference', None)] if references is not None else []) + rows
     for start in range(0, len(columns), 6):
@@ -318,14 +376,23 @@ def main():
         loras = checkpoints(args.checkpoints)
         rows = ([] if args.no_base else [('base', None)]) + loras
         reference = args.out_dir / 'reconstruction' / 'reference'
-        reconstruction = reconstruction_cases(train, reference, args.num_reconstruction, True)
-        scenario = scenario_cases(args)
-        cases_by_test = {'reconstruction': reconstruction, 'scenario': scenario['cases']}
+        reconstruction = []
+        cases_by_test = {}
+        if 'reconstruction' in args.tests:
+            reconstruction = reconstruction_cases(train, reference, args.num_reconstruction, True)
+            cases_by_test['reconstruction'] = reconstruction
+        prompt_tests = {}
+        for name, build_cases in (('scenario', scenario_cases), ('showcase', showcase_cases)):
+            if name in args.tests:
+                prompt_tests[name] = build_cases(args)
+                cases_by_test[name] = prompt_tests[name]['cases']
+        test_dirs = {name: args.out_dir / (f'showcase_{args.outfit}' if name == 'showcase' else name)
+                     for name in cases_by_test}
         tests = {}
         for name, cases in cases_by_test.items():
             jobs = [{'test': name, 'label': label, 'case': case['case'], 'seed': seed,
                      'lora_file': str(lora) if lora else None, 'output_path': str(
-                         args.out_dir / name / 'lora_test' / f"{label}_{case['case']}_seed{seed}.png"),
+                         test_dirs[name] / 'lora_test' / f"{label}_{case['case']}_seed{seed}.png"),
                      'prompt': case['prompt']}
                     for label, lora in rows for case in cases
                     for seed in (args.seeds if name == 'reconstruction' else [case['seed']])]
@@ -337,7 +404,7 @@ def main():
             print(json.dumps({'trigger': args.trigger, 'workflow': str(args.workflow),
                               'checkpoints': [{'label': label, 'lora_file': str(path)}
                                               for label, path in loras],
-                              'reference_files': references, 'tests': tests,
+                              'reference_files': references, 'selected_tests': args.tests, 'tests': tests,
                               'total_jobs': sum(test['job_count'] for test in tests.values())},
                              ensure_ascii=False, indent=2))
             return 0
@@ -345,13 +412,15 @@ def main():
         sampler = workflow[unique_node(workflow, 'KSampler')]['inputs']
         negative = workflow[sampler['negative'][0]]['inputs']['text']
         confirm_loras(args, loras)
-        reconstruction_cases(train, reference, args.num_reconstruction, False)
+        if 'reconstruction' in tests:
+            reconstruction_cases(train, reference, args.num_reconstruction, False)
         for name, test in tests.items():
-            test_dir = args.out_dir / name
+            test_dir = test_dirs[name]
             (test_dir / 'lora_test').mkdir(parents=True, exist_ok=True)
-            if name == 'scenario':
+            if name in prompt_tests:
                 (test_dir / 'prompts.json').write_text(
-                    json.dumps(scenario, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+                    json.dumps(prompt_tests[name], ensure_ascii=False, indent=2) + '\n',
+                    encoding='utf-8')
             entries = []
             for job in test['jobs']:
                 path = Path(job['output_path'])
@@ -365,13 +434,15 @@ def main():
                             raise ValueError(f'All-black image returned for {path.name}')
                         rgb.save(path, format='PNG')
                 entries.append({**job, **inspect_image(path)})
-            meta = {'trigger': args.trigger,
+            meta = {'trigger': args.trigger, 'selected_tests': args.tests,
                     'negative': negative, 'seeds': list(dict.fromkeys(j['seed'] for j in test['jobs'])),
                     'strength': args.strength, 'workflow': str(args.workflow), 'unet': args.unet,
                     'width': args.width, 'height': args.height, 'steps': args.steps, 'cfg': args.cfg,
                     'sampler': args.sampler, 'scheduler': args.scheduler, 'images': entries}
             if name == 'reconstruction':
                 meta['reference_files'] = references
+            elif name == 'showcase':
+                meta.update({key: value for key, value in prompt_tests[name].items() if key != 'cases'})
             (test_dir / 'test_meta.json').write_text(
                 json.dumps(meta, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
             columns = [(case['case'], seed) for case in cases_by_test[name]
