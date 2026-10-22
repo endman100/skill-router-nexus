@@ -41,7 +41,7 @@ def parse_args():
                         default=TEMPLATES / 'validate_scenarios.txt')
     parser.add_argument('--character-features', type=Path)
     parser.add_argument('--vocab-params', type=Path)
-    parser.add_argument('--seeds', default='31415926,42,1234567,20261022')
+    parser.add_argument('--seeds', default='31415926')
     parser.add_argument('--strength', type=float, default=0.8)
     parser.add_argument('--unet', default='novaAnimeAM_v6029B.safetensors')
     parser.add_argument('--width', type=int, default=720)
