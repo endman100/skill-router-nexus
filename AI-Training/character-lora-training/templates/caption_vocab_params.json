@@ -1,0 +1,90 @@
+{
+ "_doc": "codex_caption_v2.py / vocab_tools.py 的欄位對應（通用，不含角色資料）。field_traits：caption 欄位 -> vocab character_features 的 trait 名（完全相同優先，其次最長的 'prefix*'）。outfit_accessory_tags：服裝 tag 中歸入 character_accessories_tags 的 tag，其餘服裝 tag 歸入 character_clothing_tags；角色有清單外的配件時，複製本檔另存並加進去，用 --params 指定。template_vars：caption 欄位 -> 模板變數。群組名需與 build_train_set.py 的 source_group 一致。",
+ "field_traits": {
+  "height_of_this_character": [
+   "height"
+  ],
+  "body_type_of_his_character": [
+   "body_type"
+  ],
+  "age_of_this_character": [
+   "age"
+  ],
+  "style_of_the_hair": [
+   "hair_style",
+   "bangs",
+   "hair_style_*"
+  ],
+  "length_of_the_hair": [
+   "hair_length"
+  ],
+  "color_of_the_hair": [
+   "hair_color"
+  ],
+  "color_of_the_eyes": [
+   "eye_color"
+  ],
+  "color_of_the_skin": [
+   "skin_color"
+  ],
+  "size_of_the_chest": [
+   "chest"
+  ],
+  "character_head_features_tags": [
+   "head_*"
+  ],
+  "character_body_characteristics_tags": [
+   "body_*"
+  ],
+  "character_accessories_tags": [
+   "accessory_*"
+  ]
+ },
+ "outfit_accessory_tags": [
+  "choker",
+  "black choker",
+  "necklace",
+  "pendant",
+  "earrings",
+  "bracelet",
+  "armlet",
+  "wristband",
+  "wrist scrunchie",
+  "brooch",
+  "ring",
+  "sunglasses",
+  "glasses",
+  "eyewear on head",
+  "hair ribbon",
+  "hair bow",
+  "hairband",
+  "hairclip",
+  "fake animal ears",
+  "bag",
+  "handbag",
+  "backpack"
+ ],
+ "template_vars": {
+  "height_of_this_character": "height_options",
+  "body_type_of_his_character": "body_type_options",
+  "age_of_this_character": "age_options",
+  "style_of_the_hair": "hair_style_options",
+  "length_of_the_hair": "hair_length_options",
+  "color_of_the_hair": "hair_color_options",
+  "color_of_the_eyes": "eye_color_options",
+  "color_of_the_skin": "skin_color_options",
+  "size_of_the_chest": "chest_options",
+  "character_head_features_tags": "head_feature_options",
+  "character_clothing_tags": "clothing_options",
+  "character_accessories_tags": "accessory_options",
+  "character_body_characteristics_tags": "body_feature_options"
+ },
+ "collected_group": "collected",
+ "keep_outfit_groups": [
+  "gen_codex_keep",
+  "gen_grok_keep"
+ ],
+ "change_outfit_groups": [
+  "gen_codex_change"
+ ]
+}

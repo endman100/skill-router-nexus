@@ -1,0 +1,153 @@
+{
+ "properties": {
+  "detailed_description": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Detailed Description"
+  },
+  "height_of_this_character": {
+   "title": "Height Of This Character",
+   "type": "string"
+  },
+  "body_type_of_his_character": {
+   "title": "Body Type Of His Character",
+   "type": "string"
+  },
+  "age_of_this_character": {
+   "title": "Age Of This Character",
+   "type": "string"
+  },
+  "style_of_the_hair": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Style Of The Hair",
+   "type": "array"
+  },
+  "length_of_the_hair": {
+   "title": "Length Of The Hair",
+   "type": "string"
+  },
+  "color_of_the_hair": {
+   "title": "Color Of The Hair",
+   "type": "string"
+  },
+  "color_of_the_eyes": {
+   "title": "Color Of The Eyes",
+   "type": "string"
+  },
+  "color_of_the_skin": {
+   "title": "Color Of The Skin",
+   "type": "string"
+  },
+  "size_of_the_chest": {
+   "title": "Size Of The Chest",
+   "type": "string"
+  },
+  "main_subject_tags": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Main Subject Tags",
+   "type": "array"
+  },
+  "character_head_features_tags": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Character Head Features Tags",
+   "type": "array"
+  },
+  "character_body_characteristics_tags": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Character Body Characteristics Tags",
+   "type": "array"
+  },
+  "character_clothing_tags": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Character Clothing Tags",
+   "type": "array"
+  },
+  "character_pose_tags": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Character Pose Tags",
+   "type": "array"
+  },
+  "character_expression_tags": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Character Expression Tags",
+   "type": "array"
+  },
+  "character_accessories_tags": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Character Accessories Tags",
+   "type": "array"
+  },
+  "background_tags": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Background Tags",
+   "type": "array"
+  },
+  "lighting_and_atmosphere_tags": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Lighting And Atmosphere Tags",
+   "type": "array"
+  },
+  "composition_and_framing_tags": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Composition And Framing Tags",
+   "type": "array"
+  },
+  "NSFW": {
+   "title": "Nsfw",
+   "type": "boolean"
+  }
+ },
+ "required": [
+  "height_of_this_character",
+  "body_type_of_his_character",
+  "age_of_this_character",
+  "style_of_the_hair",
+  "length_of_the_hair",
+  "color_of_the_hair",
+  "color_of_the_eyes",
+  "color_of_the_skin",
+  "size_of_the_chest",
+  "main_subject_tags",
+  "character_head_features_tags",
+  "character_body_characteristics_tags",
+  "character_clothing_tags",
+  "character_pose_tags",
+  "character_expression_tags",
+  "character_accessories_tags",
+  "background_tags",
+  "lighting_and_atmosphere_tags",
+  "composition_and_framing_tags",
+  "NSFW"
+ ],
+ "title": "Character_Caption_BaseModel_Anima",
+ "type": "object"
+}
