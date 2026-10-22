@@ -32,7 +32,6 @@ def parse_args():
     parser.add_argument('--out-dir', type=Path)
     parser.add_argument('--comfy-url', default='http://127.0.0.1:1121')
     parser.add_argument('--workflow', type=Path)
-    parser.add_argument('--negative-file', type=Path)
     parser.add_argument('--trigger')
     parser.add_argument('--num-reconstruction', type=int, default=4)
     parser.add_argument('--scenario-template', type=Path,
@@ -92,17 +91,16 @@ def unique_node(workflow, class_type):
     return matches[0]
 
 
-def prepare_workflow(args, lora, seed, positive, negative):
+def prepare_workflow(args, lora, seed, positive):
     workflow = json.loads(args.workflow.read_text(encoding='utf-8'))
     sampler = workflow[unique_node(workflow, 'KSampler')]['inputs']
     unet_id = unique_node(workflow, 'UNETLoader')
     lora_id = unique_node(workflow, 'LoraLoaderModelOnly')
     workflow[unet_id]['inputs']['unet_name'] = args.unet
-    for key, text in (('positive', positive), ('negative', negative)):
-        encoder = workflow[sampler[key][0]]
-        if encoder['class_type'] != 'CLIPTextEncode':
-            raise ValueError(f'KSampler {key} must link to CLIPTextEncode')
-        encoder['inputs']['text'] = text
+    encoder = workflow[sampler['positive'][0]]
+    if encoder['class_type'] != 'CLIPTextEncode':
+        raise ValueError('KSampler positive must link to CLIPTextEncode')
+    encoder['inputs']['text'] = positive
     latent = workflow[sampler['latent_image'][0]]
     if latent['class_type'] != 'EmptyLatentImage':
         raise ValueError('KSampler latent_image must link to EmptyLatentImage')
@@ -190,10 +188,9 @@ def workspace_defaults(args):
     args.workflow = (args.workflow or (
         validate / 'workflow.json' if (validate / 'workflow.json').exists()
         else TEMPLATES / 'animaEndToEnd_fast.json')).resolve()
-    for key, default in (('negative_file', validate / 'prompts' / 'negative.txt'),
-                         ('character_features', validate / 'prompts' / 'character_features.txt')):
-        value = getattr(args, key)
-        setattr(args, key, (value or default).resolve() if value or default.exists() else None)
+    default = validate / 'prompts' / 'character_features.txt'
+    value = args.character_features
+    args.character_features = (value or default).resolve() if value or default.exists() else None
     args.vocab_params = (args.vocab_params or (
         vocab / 'caption_vocab_params.json' if (vocab / 'caption_vocab_params.json').exists()
         else TEMPLATES / 'caption_vocab_params.json')).resolve()
@@ -318,7 +315,6 @@ def main():
         workspace_defaults(args)
         train = args.workspace / '05_caption' / 'train_set'
         args.trigger = args.trigger or infer_trigger(train)
-        negative = args.negative_file.read_text(encoding='utf-8') if args.negative_file else ''
         loras = checkpoints(args.checkpoints)
         rows = ([] if args.no_base else [('base', None)]) + loras
         reference = args.out_dir / 'reconstruction' / 'reference'
@@ -345,6 +341,9 @@ def main():
                               'total_jobs': sum(test['job_count'] for test in tests.values())},
                              ensure_ascii=False, indent=2))
             return 0
+        workflow = json.loads(args.workflow.read_text(encoding='utf-8'))
+        sampler = workflow[unique_node(workflow, 'KSampler')]['inputs']
+        negative = workflow[sampler['negative'][0]]['inputs']['text']
         confirm_loras(args, loras)
         reconstruction_cases(train, reference, args.num_reconstruction, False)
         for name, test in tests.items():
@@ -358,7 +357,7 @@ def main():
                 path = Path(job['output_path'])
                 if not path.exists():
                     lora = Path(job['lora_file']) if job['lora_file'] else None
-                    workflow = prepare_workflow(args, lora, job['seed'], job['prompt'], negative)
+                    workflow = prepare_workflow(args, lora, job['seed'], job['prompt'])
                     payload = render(args, workflow)
                     with Image.open(io.BytesIO(payload)) as image:
                         rgb = image.convert('RGB')
@@ -367,7 +366,6 @@ def main():
                         rgb.save(path, format='PNG')
                 entries.append({**job, **inspect_image(path)})
             meta = {'trigger': args.trigger,
-                    'negative_file': str(args.negative_file) if args.negative_file else None,
                     'negative': negative, 'seeds': list(dict.fromkeys(j['seed'] for j in test['jobs'])),
                     'strength': args.strength, 'workflow': str(args.workflow), 'unet': args.unet,
                     'width': args.width, 'height': args.height, 'steps': args.steps, 'cfg': args.cfg,

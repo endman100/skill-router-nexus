@@ -46,7 +46,6 @@ python -B scripts/ws.py create --workspace <WS> --work "<作品名>" --character
 │   └── models/                   # <trigger>-0000NN.safetensors、<trigger>.safetensors、*-state/、train.log
 └── 07_validate/
     ├── prompts/
-    │   ├── negative.txt             # 負向 prompt（可選）
     │   └── character_features.txt   # 角色特徵覆寫（可選）
     ├── workflow.json                # 可選；未提供時使用技能模板
     ├── extra_model_paths.yaml       # 從 templates/extra_model_paths.example.yaml 複製
