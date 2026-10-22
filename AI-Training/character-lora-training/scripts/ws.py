@@ -1,4 +1,4 @@
-"""Workspace metadata, documented paths, and CLI defaults for steps 01–06."""
+"""Workspace metadata, documented paths, and CLI defaults for training and release."""
 import argparse
 import json
 from pathlib import Path
@@ -10,6 +10,7 @@ DIRECTORIES = (
     "02_clean/collected_sfw", "02_clean/collected_nsfw", "03_sheet",
     "04_generate/codex", "04_generate/grok/keep_outfit",
     "05_caption/vocab", "05_caption/train_set", "06_train", "07_validate/prompts",
+    "08_release",
 )
 FIELDS = ("work", "character", "trigger", "env", "main_outfit_id")
 

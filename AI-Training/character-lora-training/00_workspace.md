@@ -44,21 +44,26 @@ python -B scripts/ws.py create --workspace <WS> --work "<作品名>" --character
 │   ├── regularization/           # 可選：--reg-dir 的正則化圖
 │   ├── images_regularization_1to1/  # 可選：程式自動挑的正則化子集
 │   └── models/                   # <trigger>-0000NN.safetensors、<trigger>.safetensors、*-state/、train.log
-└── 07_validate/
-    ├── prompts/
-    │   └── character_features.txt   # 角色特徵覆寫（可選）
-    ├── workflow.json                # 可選；未提供時使用技能模板
-    ├── extra_model_paths.yaml       # 從 templates/extra_model_paths.example.yaml 複製
-    ├── reconstruction/
-    │   ├── reference/              # 選定的訓練 PNG + 同名 txt
-    │   ├── lora_test/              # 各 checkpoint × 案例 × seed 圖
-    │   ├── test_meta.json
-    │   └── checkpoint_comparison_XX.png
-    └── scenario/
-        ├── prompts.json
-        ├── lora_test/              # 各 checkpoint × 情境圖
-        ├── test_meta.json
-        └── checkpoint_comparison_XX.png
+├── 07_validate/
+│   ├── prompts/
+│   │   └── character_features.txt   # 角色特徵覆寫（可選）
+│   ├── workflow.json                # 可選；未提供時使用技能模板
+│   ├── extra_model_paths.yaml       # 從 templates/extra_model_paths.example.yaml 複製
+│   ├── reconstruction/
+│   │   ├── reference/              # 選定的訓練 PNG + 同名 txt
+│   │   ├── lora_test/              # 各 checkpoint × 案例 × seed 圖
+│   │   ├── test_meta.json
+│   │   └── checkpoint_comparison_XX.png
+│   └── scenario/
+│       ├── prompts.json
+│       ├── lora_test/              # 各 checkpoint × 情境圖
+│       ├── test_meta.json
+│       └── checkpoint_comparison_XX.png
+└── 08_release/
+    ├── <release_ckpt>              # 選定的 checkpoint 副本
+    ├── release.json                # sha256、07 生成參數、本次 version ID／URL 與草稿狀態
+    ├── model_description.md        # Antigravity 撰寫的模型描述
+    └── version_description.md      # Antigravity 撰寫的版本說明
 ```
 
 `eval_lora.py --workspace "<WS>"` 自動尋找訓練集、詞表與 checkpoints，驗證輸出預設存放於 `07_validate/`。
@@ -78,3 +83,5 @@ python -B scripts/ws.py create --workspace <WS> --work "<作品名>" --character
 ## project.json
 
 `project.json` 保存 `work`（作品名）、`character`（角色名）、`trigger`、`env`（共用環境的絕對路徑），以及初始為空字串的 `main_outfit_id`（步驟 05 選定主要服裝後寫入）。後續腳本以 `--workspace <WS>` 讀取本案資料與預設路徑；明確指定的參數一律優先。
+
+步驟 08 另寫入 `release_ckpt`（使用者選定的 checkpoint 檔名）、`civitai_model_id` 與 `civitai_model_url`（同一角色固定沿用的模型頁）；本次 version ID／URL 寫入 `08_release/release.json`，詳見 [08_civitai_release.md](08_civitai_release.md)。

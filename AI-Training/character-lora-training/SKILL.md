@@ -28,6 +28,7 @@ description: >-
 - [ ] 5. 整理訓練集與打標
 - [ ] 6. LoRA 訓練
 - [ ] 7. LoRA 驗證
+- [ ] 8. 發布到 Civitai（存草稿）
 ```
 
 0. **建立 workspace**：閱讀 [00_workspace.md](00_workspace.md)，先建立全新案例目錄；後續 `<WS>` 均指此目錄。
@@ -38,5 +39,6 @@ description: >-
 5. **整理訓練集與打標**：閱讀 [05_captioning.md](05_captioning.md)。
 6. **LoRA 訓練**：閱讀 [06_lora_training.md](06_lora_training.md)。
 7. **LoRA 驗證**：閱讀 [07_lora_validation.md](07_lora_validation.md)。
+8. **發布到 Civitai**：閱讀 [08_civitai_release.md](08_civitai_release.md)，打包使用者選定的 checkpoint，由有瀏覽器的代理上傳並存為草稿；由使用者審閱後自行發布。
 
 `scripts/` 內的程式直接執行，不需要讀取內容；指令與參數寫在各步驟的 md 檔案中。`templates/` 則是打標用的 prompt 模板、欄位設定與 schema，以及驗證用的 workflow、prompt 模板與情境清單。
