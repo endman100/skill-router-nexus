@@ -1,7 +1,9 @@
 # 03. 三視圖（已有則跳過）
 
-已有角色設定圖（三視圖）就直接用。沒有時交給 Codex 溝通者，請 Codex 用 skill-router-nexus 的 [`Image-Generation/character-sheet`](https://github.com/endman100/skill-router-nexus/tree/main/Image-Generation/character-sheet) skill 生成，附上參考圖（user 提供的參考圖；沒有時從清理後的收集圖挑主要服裝的代表圖）。
+路徑請參照 [00_workspace.md](00_workspace.md)；`<WS>` 為本案 workspace。
 
-- 版面用預設的 unmeasured 5×3：正面、左側、背面全身，手、鞋、服裝細節，兩個表情和一張正面頭像。
+若已有角色設定圖（三視圖），請直接存至 `<WS>/03_sheet/character-sheet.png` 使用。若無，則交由 Codex 溝通者，請 Codex 使用 skill-router-nexus 的 [`Image-Generation/character-sheet`](https://github.com/endman100/skill-router-nexus/tree/main/Image-Generation/character-sheet) skill 生成，並附上參考圖（使用者提供的 `<WS>/01_collect/reference/` 參考圖；若無則從 `<WS>/02_clean/collected_sfw/` 挑選主要服裝的代表圖）。
+
+- 版面採用預設的 unmeasured 5×3：正面、左側、背面全身，手部、鞋子、服裝細節，兩個表情與一張正面頭像。
 - 服裝維持參考圖原樣。
-- 輸出 `<角色名>-character-sheet.png`，就是步驟 04 的參考圖。
+- 輸出至 `<WS>/03_sheet/character-sheet.png`，即為步驟 04 的參考圖。
