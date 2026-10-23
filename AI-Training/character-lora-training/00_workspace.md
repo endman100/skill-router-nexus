@@ -12,13 +12,14 @@ python -B scripts/ws.py create --workspace <WS> --work "<作品名>" --character
 <WS>/
 ├── 01_collect/
 │   ├── codex/                    # Codex 收集圖 + sources.json
-│   ├── grok/                     # Grok 收集圖 + sources.json
+│   ├── grok/                     # Grok Build 收集圖、sources.json、summary.json、failed.json、logs/
 │   └── reference/                # 使用者提供的參考圖（可選）
 ├── 02_clean/
 │   ├── input_mapping.json        # 全部收集圖的唯一檔名 ↔ 原始路徑（含子資料夾）
 │   ├── dedup/  dedup.json        # 去重結果
 │   ├── sfw/  nsfw/  rating.json  # WD Tagger 分流
 │   ├── codex_clean/              # Codex 清理圖、summary.json、rejected.json、Codex log
+│   ├── grok_clean/               # summary.json、rejected.json、suspicious.json、failed.json、logs/
 │   ├── collected_sfw/            # 清理後收集圖（Codex 清理 + Grok 通過的 SFW）
 │   └── collected_nsfw/           # Grok 處理通過的 NSFW 收集圖
 ├── 03_sheet/
@@ -27,17 +28,21 @@ python -B scripts/ws.py create --workspace <WS> --work "<作品名>" --character
 │   ├── codex/keep_outfit/        # Codex 維持服裝 N 張
 │   ├── codex/change_outfit/      # Codex 換服裝 2N 張
 │   ├── codex/missing.json        # 未補齊時才有
-│   └── grok/keep_outfit/         # Grok 維持服裝 N 張
+│   └── grok/
+│       ├── keep_outfit/          # Grok Build 維持服裝 N 張 PNG
+│       ├── scenes.json           # 場景規劃，重試／補圖沿用
+│       ├── missing.json          # 未補齊時才有
+│       └── summary.json  logs/   # 結果與逐次呼叫紀錄
 ├── 05_caption/
 │   ├── resized/                  # resize_prep 輸出：<群組>/、_needs_upscale/、resize_manifest.json
-│   │   └── _up_codex/  _up_grok/  _up_esrgan/   # 各放大方式的 <群組>/ 輸出
+│   │   └── _up_codex/  _up_grok/  _up_esrgan/   # 各放大方式的 <群組>/ 輸出；Grok 含 summary.json、failed.json、logs/
 │   ├── images/                   # 編號 SFW 圖 + manifest.json（Codex 打標輸入）
 │   ├── images_nsfw/              # 編號 NSFW 圖（只給 Grok）
 │   ├── vocab/                    # caption_vocab_params.json、contact_sheets/、names.json、
-│   │                             # vocab.schema.json、vocab.json、vocab_summary.md、main_outfit.json
+│   │                             # vocab.schema.json、vocab.json、vocab_summary.md、main_outfit.json、logs/、summary.json、failed.json
 │   ├── captions/                 # codex_caption_v2 --out：json/、txt/、stage_txt/、logs/、summary.json…
 │   ├── captions_nsfw/            # 本機 dry-run 的 schemas/、assignment.json、prompts/、params.json；
-│   │                             # Grok 寫 json/，caption_convert 驗證後輸出 txt/
+│   │                             # Grok Build 寫 json/，caption_convert 輸出 txt/；summary.json、failed.json、logs/
 │   └── train_set/                # 最終訓練集：圖 + 同名 txt + manifest.json
 ├── 06_train/                     # train_lora --work-dir
 │   ├── kwargs_train.json  config.toml

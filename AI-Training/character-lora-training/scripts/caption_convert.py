@@ -76,12 +76,14 @@ def convert(data, trigger):
     return stage_txt(clean), final_txt(clean, trigger)
 
 
-def validated_captions(json_dir, plan):
+def validated_captions(json_dir, plan, only=None):
     """重用 codex_caption_v2 --dry-run 的 assignment 與逐組 schema，整批通過才轉換。"""
     import jsonschema
     jobs = json.loads((plan / "assignment.json").read_text("utf-8"))
-    by_stem = {Path(j["name"]).stem: j for j in jobs}
+    by_stem = {Path(j["name"]).stem: j for j in jobs if not only or j["name"] in only}
     files = set(json_dir.glob("*.json")) | {json_dir / f"{stem}.json" for stem in by_stem}
+    if only:
+        files = {json_dir / f"{stem}.json" for stem in by_stem}
     captions, errors = [], []
     for f in sorted(files):
         try:
@@ -109,9 +111,10 @@ def main(argv=None):
     p.add_argument("--stage-out", type=Path)
     p.add_argument("--validate-with", type=Path,
                    help="codex_caption_v2 --dry-run 的輸出資料夾；依 assignment.json 與 schemas/ 驗證整批 JSON")
+    p.add_argument("--only", nargs="+", help="僅驗證與轉換指定圖片檔名的 JSON")
     a = parse_args(p, "convert", argv)
-    captions = validated_captions(a.json_dir, a.validate_with) if a.validate_with else (
-        (f, json.loads(f.read_text("utf-8-sig"))) for f in sorted(a.json_dir.glob("*.json")))
+    captions = validated_captions(a.json_dir, a.validate_with, a.only) if a.validate_with else (
+        (f, json.loads(f.read_text("utf-8-sig"))) for f in sorted(a.json_dir.glob("*.json")) if not a.only or f.stem in {Path(n).stem for n in a.only})
     a.txt_out.mkdir(parents=True, exist_ok=True)
     if a.stage_out:
         a.stage_out.mkdir(parents=True, exist_ok=True)

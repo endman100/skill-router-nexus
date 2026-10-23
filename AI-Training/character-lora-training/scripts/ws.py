@@ -7,7 +7,7 @@ import shutil
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
 DIRECTORIES = (
     "01_collect/codex", "01_collect/grok", "01_collect/reference",
-    "02_clean/collected_sfw", "02_clean/collected_nsfw", "03_sheet",
+    "02_clean/grok_clean", "02_clean/collected_sfw", "02_clean/collected_nsfw", "03_sheet",
     "04_generate/codex", "04_generate/grok/keep_outfit",
     "05_caption/vocab", "05_caption/train_set", "06_train", "07_validate/prompts",
     "08_release",
@@ -55,6 +55,23 @@ class Workspace:
             ("gen_codex_change", p("04_generate/codex/change_outfit")),
         ]
         captions = p("05_caption/captions_nsfw" if nsfw else "05_caption/captions")
+        if step == "grok_collect":
+            return dict(query=query, out=p("01_collect/grok"))
+        if step == "grok_clean":
+            return dict(target=query, nsfw=p("02_clean/nsfw"), sfw=p("02_clean/sfw"),
+                        codex_clean=p("02_clean/codex_clean"), out=p("02_clean/grok_clean"),
+                        collected_sfw=p("02_clean/collected_sfw"), collected_nsfw=p("02_clean/collected_nsfw"))
+        if step == "grok_generate":
+            return dict(reference=p("03_sheet/character-sheet.png"), out=p("04_generate/grok"))
+        if step == "grok_vocab":
+            return dict(project_dir=self.root, out=vocab, images=images, manifest=images / "manifest.json", params=self.params)
+        if step == "grok_caption":
+            return dict(project_dir=self.root, images=p("05_caption/images_nsfw"),
+                        out=p("05_caption/captions_nsfw"), final_dir=p("05_caption/train_set"),
+                        manifest=images / "manifest.json")
+        if step == "grok_upscale":
+            return dict(out_dir=resized / "_up_grok/collected_nsfw",
+                        images=sorted((resized / "_needs_upscale/collected_nsfw").glob("*.png")))
         if step == "collect":
             return dict(query=query, save_dir=p("01_collect"))
         if step == "dedup":
@@ -97,6 +114,9 @@ class Workspace:
 # Only these arguments receive workspace defaults; their legacy defaults are
 # restored when --workspace is absent. Explicit values are never replaced.
 DEFAULT_FIELDS = {
+    "grok_collect": "query out", "grok_clean": "target nsfw sfw codex_clean out collected_sfw collected_nsfw",
+    "grok_generate": "reference out", "grok_vocab": "project_dir out images manifest params",
+    "grok_caption": "project_dir images out final_dir manifest", "grok_upscale": "out_dir images",
     "collect": "query save_dir", "dedup": "out sources model_dir", "clean": "target input_dir output_dir",
     "generate": "reference folder", "fill": "fill_existing reference target",
     "resize": "out groups", "build": "out groups character trigger nsfw_out",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""打標 a（詞表）的小工具。詞表由 Grok Bot 自己看拼圖寫，這支程式不呼叫任何模型。
+"""打標 a（詞表）的小工具。詞表由 grok_vocab.py 呼叫 Grok Build 看拼圖與原圖建立，這支程式不呼叫任何模型。
 
   sheets：從 manifest 取出收集圖（source_group = collected，不含生成圖），做 8 格拼圖（每格標檔名），
           寫 names.json 與 vocab.schema.json，給 Grok 看圖寫 vocab.json。
