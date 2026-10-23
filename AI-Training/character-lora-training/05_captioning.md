@@ -47,7 +47,7 @@ python -B scripts/vocab_tools.py sheets --workspace <WS>
 
 （NSFW 收集圖從 manifest 的 `nsfw_dir` 讀取，一起放進拼圖；拼圖僅提供給 Grok 檢視。）
 
-Grok 使用 Read 檢視 `<WS>/05_caption/vocab/contact_sheets/sheet_*.jpg`（每格標示檔名，每張 8 格），看不清楚時才開啟原圖，並撰寫 `<WS>/05_caption/vocab/vocab.json`（schema = `<WS>/05_caption/vocab/vocab.schema.json`）：
+Grok 使用 Read 檢視 `<WS>/05_caption/vocab/contact_sheets/sheet_*.jpg`（每格標示檔名，每張 8 格），看不清楚時再開啟原圖；但**至少要開啟一張原圖**（建議挑主要服裝、正面且臉部清楚的圖），確認臉型、髮型、瀏海、眼睛、配件等拼圖縮圖看不清的細節，之後撰寫 `<WS>/05_caption/vocab/vocab.json`（schema = `<WS>/05_caption/vocab/vocab.schema.json`）：
 
 - `character_features`：`[{trait, tag, visibility}]`，每個特徵對應一個 canonical tag，`visibility` 為 `always`／`sometimes`。
 - `outfits`：`[{id: "outfit_…", name, tags: [{tag, visibility}], images: [檔名]}]`，每張收集圖恰好屬於一套。
