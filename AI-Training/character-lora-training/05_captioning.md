@@ -83,6 +83,8 @@ python -B scripts/vocab_tools.py check --workspace <WS> --main-outfit <主要服
 
 驗證 PASS 後將寫入 `<WS>/05_caption/vocab/vocab_summary.md` 與 `<WS>/05_caption/vocab/main_outfit.json`（包含 main_outfit_id、name、tags、image_count），並印出各欄位的選項。若出現 ERROR（如未對應的 trait、固定欄位缺少 tag、圖片未分組等），請修正 vocab 後重新執行。
 
+**使用者確認（暫停點）：** 除非使用者明確說要自動執行，否則 vocab 驗證 PASS 後必須先暫停，不要進入 b. 打標。把 `vocab_summary.md` 的重點（各固定特徵欄位如臉型、髮色、髮型、瀏海、眼睛、體型、膚色，主要服裝及其 tags、各服裝分組與圖數）整理給使用者，請使用者確認特徵是否都正確；依回饋修改 vocab 並重新執行 check，直到使用者確認後才繼續打標。
+
 ## b. 逐張打標（Codex）
 
 先以 dry-run 檢查分組與 prompt（此步驟不呼叫 Codex）：
