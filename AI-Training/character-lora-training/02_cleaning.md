@@ -29,6 +29,12 @@ python -B scripts/codex_clean.py --workspace <WS>
 
 ## 4. Grok 處理
 
-針對 `<WS>/02_clean/nsfw/` 中的圖片，以及 `<WS>/02_clean/codex_clean/rejected.json` 內 Codex 拒絕處理或失敗的圖片，由 Grok Bot 依照第 3 步的標準進行處理（需要時可使用 `python -B scripts/wdtag.py --model-dir <ENV>/models/wd-eva02-large-tagger-v3 <WS>/02_clean/nsfw/<檔名>` 查看 tag）。可疑內容（例如外觀未成年的性化圖片）直接排除並列給使用者。
+```
+python -B scripts/grok_clean.py --workspace <WS>
+```
 
-將 `<WS>/02_clean/codex_clean/` 中的 PNG 檔案複製至 `<WS>/02_clean/collected_sfw/`，經 Grok 處理通過的 SFW 圖片亦存入此處；NSFW 圖片則存入 `<WS>/02_clean/collected_nsfw/`。步驟 05 會以 `collected:nsfw=` 傳入後者，編號後的圖片會存放到 `<WS>/05_caption/images_nsfw/`，不進入 Codex 打標資料夾。後續的 Codex 腳本亦不再進行 SFW 檢查。
+預設讀取 `<WS>/02_clean/nsfw/` 全部圖片，以及 `<WS>/02_clean/codex_clean/rejected.json` 列出的 `<WS>/02_clean/sfw/` 圖片，逐張複製至暫存工作目錄，透過 Grok Build CLI 依第 3 步標準清理。需要時可用 `python -B scripts/wdtag.py --model-dir <ENV>/models/wd-eva02-large-tagger-v3 <WS>/02_clean/nsfw/<檔名>` 查看 tag。可疑內容（例如外觀未成年的性化圖片）直接排除，寫入 `grok_clean/suspicious.json` 並列給使用者。
+
+腳本也會將 `codex_clean/*.png` 複製至 `collected_sfw/`。原先來自 `nsfw/` 的圖片通過後一律存入 `collected_nsfw/`，不因 Grok 的 rating 改送 Codex；Codex 拒絕圖則依 Grok 的 rating 存至 `collected_sfw/` 或 `collected_nsfw/`。步驟 05 以 `collected:nsfw=` 傳入後者，編號後存於 `images_nsfw/`，不進入 Codex 打標資料夾。
+
+預設 `--model grok-4.7 --timeout 3600 --retries 2`；可覆寫 `--target`、`--nsfw`、`--sfw`、`--codex-clean`、`--out`、`--collected-sfw`、`--collected-nsfw`。`--only <檔名...>` 重跑指定圖片，`--dry-run` 只列計畫。輸出與呼叫紀錄位於 `<WS>/02_clean/grok_clean/`：`summary.json`、`rejected.json`、`suspicious.json`、`failed.json`、`logs/`。後續 Codex 腳本不再進行 SFW 檢查。

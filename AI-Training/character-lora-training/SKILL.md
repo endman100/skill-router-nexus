@@ -13,7 +13,9 @@ description: >-
 
 ## 必守規則
 
-- Codex 不得接收任何 NSFW 圖片或文字；NSFW 僅由 Grok 處理（分流於步驟 2 與 5）。
+- Codex 不得接收任何 NSFW 圖片或文字；NSFW 僅由 Grok Build 腳本處理；Codex 永不接收 NSFW（分流於步驟 2 與 5）。
+
+Grok 步驟一律使用各步驟的 `grok_*.py` 腳本，透過已登入的 Grok Build CLI `/home/box/.local/bin/grok` 無人值守執行。共用預設為 `--model grok-4.7 --timeout 3600 --retries 2`；可用 `--grok-bin`、`--model`、`--effort`、`--timeout` 覆寫，`--dry-run` 只列計畫，不呼叫 Grok。除收集外皆停用網路搜尋，每次呼叫皆記錄 prompt、stdout JSON、stderr 與 exit code，失敗不改寫要求繞過工具限制。
 
 ## 流程
 
