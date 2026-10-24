@@ -2,21 +2,12 @@ Character: {{character}} ({{work}}), trigger: {{trigger}}
 Image: {{image_path}}
 Output: write {{output_path}} matching {{schema_path}}. Every field is required. Output only the JSON file.
 
-Fixed vocabulary. For these fields pick only from the listed tags, and only the ones visible in this image. Never write any other word.
+Required vocabulary. These fields must never be empty: pick the listed tag that fits this image (exactly one for string fields, at least one for array fields). Never write any other word.
+{{required_vocab_lines}}
+
+Optional vocabulary. For these fields pick only from the listed tags, and only the ones visible in this image. Never write any other word.
 If none of the listed tags for a field is visible in this image, leave it empty: [] for array fields, "" for string fields.
-- height_of_this_character: {{height_options}}
-- body_type_of_his_character: {{body_type_options}}
-- age_of_this_character: {{age_options}}
-- style_of_the_hair: {{hair_style_options}}
-- length_of_the_hair: {{hair_length_options}}
-- color_of_the_hair: {{hair_color_options}}
-- color_of_the_eyes: {{eye_color_options}}
-- color_of_the_skin: {{skin_color_options}}
-- size_of_the_chest: {{chest_options}}
-- character_head_features_tags: {{head_feature_options}}
-- character_body_characteristics_tags: {{body_feature_options}}
-- character_clothing_tags: {{clothing_options}}
-- character_accessories_tags: {{accessory_options}}
+{{optional_vocab_lines}}
 
 Free fields. Describe from the image:
 - detailed_description: A comprehensive, detailed narrative of all visible elements: main subject, character features, clothing, pose, expression, accessories, background, lighting, atmosphere, composition, and framing.
