@@ -47,20 +47,23 @@ python -B scripts/grok_vocab.py --workspace <WS> [--main-outfit <主要服裝id>
 
 （NSFW 收集圖從 manifest 的 `nsfw_dir` 讀取，一起放進拼圖；拼圖僅提供給 Grok 檢視。）
 
-腳本先執行 `vocab_tools.py sheets`，再由 Grok Build 檢視 `contact_sheets/sheet_*.jpg`（每格標示檔名，每張 8 格）及**至少一張原圖**（建議主要服裝、正面且臉部清楚），確認臉型、髮型、瀏海、眼睛與配件。腳本以 `vocab.schema.json` 取得 structuredOutput 寫入 `vocab.json`，並從 session 的 `chat_history.jsonl` 確認所有拼圖及至少一張原圖確實被檢視；未檢視則重試。規則如下：
+腳本先執行 `vocab_tools.py sheets`，再把拼圖、原圖、本節規則、params 與 `vocab.schema.json` 複製到 `05_caption/vocab/.grok_vocab_*/` 隔離資料夾，以它為 cwd 並加上 `--sandbox strict`（kernel 限制只能讀 cwd、系統路徑與 `~/.grok`）及「只能讀工作資料夾內檔案」的規則呼叫 Grok Build，避免讀到 `/workspace` 其他舊詞表；Grok 檢視 `contact_sheets/sheet_*.jpg`（每格標示檔名，每張 8 格）及**至少一張原圖**（建議主要服裝、正面且臉部清楚），確認臉型、髮型、瀏海、眼睛與配件。腳本以 `vocab.schema.json` 取得 structuredOutput 寫入 `vocab.json`，並從 session 的 `chat_history.jsonl` 確認所有拼圖及至少一張原圖確實被檢視；未檢視則重試。規則如下：
 
-- `character_features`：`[{trait, tag, visibility}]`，每個特徵對應一個 canonical tag，`visibility` 為 `always`／`sometimes`。
-- `outfits`：`[{id: "outfit_…", name, tags: [{tag, visibility}], images: [檔名]}]`，每張收集圖恰好屬於一套。
+- `character_features`：`[{trait, tag}]`，每個特徵對應一個 canonical tag（不再標 visibility）。
+- `outfits`：`[{id: "outfit_…", name, tags: [{tag}], images: [檔名]}]`，每張收集圖恰好屬於一套。
+- **每張必填 vs 可選**：`caption_vocab_params.json` 的 `fixed_traits`（預設 `height`、`body_type`、`age`）是唯一定義處；這些 trait 必須寫進詞表，逐張打標時對應欄位每張都必填、不可留空。其他角色特徵（含 `face_shape`）與所有服裝 tag 皆為可選：打標時只能從詞表列出的 tag 挑選（schema enum，不可自創），看不到就留空。
+- `face_shape` 必填進詞表（看過原圖後判斷），字串、恰好一個 tag：臉部整體輪廓與臉頰的 danbooru 式 tag。候選例：`round face`、`oval face`、`long face`、`pointy chin`、`chubby cheeks`、`square jaw`；都不合適時可自行寫一個簡短 danbooru 式 tag（小寫、≤ 4 個英文單字）。表情（如 puffy cheeks、blush）不放這裡，其他頭部細節放 `head_*`。
 - tag 採用 danbooru 式、小寫、≤ 4 個英文單字，不可有同義詞、佔位詞或版面用語；角色特徵 tag 不可重複出現在服裝中。
 - 年齡採用 danbooru 式（例如 `girl`）。身體特徵必須包含在詞表內。
 
-trait 名稱決定歸入哪一個 caption 欄位（參考 `<WS>/05_caption/vocab/caption_vocab_params.json` 的 `field_traits`，完全相同者優先，其次為 `前綴*`）：
+trait 名稱決定歸入哪一個 caption 欄位（參考 `<WS>/05_caption/vocab/caption_vocab_params.json` 的 `field_traits`，Grok 隔離資料夾內為 `./caption_vocab_params.json`；完全相同者優先，其次為 `前綴*`）：
 
 | trait | caption 欄位 | 例 |
 |---|---|---|
-| `height` | height_of_this_character | short |
-| `body_type` | body_type_of_his_character | petite |
-| `age` | age_of_this_character | girl |
+| `height`（每張必填） | height_of_this_character | short |
+| `body_type`（每張必填） | body_type_of_his_character | petite |
+| `age`（每張必填） | age_of_this_character | girl |
+| `face_shape` | shape_of_the_face（字串，一個 tag） | round face |
 | `hair_style`、`bangs`、`hair_style_*` | style_of_the_hair | twintails、hair between eyes |
 | `hair_length` | length_of_the_hair | medium hair |
 | `hair_color` | color_of_the_hair | black hair |
@@ -71,7 +74,7 @@ trait 名稱決定歸入哪一個 caption 欄位（參考 `<WS>/05_caption/vocab
 | `body_*` | character_body_characteristics_tags | body_legs → slender legs |
 | `accessory_*` | character_accessories_tags（角色固定配件，例如髮飾） | accessory_hair_x → x hair ornament |
 
-服裝 tag 中屬於配件者（例如 choker、necklace、sunglasses…），由 `outfit_accessory_tags` 清單分流至 character_accessories_tags，其餘則歸入 character_clothing_tags。若角色擁有清單外的配件，請加入 `<WS>/05_caption/vocab/caption_vocab_params.json` 的清單中；驗證與打標預設使用本案版本，亦可透過 `--params` 覆寫。
+服裝 tag 中屬於配件者（例如 choker、necklace、sunglasses…），由 `outfit_accessory_tags` 清單分流至 character_accessories_tags，其餘則歸入 character_clothing_tags。若角色擁有清單外的配件，請加入 `<WS>/05_caption/vocab/caption_vocab_params.json` 的清單中（Grok 只改隔離資料夾內的複本，腳本把原檔備份成 `caption_vocab_params.prev_<時間>.json` 後寫回）；驗證與打標預設使用本案版本，亦可透過 `--params` 覆寫。
 
 腳本接著自動執行下列驗證；若依使用者回饋手動修改詞表，也可單獨重跑並記錄主要服裝（供後續測試使用）：
 
@@ -81,11 +84,11 @@ python -B scripts/vocab_tools.py check --workspace <WS> --main-outfit <主要服
 
 明確指定 `--main-outfit` 時會同時寫回 `project.json` 的 `main_outfit_id`；之後可省略此參數。
 
-驗證 PASS 後將寫入 `<WS>/05_caption/vocab/vocab_summary.md` 與 `<WS>/05_caption/vocab/main_outfit.json`（包含 main_outfit_id、name、tags、image_count），並印出各欄位的選項。若出現 ERROR（如未對應的 trait、固定欄位缺少 tag、圖片未分組等），請修正 vocab 後重新執行。
+驗證 PASS 後將寫入 `<WS>/05_caption/vocab/vocab_summary.md` 與 `<WS>/05_caption/vocab/main_outfit.json`（包含 main_outfit_id、name、tags、image_count），並印出各欄位的選項。若出現 ERROR（如未對應的 trait、缺少每張必填的 trait、欄位缺少 tag、圖片未分組等），請修正 vocab 後重新執行。
 
-預設 `--model grok-4.7 --timeout 3600 --retries 2`，輸出預設 `05_caption/vocab/`，含 `logs/`、`summary.json`、`failed.json`；可覆寫 `--out`、`--images`、`--manifest`，`--dry-run` 只列計畫。
+預設 `--model grok-4.7 --timeout 3600 --retries 2 --sandbox strict`，輸出預設 `05_caption/vocab/`，含 `logs/`、`summary.json`、`failed.json`；可覆寫 `--out`、`--images`、`--manifest`，`--dry-run` 只列計畫。
 
-**使用者確認（暫停點）：** 腳本印出 `vocab_summary.md` 與主要服裝重點後即結束；除非使用者明確說要自動執行並加上 `--auto`，否則 vocab 驗證 PASS 後必須先暫停，不要進入 b. 打標。把 `vocab_summary.md` 的重點（各固定特徵欄位如臉型、髮色、髮型、瀏海、眼睛、體型、膚色，主要服裝及其 tags、各服裝分組與圖數）整理給使用者，請使用者確認特徵是否都正確；依回饋修改 vocab 並重新執行 check，直到使用者確認後才繼續打標。
+**使用者確認（暫停點）：** 腳本印出 `vocab_summary.md` 與主要服裝重點後即結束；除非使用者明確說要自動執行並加上 `--auto`，否則 vocab 驗證 PASS 後必須先暫停，不要進入 b. 打標。把 `vocab_summary.md` 的重點（每張必填的身高、體型、年齡，以及臉型、髮色、髮型、瀏海、眼睛、膚色等特徵，主要服裝及其 tags、各服裝分組與圖數）整理給使用者，請使用者確認特徵是否都正確；依回饋修改 vocab 並重新執行 check，直到使用者確認後才繼續打標。
 
 ## b. 逐張打標（Codex）
 
@@ -102,7 +105,7 @@ python -B scripts/codex_caption_v2.py --workspace <WS>
 ```
 
 - 分組：**A** 固定模板 + 主要服裝清單（主要服裝的收集圖、Codex keep、Grok keep）；**B_fixed** 固定模板 + 該造型清單（收集圖其他造型，按造型分批套用清單）；**B_free** 自由模板（Codex 換裝圖，服裝與配件自由發揮，schema 禁止使用主要服裝 tag）。
-- 固定欄位（身高、體型、年齡、髮型、髮長、髮色、眼色、膚色、胸部、頭部特徵、身體特徵；固定版另含服裝、配件）只能從清單中勾選，由 schema enum 鎖定；若畫面中無法辨識則留空（陣列為 `[]`、字串為 `""`）。NSFW 欄位不輸出。
+- 詞表欄位（身高、體型、年齡、臉型、髮型、髮長、髮色、眼色、膚色、胸部、頭部特徵、身體特徵；固定版另含服裝、配件）只能從清單中勾選，由 schema enum 鎖定，不可自創 tag。`fixed_traits` 對應的身高、體型、年齡每張必填、不可留空（字串 enum 不含 `""`，陣列 `minItems: 1`）；其餘詞表欄位為可選，畫面中無法辨識則留空（陣列為 `[]`、字串為 `""`）。prompt 依此分成 Required／Optional vocabulary 兩段（模板變數 `{{required_vocab_lines}}`、`{{optional_vocab_lines}}`，依 `template_vars` 順序產生）。NSFW 欄位不輸出。
 - 程式僅會讀取 `--images` 資料夾內的圖片（manifest 僅用於查詢 source_group；若資料夾內含有 manifest 未記錄的圖片將會報錯）。此處不做 NSFW 判斷，NSFW 圖片已由 `build_train_set.py` 移至 `<WS>/05_caption/images_nsfw/`。**正式呼叫 Codex 時，`--images` 只能指向 `<WS>/05_caption/images`。**下方 NSFW 流程僅以 `--dry-run` 在本機建立 schema，不呼叫 Codex。
 - JSON → txt 轉換（`scripts/caption_convert.py`，邏輯與原 repo 相同）：去空值（drop_empty）→ 刪除 detailed_description → json_to_string → merge_all_caption([only_prefix(['anime style', trigger]), …])（透過 recreate_tags_format 去重）。此階段不做其他額外過濾，txt 一律以 `anime style, <trigger>, ` 開頭。若需單獨重新轉換：`python -B scripts/caption_convert.py <WS>/05_caption/captions/json <WS>/05_caption/captions/txt --stage-out <WS>/05_caption/captions/stage_txt --trigger <trigger>`。
 - 若模型不在 Codex 的 `models_cache.json` 中，程式將直接停止：立即停下並告知使用者，不更換模型。

@@ -1,5 +1,10 @@
 {
- "_doc": "codex_caption_v2.py / vocab_tools.py 的欄位對應（通用，不含角色資料）。field_traits：caption 欄位 -> vocab character_features 的 trait 名（完全相同優先，其次最長的 'prefix*'）。outfit_accessory_tags：服裝 tag 中歸入 character_accessories_tags 的 tag，其餘服裝 tag 歸入 character_clothing_tags；角色有清單外的配件時，複製本檔另存並加進去，用 --params 指定。template_vars：caption 欄位 -> 模板變數。群組名需與 build_train_set.py 的 source_group 一致。",
+ "_doc": "codex_caption_v2.py / vocab_tools.py / grok_vocab.py 的欄位對應（通用，不含角色資料）。fixed_traits：每張圖 caption 都必須出現的 trait（schema 必填、不可留空；vocab check 要求詞表一定要有）；其餘角色特徵與服裝 tag 一律為可選，但只能從詞表列出的 tag 挑（enum），看不到可留空。field_traits：caption 欄位 -> vocab character_features 的 trait 名（完全相同優先，其次最長的 'prefix*'）。trait_notes：建立詞表時給 Grok 的 trait 說明（grok_vocab.py 會放進 prompt）。field_hints：逐張打標 prompt 中該欄位的簡短說明。outfit_accessory_tags：服裝 tag 中歸入 character_accessories_tags 的 tag，其餘服裝 tag 歸入 character_clothing_tags；角色有清單外的配件時，複製本檔另存並加進去，用 --params 指定。template_vars：caption 欄位 -> 模板變數。群組名需與 build_train_set.py 的 source_group 一致。",
+ "fixed_traits": [
+  "height",
+  "body_type",
+  "age"
+ ],
  "field_traits": {
   "height_of_this_character": [
    "height"
@@ -9,6 +14,9 @@
   ],
   "age_of_this_character": [
    "age"
+  ],
+  "shape_of_the_face": [
+   "face_shape"
   ],
   "style_of_the_hair": [
    "hair_style",
@@ -40,6 +48,12 @@
    "accessory_*"
   ]
  },
+ "trait_notes": {
+  "face_shape": "face_shape (string, exactly one tag): the overall outline of the face and cheeks, as one danbooru-style tag. Judge it from a clear front or three-quarter view of an original image. Candidates: round face, oval face, long face, pointy chin, chubby cheeks, square jaw. Pick the single best fit; if none of these fits, write your own short danbooru-style tag (lowercase, at most 4 words). Do not put expressions (e.g. puffy cheeks, blush) here; other head details stay in head_* traits."
+ },
+ "field_hints": {
+  "shape_of_the_face": "overall face outline / cheeks"
+ },
  "outfit_accessory_tags": [
   "choker",
   "black choker",
@@ -68,6 +82,7 @@
   "height_of_this_character": "height_options",
   "body_type_of_his_character": "body_type_options",
   "age_of_this_character": "age_options",
+  "shape_of_the_face": "face_shape_options",
   "style_of_the_hair": "hair_style_options",
   "length_of_the_hair": "hair_length_options",
   "color_of_the_hair": "hair_color_options",

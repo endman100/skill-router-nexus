@@ -27,7 +27,10 @@ def options(parser, only=False):
 
 
 def run_grok(prompt, cwd, log_dir, name, *, schema=None, web=False,
-             model=None, effort=None, timeout=3600, grok_bin=DEFAULT, extra_args=()):
+             model=None, effort=None, timeout=3600, grok_bin=DEFAULT, extra_args=(),
+             sandbox=None, rules=None):
+    """sandbox: Grok Build --sandbox profile (e.g. "strict" = read only cwd + system paths + ~/.grok).
+    rules: extra system-prompt rules (--rules)."""
     cwd, log_dir = Path(cwd).resolve(), Path(log_dir).resolve()
     log_dir.mkdir(parents=True, exist_ok=True)
     # Keep logs from earlier invocations as well as retries.
@@ -46,6 +49,10 @@ def run_grok(prompt, cwd, log_dir, name, *, schema=None, web=False,
     # Headless Grok Build rejects --add-dir; it can still read absolute paths outside cwd.
     if not web:
         argv.append("--disable-web-search")
+    if sandbox:
+        argv += ["--sandbox", sandbox]
+    if rules:
+        argv += ["--rules", rules]
     if model:
         argv += ["-m", model]
     if effort:

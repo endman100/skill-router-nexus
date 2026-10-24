@@ -24,6 +24,11 @@
    "title": "Age Of This Character",
    "type": "string"
   },
+  "shape_of_the_face": {
+   "title": "Shape Of The Face",
+   "type": "string",
+   "description": "One danbooru-style tag for the overall face outline / cheeks (from the character vocab)."
+  },
   "style_of_the_hair": {
    "items": {
     "type": "string"
@@ -130,6 +135,7 @@
   "height_of_this_character",
   "body_type_of_his_character",
   "age_of_this_character",
+  "shape_of_the_face",
   "style_of_the_hair",
   "length_of_the_hair",
   "color_of_the_hair",

@@ -8,7 +8,9 @@
 正式打標只讀 --images 資料夾內的圖片（manifest 只用來查 source_group），全部交給 Codex。
 本程式不做 NSFW 判斷：正式打標只能指定 SFW 資料夾；NSFW 資料夾僅能搭配 --dry-run 在本機建立 schema，
 此模式只列檔名、不開啟圖片、不呼叫 Codex，供 Grok 打標及 caption_convert 驗證使用。
-每張圖的 schema：固定欄位 = 該組選項的 enum，看不到可留空（陣列 []、字串 ""）；自由欄位必填；NSFW 欄位不輸出。
+每張圖的 schema：詞表欄位 = 該組選項的 enum（不得自創 tag）。params 的 fixed_traits（身高、體型、年齡）對應欄位
+每張必填、不可留空；其他詞表欄位為可選，看不到可留空（陣列 []、字串 ""）；自由欄位必填；NSFW 欄位不輸出。
+模板中的 {{required_vocab_lines}} / {{optional_vocab_lines}} 依 params 的 template_vars 順序產生。
 Codex 寫 ./output/<stem>.json → jsonschema 驗證 → 失敗重試（--retries）。
 JSON → txt：caption_convert.py（drop_empty → 刪 detailed_description → json_to_string →
 merge_all_caption([only_prefix(['anime style', trigger]), …])，即原 repo 轉換）；txt 以 `anime style, <trigger>, ` 開頭。
@@ -27,7 +29,7 @@ from ws import parse_args
 import jsonschema
 sys.path.insert(0, str(Path(__file__).parent))
 from codex_isolated import run_isolated
-from vocab_tools import feature_options
+from vocab_tools import feature_options, fixed_fields
 from caption_convert import convert
 
 HERE = Path(__file__).resolve().parent
@@ -62,7 +64,7 @@ def tag_list(items):
 
 
 def field_options(vocab, params, outfit, template_kind):
-    """固定欄位 -> [{tag, visibility}]。固定模板時，服裝 tag 分進 clothing / accessories。"""
+    """詞表欄位 -> [{tag}]。固定模板時，服裝 tag 分進 clothing / accessories。"""
     opts = feature_options(vocab["character_features"], params["field_traits"])
     if template_kind == "fixed":
         acc_set = set(params["outfit_accessory_tags"])
@@ -72,14 +74,32 @@ def field_options(vocab, params, outfit, template_kind):
     return opts
 
 
-def build_schema(base, opts, template_kind, main_outfit_tags):
-    props = {k: v for k, v in base["properties"].items() if k not in DROP_FIELDS}
-    fixed = set(opts) - (FREE_IN_FREE_TEMPLATE if template_kind == "free" else set())
+def vocab_fields(opts, template_kind):
+    """Fields locked to the vocab enum for this template."""
+    return set(opts) - (FREE_IN_FREE_TEMPLATE if template_kind == "free" else set())
+
+
+def build_schema(base, opts, template_kind, main_outfit_tags, required=(), described=None):
+    """required: caption fields of params fixed_traits -> enum and never empty.
+    described: free fields the template describes; other non-vocab fields are dropped
+    (e.g. shape_of_the_face with an older params file that has no face_shape mapping)."""
+    fixed = vocab_fields(opts, template_kind)
+    props = {k: v for k, v in base["properties"].items() if k not in DROP_FIELDS
+             and (described is None or k in fixed or k in described)}
     out = {}
     for f, spec in props.items():
         is_array = "array" in [s.get("type") for s in spec.get("anyOf", [spec])]
         title = spec.get("title", f)
-        if f in fixed:                                  # enum, may be empty when not visible
+        if f in fixed and f in required:                # enum, never empty (fixed traits)
+            tags = list(dict.fromkeys(tag_list(opts[f])))
+            if not tags:
+                raise ValueError(f"每張必填欄位 {f} 在詞表裡沒有 tag（先跑 vocab_tools.py check）")
+            if is_array:
+                out[f] = {"title": title, "type": "array", "uniqueItems": True, "minItems": 1,
+                          "items": {"type": "string", "enum": tags}}
+            else:
+                out[f] = {"title": title, "type": "string", "enum": tags}
+        elif f in fixed:                                # enum, may be empty when not visible
             tags = list(dict.fromkeys(tag_list(opts[f])))
             if is_array:
                 listed = {"type": "array", "uniqueItems": True, "minItems": 1, "items": {"type": "string", "enum": tags}}
@@ -95,6 +115,19 @@ def build_schema(base, opts, template_kind, main_outfit_tags):
             out[f] = {"title": title, "type": "string", "minLength": 1}
     return {"$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object",
             "additionalProperties": False, "required": list(props), "properties": out}
+
+
+def vocab_lines(opts, params, template_kind, required):
+    """Prompt lines for the required / optional vocab fields, in template_vars order."""
+    fixed, hints = vocab_fields(opts, template_kind), params.get("field_hints", {})
+    lines = {True: [], False: []}
+    for field in params["template_vars"]:
+        if field not in fixed:
+            continue
+        tags = ", ".join(dict.fromkeys(tag_list(opts.get(field, [])))) or "(none, leave empty)"
+        hint = f" ({hints[field]})" if field in hints else ""
+        lines[field in required].append(f"- {field}{hint}: {tags}")
+    return "\n".join(lines[True]) or "- (none)", "\n".join(lines[False]) or "- (none)"
 
 
 def assign_groups(images, vocab, main_id, params):
@@ -212,10 +245,12 @@ def main(argv=None):
     for d in ("prompts", "schemas"):
         (a.out / d).mkdir(exist_ok=True)
     shutil.copyfile(a.params, a.out / "params.json")
+    required = fixed_fields(params)
     for j in jobs:
         stem = Path(j["name"]).stem
         opts = field_options(vocab, params, j["outfit"], j["template"])
-        j["schema"] = build_schema(base, opts, j["template"], main_tags)
+        described = set(re.findall(r"^- ([a-z_]+):", tmpl[j["template"]], re.M))
+        j["schema"] = build_schema(base, opts, j["template"], main_tags, required, described)
         j["schema_file"] = a.out / "schemas" / f"{j['group']}_{j['outfit']['id']}.schema.json"
         j["schema_file"].write_text(json.dumps(j["schema"], ensure_ascii=False, indent=1), "utf-8")
         values = {"character": a.character, "work": a.work, "trigger": a.trigger,
@@ -223,6 +258,7 @@ def main(argv=None):
                   "schema_path": "./input/schema.json", "main_outfit_tags": ", ".join(main_tags)}
         for field, var in params["template_vars"].items():
             values[var] = ", ".join(dict.fromkeys(tag_list(opts.get(field, []))))
+        values["required_vocab_lines"], values["optional_vocab_lines"] = vocab_lines(opts, params, j["template"], required)
         j["prompt"] = fill(tmpl[j["template"]], values)
         (a.out / "prompts" / f"{stem}.txt").write_text(j["prompt"], "utf-8")
     (a.out / "assignment.json").write_text(json.dumps(

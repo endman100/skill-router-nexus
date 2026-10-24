@@ -4,7 +4,8 @@
   sheets：從 manifest 取出收集圖（source_group = collected，不含生成圖），做 8 格拼圖（每格標檔名），
           寫 names.json 與 vocab.schema.json，給 Grok 看圖寫 vocab.json。
   check ：驗證 vocab.json（JSON schema、每張收集圖恰屬一套服裝、tag 不重複／不過長／無佔位詞），
-          檢查每個 trait 都對應到 caption 欄位、固定欄位有選項；通過後寫 vocab_summary.md，
+          檢查每個 trait 都對應到 caption 欄位、params 的 fixed_traits（每張必填）都在詞表、固定欄位有選項；
+          通過後寫 vocab_summary.md，
           給 --main-outfit 時同時寫 main_outfit.json。
 
 用法：
@@ -20,28 +21,28 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = Path(__file__).resolve().parent
 DEFAULT_PARAMS = HERE.parent / "templates" / "caption_vocab_params.json"
 BANNED = ("not discernible", "not visible", "unknown", "sheet", "panel", "inset", "layout", "reference")
-OPTIONAL_FIELDS = {"character_head_features_tags", "character_accessories_tags", "character_clothing_tags"}
+# 詞表裡可以完全沒有 tag 的欄位（其他對應欄位缺 tag 時 check 報錯）。
+MAY_HAVE_NO_TAGS = {"character_head_features_tags", "character_accessories_tags", "character_clothing_tags"}
 
 
 def make_schema():
     tag = {"type": "string", "minLength": 2, "maxLength": 40, "pattern": "^[a-z0-9][a-z0-9 \\-]*[a-z0-9]$"}
-    vis = {"enum": ["always", "sometimes"]}
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object", "additionalProperties": False,
         "required": ["character_features", "outfits"],
         "properties": {
             "character_features": {"type": "array", "minItems": 3, "items": {
-                "type": "object", "additionalProperties": False, "required": ["trait", "tag", "visibility"],
-                "properties": {"trait": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"}, "tag": tag, "visibility": vis}}},
+                "type": "object", "additionalProperties": False, "required": ["trait", "tag"],
+                "properties": {"trait": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"}, "tag": tag}}},
             "outfits": {"type": "array", "minItems": 1, "items": {
                 "type": "object", "additionalProperties": False, "required": ["id", "name", "tags", "images"],
                 "properties": {
                     "id": {"type": "string", "pattern": "^outfit_[a-z0-9_]+$"},
                     "name": {"type": "string", "minLength": 1, "maxLength": 60},
                     "tags": {"type": "array", "minItems": 1, "items": {
-                        "type": "object", "additionalProperties": False, "required": ["tag", "visibility"],
-                        "properties": {"tag": tag, "visibility": vis}}},
+                        "type": "object", "additionalProperties": False, "required": ["tag"],
+                        "properties": {"tag": tag}}},
                     "images": {"type": "array", "minItems": 1, "uniqueItems": True, "items": {"type": "string"}}}}},
         },
     }
@@ -98,14 +99,38 @@ def validate(data, names, schema):
     return errs
 
 
-def summary_md(data):
-    lines = ["| 特徵 | tag | visibility |", "|---|---|---|"]
-    lines += [f"| {f['trait']} | {f['tag']} | {f['visibility']} |" for f in data["character_features"]]
+def strip_legacy(data):
+    """舊詞表的 visibility 已廢除：直接忽略。"""
+    for f in data.get("character_features", []):
+        if isinstance(f, dict):
+            f.pop("visibility", None)
+    for o in data.get("outfits", []):
+        for t in o.get("tags", []) if isinstance(o, dict) else []:
+            if isinstance(t, dict):
+                t.pop("visibility", None)
+    return data
+
+
+def fixed_traits(params):
+    """每張圖 caption 必填的 trait（唯一定義處：caption_vocab_params.json 的 fixed_traits）。"""
+    return list(params.get("fixed_traits", []))
+
+
+def fixed_fields(params):
+    """fixed_traits 對應的 caption 欄位（schema 必填、不可留空）。"""
+    return {trait_field(t, params["field_traits"]) for t in fixed_traits(params)} - {None}
+
+
+def summary_md(data, params=None):
+    fixed = set(fixed_traits(params or {}))
+    lines = ["| 特徵 | tag | 每張必填 |", "|---|---|---|"]
+    lines += [f"| {f['trait']} | {f['tag']} | {'✓' if f['trait'] in fixed else ''} |" for f in data["character_features"]]
     lines += ["", "| id | 名稱 | 圖片數 | tags |", "|---|---|---:|---|"]
     for o in data["outfits"]:
-        tags = ", ".join(t["tag"] + ("" if t["visibility"] == "always" else "*") for t in o["tags"])
+        tags = ", ".join(t["tag"] for t in o["tags"])
         lines.append(f"| {o['id']} | {o['name']} | {len(o['images'])} | {tags} |")
-    lines += ["", "\\* = sometimes"]
+    lines += ["", f"每張必填（fixed_traits）：{', '.join(sorted(fixed)) or '-'}；"
+              "其餘角色特徵與服裝 tag 皆為可選，打標時只能從本詞表挑選，看不到可留空。"]
     return "\n".join(lines) + "\n"
 
 
@@ -126,13 +151,13 @@ def trait_field(trait, field_traits):
 
 
 def feature_options(features, field_traits):
-    """caption field -> [{tag, visibility}] in field_traits pattern order, then vocab order."""
+    """caption field -> [{tag}] in field_traits pattern order, then vocab order."""
     opts = {}
     for field, pats in field_traits.items():
         out = opts.setdefault(field, [])
         for pat in pats:
             for f in features:
-                item = {"tag": f["tag"], "visibility": f["visibility"]}
+                item = {"tag": f["tag"]}
                 if _match(f["trait"], pat) and trait_field(f["trait"], field_traits) == field and item not in out:
                     out.append(item)
     return opts
@@ -141,13 +166,19 @@ def feature_options(features, field_traits):
 def coverage(vocab, params):
     errs, warns = [], []
     ft = params["field_traits"]
+    traits = {f["trait"] for f in vocab["character_features"]}
+    for t in fixed_traits(params):
+        if trait_field(t, ft) is None:
+            errs.append(f"params fixed_traits 的 {t} 沒有對應的 caption 欄位（field_traits）")
+        elif t not in traits:
+            errs.append(f"每張必填的 trait {t} 不在 character_features（fixed_traits）")
     for f in vocab["character_features"]:
         if trait_field(f["trait"], ft) is None:
             errs.append(f"trait {f['trait']} ({f['tag']}) 沒有對應的 caption 欄位（改 trait 名或 params field_traits）")
     opts = feature_options(vocab["character_features"], ft)
     for field in params["template_vars"]:
         if field in ft and not opts.get(field):
-            (warns if field in OPTIONAL_FIELDS else errs).append(f"固定欄位 {field} 在詞表裡沒有任何 tag")
+            (warns if field in MAY_HAVE_NO_TAGS else errs).append(f"欄位 {field} 在詞表裡沒有任何 tag")
     return errs, warns, opts
 
 
@@ -165,7 +196,7 @@ def cmd_sheets(a):
 
 
 def cmd_check(a):
-    data = json.loads(a.vocab.read_text("utf-8"))
+    data = strip_legacy(json.loads(a.vocab.read_text("utf-8")))
     names = json.loads(a.names.read_text("utf-8"))
     params = json.loads(a.params.read_text("utf-8"))
     errs = validate(data, names, make_schema())
@@ -178,9 +209,11 @@ def cmd_check(a):
         print("WARN", w)
     if errs:
         print("\n".join("ERROR " + e for e in errs)); return 1
+    required = fixed_fields(params)
     for field, o in opts.items():
-        print(f"{field}: {', '.join(t['tag'] for t in o) or '-'}")
-    (a.vocab.parent / "vocab_summary.md").write_text(summary_md(data), "utf-8")
+        mark = "（每張必填）" if field in required else ""
+        print(f"{field}{mark}: {', '.join(t['tag'] for t in o) or '-'}")
+    (a.vocab.parent / "vocab_summary.md").write_text(summary_md(data, params), "utf-8")
     if a.main_outfit:
         o = outfits[a.main_outfit]
         (a.vocab.parent / "main_outfit.json").write_text(json.dumps(dict(
