@@ -18,12 +18,14 @@ python -B scripts/ws.py create --workspace <WS> --work "<作品名>" --character
 │   ├── input_mapping.json        # 全部收集圖的唯一檔名 ↔ 原始路徑（含子資料夾）
 │   ├── dedup/  dedup.json        # 去重結果
 │   ├── sfw/  nsfw/  rating.json  # WD Tagger 分流
-│   ├── codex_clean/              # Codex 清理圖、summary.json、rejected.json、Codex log
+│   ├── codex_clean/              # Codex 逐張清理圖、summary.json、rejected.json
+│   │   └── logs/<stem>/          # argv、prompt、events、stderr、last message、status
 │   ├── grok_clean/               # summary.json、rejected.json、suspicious.json、failed.json、logs/
 │   ├── collected_sfw/            # 清理後收集圖（Codex 清理 + Grok 通過的 SFW）
 │   └── collected_nsfw/           # Grok 處理通過的 NSFW 收集圖
 ├── 03_sheet/
-│   └── character-sheet.png       # 角色設定圖（04 的參考圖）
+│   ├── character-sheet.png       # 步驟 2 清理前產出；清理與 04 的參考圖
+│   └── codex_sheet/              # chosen-inputs.json、sheet/ 呼叫紀錄
 ├── 04_generate/
 │   ├── codex/keep_outfit/        # Codex 維持服裝 N 張
 │   ├── codex/change_outfit/      # Codex 換服裝 2N 張

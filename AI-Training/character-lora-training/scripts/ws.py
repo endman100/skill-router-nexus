@@ -59,6 +59,7 @@ class Workspace:
             return dict(query=query, out=p("01_collect/grok"))
         if step == "grok_clean":
             return dict(target=query, nsfw=p("02_clean/nsfw"), sfw=p("02_clean/sfw"),
+                        sheet=p("03_sheet/character-sheet.png"),
                         codex_clean=p("02_clean/codex_clean"), out=p("02_clean/grok_clean"),
                         collected_sfw=p("02_clean/collected_sfw"), collected_nsfw=p("02_clean/collected_nsfw"))
         if step == "grok_generate":
@@ -78,7 +79,11 @@ class Workspace:
             return dict(out=p("02_clean"), sources=[f"{n}={p('01_collect/' + n)}" for n in ("codex", "grok")],
                         model_dir=str(e / "models/wd-eva02-large-tagger-v3"))
         if step == "clean":
-            return dict(target=query, input_dir=p("02_clean/sfw"), output_dir=p("02_clean"))
+            return dict(target=query, input_dir=p("02_clean/sfw"), output_dir=p("02_clean"),
+                        sheet=p("03_sheet/character-sheet.png"))
+        if step == "sheet":
+            return dict(inputs=[p("02_clean/sfw")], out=p("03_sheet/character-sheet.png"),
+                        log_dir=p("03_sheet/codex_sheet"))
         if step == "generate":
             return dict(reference=p("03_sheet/character-sheet.png"), folder=p("04_generate/codex"))
         if step == "fill":
@@ -114,10 +119,11 @@ class Workspace:
 # Only these arguments receive workspace defaults; their legacy defaults are
 # restored when --workspace is absent. Explicit values are never replaced.
 DEFAULT_FIELDS = {
-    "grok_collect": "query out", "grok_clean": "target nsfw sfw codex_clean out collected_sfw collected_nsfw",
+    "grok_collect": "query out", "grok_clean": "target nsfw sfw codex_clean out collected_sfw collected_nsfw sheet",
     "grok_generate": "reference out", "grok_vocab": "project_dir out images manifest params",
     "grok_caption": "project_dir images out final_dir manifest", "grok_upscale": "out_dir images",
-    "collect": "query save_dir", "dedup": "out sources model_dir", "clean": "target input_dir output_dir",
+    "collect": "query save_dir", "dedup": "out sources model_dir", "clean": "target input_dir output_dir sheet",
+    "sheet": "inputs out log_dir",
     "generate": "reference folder", "fill": "fill_existing reference target",
     "resize": "out groups", "build": "out groups character trigger nsfw_out",
     "sheets": "images manifest out", "check": "vocab names params main_outfit",

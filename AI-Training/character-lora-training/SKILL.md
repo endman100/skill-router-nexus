@@ -24,8 +24,8 @@ Grok 步驟一律使用各步驟的 `grok_*.py` 腳本，透過已登入的 Grok
 ```
 - [ ] 0. 建立 workspace
 - [ ] 1. 資料收集
-- [ ] 2. 清理
-- [ ] 3. 三視圖
+- [ ] 2. 去重、分流、三視圖與逐張清理
+- [ ] 3. 三視圖（已於步驟 2 清理前產出）
 - [ ] 4. 資料集生成
 - [ ] 5. 整理訓練集與打標
 - [ ] 6. LoRA 訓練
@@ -35,8 +35,8 @@ Grok 步驟一律使用各步驟的 `grok_*.py` 腳本，透過已登入的 Grok
 
 0. **建立 workspace**：閱讀 [00_workspace.md](00_workspace.md)，先建立全新案例目錄；後續 `<WS>` 均指此目錄。
 1. **資料收集**：閱讀 [01_data_collection.md](01_data_collection.md)。
-2. **清理**：閱讀 [02_cleaning.md](02_cleaning.md)。
-3. **三視圖**：閱讀 [03_character_sheet.md](03_character_sheet.md)。
+2. **清理**：閱讀 [02_cleaning.md](02_cleaning.md)，依序去重 → WD Tagger 分流 → 依 [03_character_sheet.md](03_character_sheet.md) 生成三視圖並暫停等待使用者確認（`--auto` 直接繼續）→ 逐張 Codex 清理 SFW → Grok 處理 NSFW 與 Codex 拒收／交接圖。
+3. **三視圖**：已移至步驟 2 分流後、清理前產出；沿用 [03_character_sheet.md](03_character_sheet.md) 與 `03_sheet/`，此處不重複生成。
 4. **資料集生成**：閱讀 [04_dataset_generation.md](04_dataset_generation.md)。
 5. **整理訓練集與打標**：閱讀 [05_captioning.md](05_captioning.md)。
 6. **LoRA 訓練**：閱讀 [06_lora_training.md](06_lora_training.md)。

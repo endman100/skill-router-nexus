@@ -21,8 +21,8 @@ SCHEMA = {"type": "object", "additionalProperties": False,
                        "required": ["left", "top", "right", "bottom"],
                        "properties": {k: {"type": "number", "minimum": 0, "maximum": 1}
                                       for k in ("left", "top", "right", "bottom")}}}}
-PROMPT = """請以圖片檢視工具開啟 {source}，清理目標角色：{target}。
-確認角色存在、品質足夠，拒收線稿、草稿、黑白或單色圖。
+PROMPT = """請以圖片檢視工具開啟 {source} 與角色設定圖 {sheet}，清理目標角色：{target}。
+與角色設定圖比對，確認目標角色存在、品質足夠，拒收線稿、草稿、黑白或單色圖。
 若有文字、對話框或浮水印，使用 image_edit（image=["{source}"]）移除，檢視結果並與原圖比較，
 確認臉、頭髮、眼睛、服裝、顏色、姿勢及比例未走樣；失敗則拒收。
 可疑內容（例如外觀未成年且不適合收錄的圖片）標為 suspicious 並排除。
@@ -53,6 +53,7 @@ def main(argv=None):
     p.add_argument("--target", required=True)
     for name in ("nsfw", "sfw", "codex-clean", "out", "collected-sfw", "collected-nsfw"):
         p.add_argument("--" + name, type=Path, required=True)
+    p.add_argument("--sheet", type=Path, required=True)
     options(p, only=True)
     a = parse_args(p, "grok_clean", argv)
     paths = [(f, True) for f in sorted(a.nsfw.glob("*")) if f.is_file() and is_image(f)]
@@ -63,6 +64,7 @@ def main(argv=None):
         paths = [(f, n) for f, n in paths if f.name in a.only]
     if a.dry_run:
         print(json.dumps(dict(inputs=[str(f) for f, _ in paths], out=str(a.out),
+                              sheet=str(a.sheet),
                               copy_codex=[str(f) for f in a.codex_clean.glob("*.png")]), ensure_ascii=False))
         return 0
     a.collected_sfw.mkdir(parents=True, exist_ok=True)
@@ -76,13 +78,15 @@ def main(argv=None):
             with isolated_cwd(a.out, "clean") as work:
                 attached = work / src.name
                 shutil.copy2(src, attached)
+                sheet = work / "character-sheet.png"
+                shutil.copy2(a.sheet, sheet)
                 def accept(result):
                     data = result["structured"]
                     if data["decision"] != "keep":
                         return data, None
                     output = generated_image(result) if data["output_file"] else attached
                     return data, cropped_png(output, data["crop"])
-                result, error = retry(PROMPT.format(source=attached, target=a.target), work,
+                result, error = retry(PROMPT.format(source=attached, sheet=sheet, target=a.target), work,
                                       a.out / "logs", f"{index:04d}_{src.stem}", a, schema=SCHEMA, accept=accept,
                                       profile="image")
                 if result:
