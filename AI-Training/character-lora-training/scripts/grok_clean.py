@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""逐張清理 NSFW 與 Codex 拒絕的圖片，保留上游分流。
+"""逐張清理 NSFW 與 Codex 交接的圖片，保留上游分流。
 
 最小權限（grok_headless.PROFILES["image"]）：每張圖複製到 <out>/.grok_clean_*/（沙箱 lora_min），
 Grok 只有 read_file + image_edit（去字），無 shell、無寫檔、無網路。裁切改由 Grok 在 structuredOutput
@@ -8,7 +8,7 @@ Grok 只有 read_file + image_edit（去字），無 shell、無寫檔、無網�
 import argparse, io, json, shutil
 from pathlib import Path
 from PIL import Image
-from ws import parse_args
+from ws import check_sheet_approved, parse_args
 from codex_collect import is_image
 from grok_headless import options, retry, report, write_json, generated_image, entry, isolated_cwd
 
@@ -59,7 +59,8 @@ def main(argv=None):
     paths = [(f, True) for f in sorted(a.nsfw.glob("*")) if f.is_file() and is_image(f)]
     rejected_file = a.codex_clean / "rejected.json"
     if rejected_file.exists():
-        paths += [(a.sfw / e["filename"], False) for e in json.loads(rejected_file.read_text("utf-8"))]
+        paths += [(a.sfw / e["filename"], False) for e in json.loads(rejected_file.read_text("utf-8"))
+                  if e.get("handoff") == "grok"]
     if a.only:
         paths = [(f, n) for f, n in paths if f.name in a.only]
     if a.dry_run:
@@ -67,6 +68,10 @@ def main(argv=None):
                               sheet=str(a.sheet),
                               copy_codex=[str(f) for f in a.codex_clean.glob("*.png")]), ensure_ascii=False))
         return 0
+    try:
+        check_sheet_approved(a.sheet)
+    except ValueError as exc:
+        raise SystemExit(f"錯誤：{exc}")
     a.collected_sfw.mkdir(parents=True, exist_ok=True)
     a.collected_nsfw.mkdir(parents=True, exist_ok=True)
     for f in a.codex_clean.glob("*.png"):

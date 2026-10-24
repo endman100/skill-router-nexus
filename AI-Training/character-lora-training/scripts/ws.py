@@ -1,5 +1,7 @@
 """Workspace metadata, documented paths, and CLI defaults for training and release."""
 import argparse
+from datetime import datetime
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -76,14 +78,14 @@ class Workspace:
         if step == "collect":
             return dict(query=query, save_dir=p("01_collect"))
         if step == "dedup":
-            return dict(out=p("02_clean"), sources=[f"{n}={p('01_collect/' + n)}" for n in ("codex", "grok")],
+            return dict(out=p("02_clean"), sources=[f"{n}={p('01_collect/' + n)}" for n in ("codex", "grok", "reference")],
                         model_dir=str(e / "models/wd-eva02-large-tagger-v3"))
         if step == "clean":
             return dict(target=query, input_dir=p("02_clean/sfw"), output_dir=p("02_clean"),
                         sheet=p("03_sheet/character-sheet.png"))
         if step == "sheet":
             return dict(inputs=[p("02_clean/sfw")], out=p("03_sheet/character-sheet.png"),
-                        log_dir=p("03_sheet/codex_sheet"))
+                        log_dir=p("03_sheet/codex_sheet"), rating=p("02_clean/rating.json"))
         if step == "generate":
             return dict(reference=p("03_sheet/character-sheet.png"), folder=p("04_generate/codex"))
         if step == "fill":
@@ -123,7 +125,7 @@ DEFAULT_FIELDS = {
     "grok_generate": "reference out", "grok_vocab": "project_dir out images manifest params",
     "grok_caption": "project_dir images out final_dir manifest", "grok_upscale": "out_dir images",
     "collect": "query save_dir", "dedup": "out sources model_dir", "clean": "target input_dir output_dir sheet",
-    "sheet": "inputs out log_dir",
+    "sheet": "inputs out log_dir rating",
     "generate": "reference folder", "fill": "fill_existing reference target",
     "resize": "out groups", "build": "out groups character trigger nsfw_out",
     "sheets": "images manifest out", "check": "vocab names params main_outfit",
@@ -199,16 +201,47 @@ def create(workspace, work, character, trigger, env):
     return root
 
 
+def approve_sheet(workspace):
+    sheet = Path(workspace).expanduser().resolve() / "03_sheet/character-sheet.png"
+    if not sheet.is_file():
+        raise ValueError(f"找不到角色設定圖：{sheet}")
+    record = dict(sheet="03_sheet/character-sheet.png", sha256=hashlib.sha256(sheet.read_bytes()).hexdigest(),
+                  approved_at=datetime.now().astimezone().isoformat())
+    (sheet.parent / "sheet_approved.json").write_text(
+        json.dumps(record, ensure_ascii=False, indent=2) + "\n", "utf-8")
+
+
+def check_sheet_approved(sheet_path):
+    sheet = Path(sheet_path)
+    approval = sheet.parent / "sheet_approved.json"
+    message = "請確認角色設定圖後執行 python -B scripts/ws.py approve-sheet --workspace <WS>。"
+    if not sheet.is_file():
+        raise ValueError(f"找不到角色設定圖：{sheet}；{message}")
+    if not approval.is_file():
+        raise ValueError(f"角色設定圖尚未核准：{approval}；{message}")
+    try:
+        record = json.loads(approval.read_text("utf-8"))
+    except ValueError:
+        raise ValueError(f"角色設定圖核准紀錄無效：{approval}；{message}") from None
+    if record.get("sha256") != hashlib.sha256(sheet.read_bytes()).hexdigest():
+        raise ValueError(f"角色設定圖與核准雜湊不符：{sheet}；{message}")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     command = sub.add_parser("create", help="Create a fresh workspace and project.json")
     for field in ("workspace", "work", "character", "trigger", "env"):
         command.add_argument("--" + field, required=True)
+    command = sub.add_parser("approve-sheet", help="記錄目前角色設定圖的核准雜湊")
+    command.add_argument("--workspace", required=True)
     args = vars(parser.parse_args(argv))
-    del args["command"]
+    command = args.pop("command")
     try:
-        create(**args)
+        if command == "approve-sheet":
+            approve_sheet(**args)
+        else:
+            create(**args)
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     return 0

@@ -12,7 +12,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from ws import parse_args
+from ws import check_sheet_approved, parse_args
 
 DEFAULT_MODEL = "gpt-6.1-sol"
 DEFAULT_EFFORT = "high"
@@ -225,8 +225,7 @@ def clean(target, input_dir, output_dir, sheet,
     output_dir = Path(output_dir).expanduser().resolve()
     destination = output_dir / "codex_clean"
     sheet = Path(sheet).expanduser().resolve()
-    if not sheet.is_file():
-        raise ValueError(f"Missing character sheet: {sheet}")
+    check_sheet_approved(sheet)
     paths = [p for p in sorted(input_dir.iterdir())
              if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS and (not only or p.name in only)]
     destination.mkdir(parents=True, exist_ok=True)
@@ -245,7 +244,8 @@ def clean(target, input_dir, output_dir, sheet,
         atomic_json(destination / "summary.json", dict(
             inputs=len(paths),
             processed=sum((destination / (p.stem + ".png")).is_file() for p in paths),
-            rejected=len(rejected), rejected_by_reason=dict(Counter(e["reason"] for e in rejected))))
+            rejected=len(rejected), rejected_by_reason=dict(Counter(e["reason"] for e in rejected)),
+            moderation_blocked=[e["filename"] for e in rejected if e["reason"] == "moderation_blocked"]))
 
     # Only this thread publishes outputs and manifests; workers own separate logs/workdirs.
     save_summary()
@@ -271,6 +271,8 @@ def clean(target, input_dir, output_dir, sheet,
             save_summary()
             done += 1
             print(f"[{done}/{len(paths)}] {source.name}: {result}", flush=True)
+    blocked = [e["filename"] for e in rejected if e["reason"] == "moderation_blocked"]
+    print("moderation_blocked: " + (", ".join(blocked) or "（無）"), flush=True)
     return 0
 
 

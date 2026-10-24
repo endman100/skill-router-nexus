@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""從去重、分流後的 SFW 圖片生成角色設定圖，預設等待使用者確認。"""
+"""從去重、分流後的 SFW 圖片生成角色設定圖。"""
 import argparse
 import json
 from pathlib import Path
@@ -14,6 +14,7 @@ DEFAULT_SHEET_SKILL = Path(__file__).resolve().parent.parent / "../../Image-Gene
 INSTRUCTIONS = "依複製的 character-sheet 技能，以 SFW 參考圖生成角色設定圖。僅在工作目錄內寫入，不得存取網路。"
 PROMPT = """請用圖片檢視工具瀏覽 ./input/images/ 的全部 SFW 圖片，
 挑選 4 張目標角色主要服裝的代表圖，作為本次生成的原始參考圖。
+挑選時優先採用使用者提供的參考圖：{USER_REFERENCES}。
 依照 ./input/character-sheet/SKILL.md 及其參照文件生成角色設定圖，
 採用預設 unmeasured 5×3 版面，服裝維持參考圖原樣。
 將選用參考圖的 input/images/ 相對路徑清單寫入 ./output/chosen-inputs.json（JSON 陣列）。
@@ -27,12 +28,13 @@ def main(argv=None):
     p.add_argument("--inputs", nargs="+", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--log-dir", type=Path)
+    p.add_argument("--rating", type=Path)
+    p.add_argument("--max-images", type=int, default=30)
     p.add_argument("--sheet-skill", type=Path, default=DEFAULT_SHEET_SKILL)
     p.add_argument("--model", default="gpt-6.1-sol")
     p.add_argument("--effort", default="high")
     p.add_argument("--timeout", type=float, default=3600)
     p.add_argument("--codex", default="codex")
-    p.add_argument("--auto", action="store_true")
     p.add_argument("--dry-run", action="store_true")
     a = parse_args(p, "sheet", argv)
     a.log_dir = a.log_dir or a.out.parent / "codex_sheet"
@@ -43,15 +45,31 @@ def main(argv=None):
     for path in a.inputs:
         paths.extend(sorted(f for f in path.iterdir() if f.is_file() and f.suffix.lower() in IMAGE_EXTENSIONS)
                      if path.is_dir() else [path])
+    paths.sort(key=lambda path: path.name)
+    reference_names = set()
+    if a.rating and a.rating.is_file():
+        rating = json.loads(a.rating.read_text("utf-8"))
+        reference_names = {r["file"] for r in rating["results"] if r.get("source") == "reference"}
+    references = [path for path in paths if path.name in reference_names][:a.max_images]
+    remaining = [path for path in paths if path.name not in reference_names]
+    count = min(a.max_images - len(references), len(remaining))
+    if count == 1:
+        remaining = [remaining[len(remaining) // 2]]
+    elif count > 1:
+        remaining = [remaining[i * (len(remaining) - 1) // (count - 1)] for i in range(count)]
+    else:
+        remaining = []
+    paths = references + remaining
+    prompt = PROMPT.replace("{USER_REFERENCES}", json.dumps([path.name for path in references], ensure_ascii=False))
     inputs = [(path.resolve(), "images/" + path.name) for path in paths]
     inputs.append((a.sheet_skill.resolve(), "character-sheet"))
     if a.dry_run:
         print(json.dumps(dict(inputs=[[str(s), n] for s, n in inputs], out=str(a.out),
                               log_dir=str(a.log_dir), model=a.model, effort=a.effort, timeout=a.timeout,
-                              auto=a.auto, skip=a.out.is_file(), prompt=PROMPT), ensure_ascii=False))
+                              skip=a.out.is_file(), prompt=prompt), ensure_ascii=False))
         return 0
     root, work, status, _ = run_isolated(
-        PROMPT, INSTRUCTIONS, inputs, model=a.model, effort=a.effort, timeout=a.timeout,
+        prompt, INSTRUCTIONS, inputs, model=a.model, effort=a.effort, timeout=a.timeout,
         image_generation=True, log_dir=a.log_dir, label="sheet", codex=a.codex)
     try:
         if status:
@@ -62,8 +80,6 @@ def main(argv=None):
     finally:
         shutil.rmtree(root)
     print(a.out)
-    if not a.auto:
-        print("請暫停，等待使用者確認角色設定圖（或替換此圖）後，再執行清理。")
     return 0
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""清理第 1、2 步（Grok VM 本機，不呼叫 Codex）：合併 Codex/Grok 收集圖 → sha256 去重 → pHash 去近似圖
-（距離 <= --phash-dist，保留面積最大者）→ WD Tagger rating 分流：general/sensitive → sfw/，questionable/explicit → nsfw/。
+"""清理第 1、2 步（Grok VM 本機，不呼叫 Codex）：合併 Codex/Grok 收集圖與使用者參考圖 → sha256 去重 → pHash 去近似圖
+（距離 <= --phash-dist，保留面積最大者）→ WD Tagger rating 與邊界閾值分流。
 
 用法：
   python3 dedup_split.py <輸出資料夾> codex=<codex收集資料夾> grok=<grok收集資料夾> [--phash-dist 6] [--model-dir DIR]
@@ -68,6 +68,8 @@ def main(argv=None):
     p.add_argument("sources", nargs="+", help="name=dir，例如 codex=collect/codex grok=collect/grok")
     p.add_argument("--phash-dist", type=int, default=6)
     p.add_argument("--model-dir", default=DEFAULT_MODEL_DIR)
+    p.add_argument("--questionable-threshold", type=float, default=0.15)
+    p.add_argument("--sensitive-threshold", type=float, default=0.5)
     a = parse_args(p, "dedup", argv)
     sources = [s.split("=", 1) for s in a.sources]
     items, skipped = load(sources)
@@ -86,15 +88,24 @@ def main(argv=None):
     tagger, res = Tagger(a.model_dir), []
     for k in kept:
         t = tagger.tag(k["rgb"])
+        bucket, reason = "sfw", "top_rating:" + t["top_rating"]
+        if t["top_rating"] in ("questionable", "explicit"):
+            bucket = "nsfw"
+        elif t["rating"]["questionable"] > a.questionable_threshold:
+            bucket, reason = "nsfw", "questionable_threshold"
+        elif t["rating"].get("sensitive", 0) > a.sensitive_threshold:
+            bucket, reason = "nsfw", "sensitive_threshold"
         name, conv = k["name"], None
         if k["ext"] in KEEP_EXT:
-            shutil.copy2(k["path"], a.out / t["bucket"] / name)
+            shutil.copy2(k["path"], a.out / bucket / name)
         else:                                   # gif/bmp/... -> first frame png
-            name = Path(name).stem + ".png"; k["rgb"].save(a.out / t["bucket"] / name); conv = "png"
+            name = Path(name).stem + ".png"; k["rgb"].save(a.out / bucket / name); conv = "png"
         res.append(dict(file=name, dedup_file=k["name"], scores={r: t["rating"][r] for r in t["rating"]},
-                        top=t["top_rating"], bucket=t["bucket"], converted_to=conv))
+                        source=k["source"], top=t["top_rating"], bucket=bucket, reason=reason, converted_to=conv))
     sfw = sum(r["bucket"] == "sfw" for r in res)
-    (a.out / "rating.json").write_text(json.dumps(dict(sfw=sfw, nsfw=len(res) - sfw, results=res),
+    (a.out / "rating.json").write_text(json.dumps(dict(sfw=sfw, nsfw=len(res) - sfw,
+                                                  questionable_threshold=a.questionable_threshold,
+                                                  sensitive_threshold=a.sensitive_threshold, results=res),
                                                   ensure_ascii=False, indent=1), "utf-8")
     print(f"input={len(items)} kept={len(kept)} dropped={len(dropped)} skipped={len(skipped)} sfw={sfw} nsfw={len(res) - sfw}")
 
