@@ -14,8 +14,8 @@ python -B scripts/dedup_split.py --workspace <WS>
 
 - 收集完成後，先遞迴掃描 `<WS>/01_collect/` 的 `codex`、`grok`、`reference` 三個來源（含子資料夾），使用者參考圖同樣去重與分流。全部可讀圖片統一命名為 `000001.<副檔名>`、`000002.<副檔名>`…；原始檔保留，新檔名與原始絕對路徑寫入 `<WS>/02_clean/input_mapping.json`，後續沿用此唯一主檔名。
 - 再以 sha256 移除完全相同的圖片，以 pHash（距離 ≤ 6）去除近似圖片，並保留面積較大者。
-- 依 WD Tagger（`wd-eva02-large-tagger-v3`，CPU；本案路徑 `<ENV>/models/wd-eva02-large-tagger-v3`，以 `--model-dir` 指定）的 rating 分流：最高分為 `questionable`／`explicit`、`questionable` 分數 > `--questionable-threshold`（預設 0.15），或 `sensitive` 分數 > `--sensitive-threshold`（預設 0.5），任一成立即進入 `<WS>/02_clean/nsfw/`；其餘進入 `sfw/`。閾值設為大於 1 可停用該分數規則；最高分規則仍生效。NSFW 使用者參考圖不交給 Codex。
-- `rating.json` 記錄兩個閾值，每筆結果包含 `source`（`codex`／`grok`／`reference`）、分數、分流與 `reason`（最高分 rating 或觸發的閾值）。
+- 依 WD Tagger（`wd-eva02-large-tagger-v3`，CPU；本案路徑 `<ENV>/models/wd-eva02-large-tagger-v3`，以 `--model-dir` 指定）的 rating 進行分流：`general`、`sensitive` → `<WS>/02_clean/sfw/`；`questionable`、`explicit` → `<WS>/02_clean/nsfw/`。NSFW 使用者參考圖不交給 Codex。
+- `rating.json` 每筆結果包含 `source`（`codex`／`grok`／`reference`）、分數與分流。
 - 輸出結果至 `<WS>/02_clean/` 目錄下的 `input_mapping.json`、`dedup/`、`sfw/`、`nsfw/`、`dedup.json` 與 `rating.json`。
 
 ## 3. 清理前產出三視圖
