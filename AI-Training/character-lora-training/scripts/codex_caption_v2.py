@@ -101,7 +101,10 @@ def build_schema(base, opts, template_kind, main_outfit_tags, required=(), descr
                 out[f] = {"title": title, "type": "string", "enum": tags}
         elif f in fixed:                                # enum, may be empty when not visible
             tags = list(dict.fromkeys(tag_list(opts[f])))
-            if is_array:
+            if not tags:                                # empty enum is rejected by the API (minItems 1)
+                out[f] = {"title": title, "type": "array", "maxItems": 0} if is_array else \
+                    {"title": title, "type": "string", "enum": [""]}
+            elif is_array:
                 listed = {"type": "array", "uniqueItems": True, "minItems": 1, "items": {"type": "string", "enum": tags}}
                 out[f] = {"title": title, "anyOf": [{"type": "array", "maxItems": 0}, listed]}
             else:
