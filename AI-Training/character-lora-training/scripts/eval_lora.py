@@ -273,7 +273,7 @@ def character_features(args):
     vocab_path = args.workspace / '05_caption' / 'vocab' / 'vocab.json'
     vocab = json.loads(vocab_path.read_text(encoding='utf-8'))
     fields = json.loads(args.vocab_params.read_text(encoding='utf-8'))['field_traits']
-    excluded = {'character_accessories_tags', 'character_clothing_tags'}
+    excluded = {'character_clothing_tags'}
     features = [f for f in vocab['character_features']
                 if trait_field(f['trait'], fields) not in excluded]
     options = feature_options(features, fields)
