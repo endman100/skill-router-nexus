@@ -49,7 +49,7 @@
   ]
  },
  "trait_notes": {
-  "face_shape": "face_shape (string, exactly one tag): the overall outline of the face and cheeks, as one danbooru-style tag. Judge it from a clear front or three-quarter view of an original image. Candidates: round face, oval face, long face, pointy chin, chubby cheeks, square jaw. Pick the single best fit; if none of these fits, write your own short danbooru-style tag (lowercase, at most 4 words). Do not put expressions (e.g. puffy cheeks, blush) here; other head details stay in head_* traits."
+  "face_shape": "face_shape (string, exactly one tag): the overall outline of the face and cheeks, as one danbooru-style tag. Judge it from a clear front or three-quarter view of an original image. Candidates: face, round face, oval face, long face, pointy chin, chubby cheeks, square jaw. Pick the single best fit; if none of these fits, write your own short danbooru-style tag (lowercase, at most 4 words). Do not put expressions (e.g. puffy cheeks, blush) here; other head details stay in head_* traits."
  },
  "field_hints": {
   "shape_of_the_face": "overall face outline / cheeks"
