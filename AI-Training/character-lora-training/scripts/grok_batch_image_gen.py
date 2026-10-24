@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""以 Grok Build 維持服裝生成 N 張，重跑僅補足有效 PNG 缺額。"""
-import argparse, hashlib, json
+"""以 Grok Build 維持服裝生成 N 張，重跑僅補足有效 PNG 缺額。
+
+最小權限：場景設計用 grok_headless.PROFILES["read"]（空的隔離 cwd，只回 structuredOutput）；
+每張圖用 PROFILES["image"]：參考圖複製到 <out>/.grok_gen_*/（沙箱 lora_min），Grok 只有 read_file + image_edit。
+"""
+import argparse, hashlib, json, shutil
 from pathlib import Path
 from ws import parse_args
 from codex_batch_image_gen import existing_images, next_number, update_missing_json, positive_int
-from grok_headless import options, retry, write_json, generated_image, png_bytes, IMAGE_SCHEMA, entry
+from grok_headless import options, retry, write_json, generated_image, png_bytes, IMAGE_SCHEMA, entry, isolated_cwd
 
 PROMPT = "幫我維持服裝設計與角色特徵 生成1張這個角色在不同背景 不同姿勢 不同動作 不同表情 不同長寬比的一張圖 採用乾淨的日系動畫賽璐璐上色，線稿俐落，色塊均勻，陰影簡潔，漸層平滑。皮膚與服裝表面乾淨，不添加膠片顆粒、紙張紋理、斑駁筆觸、細碎雜點或過度銳化。背景使用簡潔的動畫美術風格，避免密集零碎的材質細節。保留角色與服裝的必要細節。"
 RATIOS = ("1:1", "4:3", "3:4", "16:9", "9:16")
@@ -41,7 +45,9 @@ def main(argv=None):
                           "uniqueItems": True, "items": {"type": "string"}}}}
             prompt = (f"請設計 {a.n} 個互不相同的 SFW 角色圖場景，各自包含背景、姿勢、動作、表情、鏡頭。"
                       "背景為乾淨、具真實場景感的動畫美術背景；服裝維持參考圖。回傳 scenes 字串清單。")
-            result, last_error = retry(prompt, a.out, a.out / "logs", "scenes", a, schema=schema)
+            with isolated_cwd(a.out, "scenes") as work:
+                result, last_error = retry(prompt, work, a.out / "logs", "scenes", a, schema=schema,
+                                           profile="read", max_turns=5)
             if result:
                 write_json(scenes_file, result["structured"])
                 scenes = result["structured"]["scenes"]
@@ -61,9 +67,8 @@ def main(argv=None):
             name = f"{number:02d}.png"
             scene = scenes[(number - 1) % len(scenes)]
             ratio = RATIOS[(number - 1) % len(RATIOS)]
-            sheet = str(a.reference.resolve())
             prompt = (f'{PROMPT}\n{scene}\noutfit identical to the reference front view\n'
-                      f'用 image_edit，image={json.dumps([sheet, sheet])}，aspect_ratio="{ratio}"。'
+                      f'用 image_edit，image=["{{reference}}", "{{reference}}"]，aspect_ratio="{ratio}"。'
                       '一次產生一張；必須檢視結果並與參考正面比較，若服裝走樣則重新生成該張，'
                       '回報最終 session 圖片絕對路徑 output_file。'
                       '遇工具拒絕則記錄失敗，不改寫要求繞過限制。')
@@ -77,8 +82,12 @@ def main(argv=None):
                 hashes.add(digest)
                 return str(folder / name)
             # Each round provides one attempt per missing image.
-            result, error = retry(prompt, a.out, a.out / "logs", f"{Path(name).stem}_round{round_no}", call_args,
-                                  schema=IMAGE_SCHEMA, accept=accept)
+            with isolated_cwd(a.out, "gen") as work:
+                reference = work / ("reference" + a.reference.suffix.lower())
+                shutil.copy2(a.reference, reference)
+                result, error = retry(prompt.replace("{reference}", str(reference)), work, a.out / "logs",
+                                      f"{Path(name).stem}_round{round_no}", call_args,
+                                      schema=IMAGE_SCHEMA, accept=accept, profile="image", max_turns=20)
             results.append(dict(name=name, round=round_no, ok=result is not None, error=error))
             if result:
                 need -= 1

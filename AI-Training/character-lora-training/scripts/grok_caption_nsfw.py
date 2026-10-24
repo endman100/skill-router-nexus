@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""以 Grok Build 逐張打標 NSFW，驗證轉換後複製成功項目；不呼叫 Codex。"""
-import argparse, json, shutil, subprocess, sys, tempfile
+"""以 Grok Build 逐張打標 NSFW，驗證轉換後複製成功項目；不呼叫 Codex。
+
+最小權限（grok_headless.PROFILES["read"]）：每張圖與其 schema 複製到 <out>/.grok_caption_*/（沙箱 lora_min），
+Grok 只有 read_file/list_dir，以 structuredOutput 回傳；無 shell、無寫檔、無網路。
+"""
+import argparse, json, shutil, subprocess, sys
 from pathlib import Path
 import jsonschema
 from ws import parse_args
 from codex_caption_v2 import sha, IMAGE_EXT
-from grok_headless import options, retry, report, write_json, entry
+from grok_headless import options, retry, report, write_json, entry, isolated_cwd
 
 HERE = Path(__file__).resolve().parent
 
@@ -41,8 +45,7 @@ def main(argv=None):
             job = jobs[src.name]
             schema_file = a.out / "schemas" / f"{job['group']}_{job['outfit']}.schema.json"
             schema = json.loads(schema_file.read_text("utf-8"))
-            with tempfile.TemporaryDirectory(prefix="grok-caption-") as temporary:
-                work = Path(temporary)
+            with isolated_cwd(a.out, "caption") as work:
                 # Preserve generated prompt's relative paths, and supply absolute paths too.
                 (work / "input/images").mkdir(parents=True)
                 (work / "output").mkdir()
@@ -60,7 +63,7 @@ def main(argv=None):
                     write_json(a.out / "json" / f"{src.stem}.json", data)
                     return data
                 result, error = retry(prompt, work, a.out / "logs", src.stem, a,
-                                      schema=schema, accept=accept)
+                                      schema=schema, accept=accept, profile="read", max_turns=10)
                 rec.update(ok=result is not None, error=error)
         except (OSError, ValueError, KeyError) as exc:
             rec["error"] = str(exc)

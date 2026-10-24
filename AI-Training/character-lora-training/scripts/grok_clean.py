@@ -1,24 +1,51 @@
 #!/usr/bin/env python3
-"""逐張清理 NSFW 與 Codex 拒絕的圖片，保留上游分流。"""
-import argparse, json, shutil, tempfile
+"""逐張清理 NSFW 與 Codex 拒絕的圖片，保留上游分流。
+
+最小權限（grok_headless.PROFILES["image"]）：每張圖複製到 <out>/.grok_clean_*/（沙箱 lora_min），
+Grok 只有 read_file + image_edit（去字），無 shell、無寫檔、無網路。裁切改由 Grok 在 structuredOutput
+回報 crop（0–1 比例），本腳本以 PIL 套用到最終圖（image_edit 結果或原圖）。
+"""
+import argparse, io, json, shutil
 from pathlib import Path
+from PIL import Image
 from ws import parse_args
 from codex_collect import is_image
-from grok_headless import options, retry, report, write_json, png_bytes, generated_image, entry
+from grok_headless import options, retry, report, write_json, generated_image, entry, isolated_cwd
 
 SCHEMA = {"type": "object", "additionalProperties": False,
-          "required": ["decision", "rating", "reason", "output_file"], "properties": {
+          "required": ["decision", "rating", "reason", "output_file", "crop"], "properties": {
               "decision": {"enum": ["keep", "reject", "suspicious"]},
               "rating": {"enum": ["sfw", "nsfw"]}, "reason": {"type": "string"},
-              "output_file": {"type": "string"}}}
+              "output_file": {"type": "string"},
+              "crop": {"type": "object", "additionalProperties": False,
+                       "required": ["left", "top", "right", "bottom"],
+                       "properties": {k: {"type": "number", "minimum": 0, "maximum": 1}
+                                      for k in ("left", "top", "right", "bottom")}}}}
 PROMPT = """請以圖片檢視工具開啟 {source}，清理目標角色：{target}。
-確認角色存在、品質足夠，拒收線稿、草稿、黑白或單色圖。裁切至只保留目標角色及少量邊界。
-若有文字、對話框或浮水印，使用 image_edit 移除，檢視結果並與原圖比較，
+確認角色存在、品質足夠，拒收線稿、草稿、黑白或單色圖。
+若有文字、對話框或浮水印，使用 image_edit（image=["{source}"]）移除，檢視結果並與原圖比較，
 確認臉、頭髮、眼睛、服裝、顏色、姿勢及比例未走樣；失敗則拒收。
 可疑內容（例如外觀未成年且不適合收錄的圖片）標為 suspicious 並排除。
-依圖片判定 rating 為 sfw 或 nsfw。保留時將結果寫成工作目錄中的圖片，
-或回報 image_edit 產生的 session 圖片絕對路徑，填入 output_file。
+依圖片判定 rating 為 sfw 或 nsfw。你沒有 shell 或寫檔工具，不要自行存檔或裁切：
+output_file 填 image_edit 產生的 session 圖片絕對路徑；不需去字則填空字串（使用原圖）。
+crop 填只保留目標角色及少量邊界的裁切框（相對最終圖寬高的 0–1 比例：left、top、right、bottom；
+不需裁切則 0,0,1,1），由腳本套用。
 拒收時說明 reason。遇工具拒絕，記錄失敗，不改寫要求繞過限制。以指定 schema 回傳。"""
+
+
+def cropped_png(path, box):
+    with Image.open(path) as im:
+        im = im.convert("RGB")
+        w, h = im.size
+        l, t, r, b = (round(box[k] * size) for k, size in
+                      (("left", w), ("top", h), ("right", w), ("bottom", h)))
+        if r - l < 32 or b - t < 32:
+            raise ValueError(f"crop box too small: {box}")
+        if (l, t, r, b) != (0, 0, w, h):
+            im = im.crop((l, t, r, b))
+        buffer = io.BytesIO()
+        im.save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 def main(argv=None):
@@ -46,21 +73,18 @@ def main(argv=None):
     for index, (src, from_nsfw) in enumerate(paths, 1):
         rec = dict(filename=src.name, source=str(src), from_nsfw=from_nsfw, ok=False)
         try:
-            with tempfile.TemporaryDirectory(prefix="grok-clean-") as temporary:
-                work = Path(temporary)
+            with isolated_cwd(a.out, "clean") as work:
                 attached = work / src.name
                 shutil.copy2(src, attached)
                 def accept(result):
                     data = result["structured"]
                     if data["decision"] != "keep":
                         return data, None
-                    output = Path(data["output_file"])
-                    output = output if output.is_absolute() else work / output
-                    if not (work in output.resolve().parents and output.is_file()):
-                        output = generated_image(result)
-                    return data, png_bytes(output)
+                    output = generated_image(result) if data["output_file"] else attached
+                    return data, cropped_png(output, data["crop"])
                 result, error = retry(PROMPT.format(source=attached, target=a.target), work,
-                                      a.out / "logs", f"{index:04d}_{src.stem}", a, schema=SCHEMA, accept=accept)
+                                      a.out / "logs", f"{index:04d}_{src.stem}", a, schema=SCHEMA, accept=accept,
+                                      profile="image")
                 if result:
                     data, image = result
                     rec.update(data)

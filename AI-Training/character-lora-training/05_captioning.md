@@ -17,7 +17,7 @@ python -B scripts/resize_prep.py --workspace <WS>
 長邊 > 1280 以 LANCZOS 縮至 1280；長邊 < 768 則放入 `<WS>/05_caption/resized/_needs_upscale/<群組>/`。放大處理方式如下：
 
 - SFW：`python -B scripts/codex_upscale.py <WS>/05_caption/resized/_up_codex/<群組> <WS>/05_caption/resized/_needs_upscale/<群組>/*.png`（隔離 Codex 圖像生成，外層檢查長邊 ≥ 768、長寬比誤差 ≤ 3%）。
-- 上述 `<群組>` 使用 SFW 群組名；NSFW 的 `collected_nsfw` 執行 `python -B scripts/grok_upscale.py --workspace <WS>`，預設讀取 `resized/_needs_upscale/collected_nsfw/*.png`、輸出至 `resized/_up_grok/collected_nsfw/`。亦可如 Codex 明確傳入 `out_dir` 與圖片；預設 `--min-long 768 --model grok-4.7 --timeout 3600 --retries 2`，逐張使用單圖 `image_edit` 保持內容，外層檢查長邊與長寬比（誤差 ≤ 3%）。支援 `--only`、`--dry-run`、`--log-dir`、`--keep-generated`，結果為輸出目錄的 `summary.json`、`failed.json` 與 `logs/`，不自動執行備案。
+- 上述 `<群組>` 使用 SFW 群組名；NSFW 的 `collected_nsfw` 執行 `python -B scripts/grok_upscale.py --workspace <WS>`，預設讀取 `resized/_needs_upscale/collected_nsfw/*.png`、輸出至 `resized/_up_grok/collected_nsfw/`。亦可如 Codex 明確傳入 `out_dir` 與圖片；預設 `--min-long 768 --model grok-4.7 --timeout 3600 --retries 2`，逐張在 `.grok_upscale_*/` 隔離目錄（`image` profile：只有 read_file、image_edit，prompt 附原圖尺寸）使用單圖 `image_edit` 保持內容，外層檢查長邊與長寬比（誤差 ≤ 3%）。支援 `--only`、`--dry-run`、`--log-dir`、`--keep-generated`，結果為輸出目錄的 `summary.json`、`failed.json` 與 `logs/`，不自動執行備案。
 - 若皆失敗：`<ENV>/esrgan_venv/bin/python -B scripts/esrgan_upscale.py <WS>/05_caption/resized/_up_esrgan/<群組> <WS>/05_caption/resized/_needs_upscale/<群組>/<檔名> --model <ENV>/models/RealESRGAN_x4plus_anime_6B.pth`。
 
 選用 `codex_upscale.py --keep-generated` 時，固定指定 `<WS>/05_caption/resized/_up_codex/<群組>/generated`。放大結果（檔名不變）複製回 `<WS>/05_caption/resized/<群組>/`，再進行編號：
@@ -47,7 +47,7 @@ python -B scripts/grok_vocab.py --workspace <WS> [--main-outfit <主要服裝id>
 
 （NSFW 收集圖從 manifest 的 `nsfw_dir` 讀取，一起放進拼圖；拼圖僅提供給 Grok 檢視。）
 
-腳本先執行 `vocab_tools.py sheets`，再把拼圖、原圖、本節規則、params 與 `vocab.schema.json` 複製到 `05_caption/vocab/.grok_vocab_*/` 隔離資料夾，以它為 cwd 並加上 `--sandbox strict`（kernel 限制只能讀 cwd、系統路徑與 `~/.grok`）及「只能讀工作資料夾內檔案」的規則呼叫 Grok Build，避免讀到 `/workspace` 其他舊詞表；Grok 檢視 `contact_sheets/sheet_*.jpg`（每格標示檔名，每張 8 格）及**至少一張原圖**（建議主要服裝、正面且臉部清楚），確認臉型、髮型、瀏海、眼睛與配件。腳本以 `vocab.schema.json` 取得 structuredOutput 寫入 `vocab.json`，並從 session 的 `chat_history.jsonl` 確認所有拼圖及至少一張原圖確實被檢視；未檢視則重試。規則如下：
+腳本先執行 `vocab_tools.py sheets`，再把拼圖、原圖、本節規則、params 與 `vocab.schema.json` 複製到 `05_caption/vocab/.grok_vocab_*/` 隔離資料夾，以它為 cwd 並加上 `--sandbox lora_min`（strict + 禁讀 `/tmp/*`；kernel 限制只能讀 cwd、系統路徑與 `~/.grok`）、`read` profile（只有 read_file、list_dir）及「只能讀工作資料夾內檔案」的規則呼叫 Grok Build，避免讀到 `/workspace` 其他舊詞表；Grok 檢視 `contact_sheets/sheet_*.jpg`（每格標示檔名，每張 8 格）及**至少一張原圖**（建議主要服裝、正面且臉部清楚），確認臉型、髮型、瀏海、眼睛與配件。腳本以 `vocab.schema.json` 取得 structuredOutput 寫入 `vocab.json`，並從 session 的 `chat_history.jsonl` 確認所有拼圖及至少一張原圖確實被檢視；未檢視則重試。規則如下：
 
 - `character_features`：`[{trait, tag}]`，每個特徵對應一個 canonical tag（不再標 visibility）。
 - `outfits`：`[{id: "outfit_…", name, tags: [{tag}], images: [檔名]}]`，每張收集圖恰好屬於一套。
@@ -74,7 +74,7 @@ trait 名稱決定歸入哪一個 caption 欄位（參考 `<WS>/05_caption/vocab
 | `body_*` | character_body_characteristics_tags | body_legs → slender legs |
 | `accessory_*` | character_accessories_tags（角色固定配件，例如髮飾） | accessory_hair_x → x hair ornament |
 
-服裝 tag 中屬於配件者（例如 choker、necklace、sunglasses…），由 `outfit_accessory_tags` 清單分流至 character_accessories_tags，其餘則歸入 character_clothing_tags。若角色擁有清單外的配件，請加入 `<WS>/05_caption/vocab/caption_vocab_params.json` 的清單中（Grok 只改隔離資料夾內的複本，腳本把原檔備份成 `caption_vocab_params.prev_<時間>.json` 後寫回）；驗證與打標預設使用本案版本，亦可透過 `--params` 覆寫。
+服裝 tag 中屬於配件者（例如 choker、necklace、sunglasses…），由 `outfit_accessory_tags` 清單分流至 character_accessories_tags，其餘則歸入 character_clothing_tags。若角色擁有清單外的配件，請加入 `<WS>/05_caption/vocab/caption_vocab_params.json` 的清單中（Grok 沒有寫檔工具，改以 structuredOutput 的 `outfit_accessory_tags_add` 回報要新增的配件，腳本把原檔備份成 `caption_vocab_params.prev_<時間>.json` 後寫回）；驗證與打標預設使用本案版本，亦可透過 `--params` 覆寫。
 
 腳本接著自動執行下列驗證；若依使用者回饋手動修改詞表，也可單獨重跑並記錄主要服裝（供後續測試使用）：
 
@@ -86,7 +86,7 @@ python -B scripts/vocab_tools.py check --workspace <WS> --main-outfit <主要服
 
 驗證 PASS 後將寫入 `<WS>/05_caption/vocab/vocab_summary.md` 與 `<WS>/05_caption/vocab/main_outfit.json`（包含 main_outfit_id、name、tags、image_count），並印出各欄位的選項。若出現 ERROR（如未對應的 trait、缺少每張必填的 trait、欄位缺少 tag、圖片未分組等），請修正 vocab 後重新執行。
 
-預設 `--model grok-4.7 --timeout 3600 --retries 2 --sandbox strict`，輸出預設 `05_caption/vocab/`，含 `logs/`、`summary.json`、`failed.json`；可覆寫 `--out`、`--images`、`--manifest`，`--dry-run` 只列計畫。
+預設 `--model grok-4.7 --timeout 3600 --retries 2 --sandbox lora_min`（`strict` 仍可讀 `/tmp`，`off` 不建議），輸出預設 `05_caption/vocab/`，含 `logs/`、`summary.json`、`failed.json`；可覆寫 `--out`、`--images`、`--manifest`，`--dry-run` 只列計畫。
 
 **使用者確認（暫停點）：** 腳本印出 `vocab_summary.md` 與主要服裝重點後即結束；除非使用者明確說要自動執行並加上 `--auto`，否則 vocab 驗證 PASS 後必須先暫停，不要進入 b. 打標。把 `vocab_summary.md` 的重點（每張必填的身高、體型、年齡，以及臉型、髮色、髮型、瀏海、眼睛、膚色等特徵，主要服裝及其 tags、各服裝分組與圖數）整理給使用者，請使用者確認特徵是否都正確；依回饋修改 vocab 並重新執行 check，直到使用者確認後才繼續打標。
 
@@ -119,6 +119,6 @@ python -B scripts/grok_caption_nsfw.py --workspace <WS>
 
 預設輸入 `<WS>/05_caption/images_nsfw/`、輸出 `captions_nsfw/`、成功項目複製至 `train_set/`。若 `assignment.json` 不存在，腳本先執行本機 `codex_caption_v2.py --workspace <WS> --nsfw-schema --dry-run` 建立 schema 與 prompt（只列檔名，不開啟圖片、不呼叫 Codex；**必須保留 `--dry-run`**）。
 
-再逐張呼叫 Grok Build 檢視圖片，依 `assignment.json` 的 group、outfit 使用 `schemas/<group>_<outfit>.schema.json` 與 `prompts/<stem>.txt`，將 structuredOutput 寫入 `json/<stem>.json`。預設 `--model grok-4.7 --timeout 3600 --retries 2`；`--images`、`--out`、`--final-dir` 可覆寫，`--dry-run` 只準備本機 schema／列計畫，不呼叫 Grok，`--only <失敗檔名...>` 重跑指定圖片。此腳本永不呼叫 Codex。
+再逐張把圖片與 schema 複製到 `.grok_caption_*/` 隔離目錄，以 `read` profile（只有 read_file、list_dir，max-turns 10）呼叫 Grok Build 檢視圖片，依 `assignment.json` 的 group、outfit 使用 `schemas/<group>_<outfit>.schema.json` 與 `prompts/<stem>.txt`，將 structuredOutput 寫入 `json/<stem>.json`。預設 `--model grok-4.7 --timeout 3600 --retries 2`；`--images`、`--out`、`--final-dir` 可覆寫，`--dry-run` 只準備本機 schema／列計畫，不呼叫 Grok，`--only <失敗檔名...>` 重跑指定圖片。此腳本永不呼叫 Codex。
 
 腳本接著執行 `caption_convert.py --workspace <WS>`，以 `--only` 僅驗證與轉換本次 JSON 成功的項目，欄位順序依 schema。僅在 JSON 驗證與 txt 寫入均成功後，複製對應圖片及同名 txt 至 `train_set/`，並核對 sha256；txt 以 `anime style, <trigger>, ` 開頭，不手寫 txt。失敗項目不複製，並移除最終資料夾中的舊圖與 txt；清單寫入 `summary.json`、`failed.json`，以非零狀態結束並回報使用者。呼叫紀錄位於 `captions_nsfw/logs/`。也可單獨執行 `python -B scripts/caption_convert.py --workspace <WS>` 驗證並轉換整批 JSON。
