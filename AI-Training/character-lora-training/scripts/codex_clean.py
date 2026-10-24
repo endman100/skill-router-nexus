@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
-"""Clean character images through exactly one isolated Codex task (stdlib only)."""
+"""逐張以獨立 Codex 執行清理 SFW 圖片，參照角色設定圖並支援續跑。"""
 
 import argparse
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
-import math
 import os
 from pathlib import Path
-from ws import parse_args
 import shlex
 import shutil
-import stat
 import subprocess
 import sys
 import tempfile
-
+from ws import parse_args
 
 DEFAULT_MODEL = "gpt-6.1-sol"
 DEFAULT_EFFORT = "high"
-DEFAULT_TIMEOUT = 3600
+DEFAULT_TIMEOUT = 480
 DISABLED_FEATURES = (
     "shell_tool", "unified_exec", "code_mode_host", "shell_snapshot", "apps",
     "plugins", "remote_plugin", "plugin_sharing", "browser_use",
@@ -45,15 +43,17 @@ REASON_LABELS = {
     "low_quality": "品質過低",
     "lineart_or_monochrome": "線稿或黑白圖",
     "refused": "拒絕處理",
-    "unprocessed": "未處理",
+    "timeout": "逾時",
+    "codex_failed": "Codex 執行失敗",
+    "moderation_blocked": "圖像生成遭 moderation 阻擋",
 }
+HANDOFF_REASONS = ("timeout", "codex_failed", "moderation_blocked")
 TASK_INSTRUCTIONS = (
-    "Infer the target character's appearance from the work title, character name, and recurring "
-    "character across all input images; write an appearance profile in the workdir. "
-    "Pre-screen inputs as labeled 8-image contact sheets, then identify, crop, remove text, and reject low-quality, line-art, and black-and-white/monochrome images using that profile. "
-    "Use the image viewer, shell tools, and image generation; write only in the workdir. "
-    "Read generated images from CODEX_HOME/generated_images and copy chosen results into output. "
-    "Account for every input in output images or rejected.json. No web access."
+    "Clean the single input image using the supplied character sheet to identify the target. "
+    "Check quality, reject line-art and monochrome, crop to the target, remove text with "
+    "image generation and compare with the original. Use the image viewer and shell tools; "
+    "write only in the workdir. Read generated images from CODEX_HOME/generated_images. "
+    "Write either the output PNG or a rejection. No web access."
 )
 
 
@@ -124,285 +124,154 @@ def command(codex, cwd, catalog, last_message,
     return value
 
 
-def input_mapping(paths):
-    """Reserve unique stems first, then disambiguate collisions deterministically."""
-    counts = Counter(path.stem.casefold() for path in paths)
-    used = {path.stem.casefold() for path in paths if counts[path.stem.casefold()] == 1}
-    entries = []
-    for path in paths:
-        stem = path.stem
-        if counts[stem.casefold()] > 1:
-            base = f"{stem}__{path.suffix[1:].lower()}"
-            stem, number = base, 2
-            while stem.casefold() in used:
-                stem = f"{base}__{number}"
-                number += 1
-            used.add(stem.casefold())
-        entries.append({"filename": path.name, "input_filename": stem + path.suffix,
-                        "output_filename": stem + ".png"})
-    return entries
-
-
-def build_prompt(target, inputs, home):
-    inventory = json.dumps(inputs, ensure_ascii=False, indent=2)
-    labels = json.dumps(REASON_LABELS, ensure_ascii=False)
-    return f"""請清理以下目標（作品名稱與角色名稱）的圖片：
-{target}
-以下 JSON 是檔名對照表（filename 是原始檔名，input_filename 是工作副本，output_filename 是最終檔名）：
-{inventory}
-
-開始逐張處理前，必須先用圖片檢視工具開啟並瀏覽 ./input 的全部輸入圖片，
-找出在整批圖片中反覆出現的角色。結合上述作品名稱與角色名稱，推斷目標角色的外觀，
-辨識其臉、頭髮、眼睛、服裝、顏色等區別特徵，將推斷依據與外觀描述寫入
-工作目錄的 ./character_profile.md（不可寫入 ./output），作為後續逐張辨識的依據。
-
-第一段：拼圖初篩。用 shell 工具（Python/Pillow）把 ./input 的圖片每 8 張拼成一張拼圖，
-存在工作目錄的 ./review/sheets/，每格都標上該圖的 input_filename。用圖片檢視工具逐張看拼圖，
-一次判斷 8 格：與 ./character_profile.md 比較，角色不存在的記錄 not_present / 角色不存在；
-線稿、草稿、黑白或單色圖記錄 lineart_or_monochrome / 線稿或黑白圖；明顯模糊或極度破損的
-記錄 low_quality / 品質過低。拿不準的格子不可直接拒收，必須單獨開啟原圖再判斷。
-只有初篩通過的圖片進入第二段。
-
-第二段：逐張細處理。初篩通過的圖片一次只處理一張，必須逐張用圖片檢視工具開啟原圖：
-(1) 角色辨識：確認原圖中確實有目標角色；若沒有，拒收並記錄 not_present / 角色不存在。
-(2) 裁切：使用 shell 工具（例如可用的 Python/Pillow）裁切，只保留目標角色及少量邊界，
-中間檔寫在工作目錄。無法完成裁切則記錄 crop_failed / 裁切失敗。
-(3) 去字：若裁切圖含有文字、對話框、音效字或浮水印，必須使用圖片生成工具 image_generation
-移除這些元素。將結果與原始裁切圖比較，確認僅移除文字，角色的臉、頭髮、眼睛、服裝、
-顏色、姿勢及比例均保持不變。若角色失真，重新生成再比較；重做仍失敗就視為不可用，
-記錄 text_removal_distorted / 去字失真。沒有文字的圖片跳過去字步驟。
-(4) 品質檢查：拼圖看不出輕微模糊、壓縮雜訊和小字，必須在此用原圖再確認。逐張檢查來源、裁切圖及最終圖的品質。若解析度過低、模糊、
-壓縮失真嚴重，或裁切後角色仍太小等，導致圖片品質過低，拒收並記錄
-low_quality / 品質過低，不將該圖放入 ./output。
-(5) 線稿與黑白圖：初篩漏掉的線稿、草稿、黑白或單色圖（沒有正常上色）一律拒收，記錄
-lineart_or_monochrome / 線稿或黑白圖，不將該圖放入 ./output。
-生成圖片位於 {home / 'generated_images'}（CODEX_HOME/generated_images）；
-將選定結果複製到 ./output。每張最終圖必須是 PNG，儲存為 ./output/<source stem>.png，
-其中 source stem 是工作副本 input_filename 的檔名主體，務必遵循對照表的 output_filename。
-因其他原因無法處理時，記錄 refused / 拒絕處理。
-
-全部處理後再次逐張檢查：每張輸出都要用圖片檢視工具開啟，與其來源及 ./character_profile.md 比較，
-確認角色、裁切及去字均正確，品質足夠；品質過低則移除輸出並記錄 low_quality / 品質過低。
-核對每一張輸入都有輸出或拒收紀錄，補完遺漏並修正問題，
-確認工作真正完成後，撰寫 ./output/rejected.json，格式為 JSON 陣列，例如：
-[{{"filename": "原始輸入檔名.png", "reason": "not_present", "reason_zh": "角色不存在", "detail": "具體說明"}}]
-filename 必須使用對照表的原始 filename，不是重新命名的工作副本。沒有拒收時寫 []。
-原因代碼與標籤：{labels}。unprocessed 由外層補記；請完成所有可處理圖片。
-最終訊息彙總輸入、成功、各原因拒收的數量。
+def build_prompt(target, source, home):
+    return f"""請清理目標角色：{target}。
+用圖片檢視工具開啟 ./input/source/{source.name} 與 ./input/character-sheet.png，
+以角色設定圖比對，確認原圖中有目標角色；沒有則拒收 not_present。
+檢查原圖品質：拒收線稿、草稿、黑白或單色圖（lineart_or_monochrome），
+解析度過低、模糊、壓縮失真嚴重或角色太小則拒收 low_quality。
+使用 shell 工具（例如 Python/Pillow）裁切至僅保留目標角色與少量邊界；失敗記錄 crop_failed。
+若有文字、對話框、音效字或浮水印，使用 image_generation 移除，再與原圖及裁切圖比較，
+確認臉、頭髮、眼睛、服裝、顏色、姿勢及比例保持不變；去字失真則拒收 text_removal_distorted。
+沒有文字則跳過去字。其他無法處理的情況記錄 refused。
+生成圖片位於 {home / 'generated_images'}（CODEX_HOME/generated_images）。
+用圖片檢視工具檢查最終圖，與原圖及角色設定圖比較，確認角色、裁切、去字與品質均正確。
+成功存為 ./output/{source.stem}.png（PNG）；拒收則寫 ./output/rejected.json，
+格式為單筆物件或單筆陣列，例如：
+[{{"filename": "{source.name}", "reason": "not_present", "reason_zh": "角色不存在", "detail": "具體說明"}}]
+原因代碼與標籤：{json.dumps({k: v for k, v in REASON_LABELS.items() if k not in HANDOFF_REASONS}, ensure_ascii=False)}。
 僅在工作目錄內寫入（含暫存檔），不得存取網路。
 """
 
 
-def regular_file(path):
-    """lstat never follows a symlink, including dangling links."""
-    try:
-        return stat.S_ISREG(path.lstat().st_mode)
-    except FileNotFoundError:
-        return False
+def atomic_json(path, value):
+    temporary = path.with_name(path.name + ".tmp")
+    temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", "utf-8")
+    temporary.replace(path)
 
 
-def open_regular(path):
-    """Open without following links and verify the opened descriptor is regular."""
-    fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
-                 | getattr(os, "O_NONBLOCK", 0))
-    try:
-        if not stat.S_ISREG(os.fstat(fd).st_mode) or path.is_symlink():
-            raise OSError(f"Not a regular file: {path}")
-        return os.fdopen(fd, "rb")
-    except BaseException:
-        os.close(fd)
-        raise
-
-
-def copy_regular(source, target):
-    with open_regular(source) as reader, target.open("xb") as writer:
-        shutil.copyfileobj(reader, writer)
-
-
-def text_value(value):
-    if isinstance(value, bytes):
-        return value.decode("utf-8", errors="replace")
-    return value or ""
-
-
-def reconcile(inputs, filenames, raw_rejected):
-    """Account for the current run only, without decoding any images."""
-    notes, rejected = [], {}
-    mapping = {entry["output_filename"][:-4]: entry["filename"] for entry in inputs}
-    processed, extras = set(), []
-    for filename in filenames:
-        path = Path(filename)
-        if path.suffix.lower() in IMAGE_EXTENSIONS:
-            original = mapping.get(path.stem)
-            if original is None:
-                extras.append(filename)
-            else:
-                processed.add(original)
-    try:
-        entries = json.loads(raw_rejected) if raw_rejected is not None else []
-        if not isinstance(entries, list):
-            raise ValueError("expected a JSON list")
-    except (ValueError, UnicodeError) as exc:
-        notes.append(f"Invalid rejected.json: {exc}; raw file retained if present")
-        entries = []
-    originals = {entry["filename"] for entry in inputs}
-    for entry in entries:
-        if not isinstance(entry, dict) or not isinstance(entry.get("filename"), str):
-            notes.append("Ignored malformed rejection entry")
-            continue
-        name = entry["filename"]
-        if name not in originals:
-            notes.append(f"Ignored rejection for unknown input: {name!r}")
-            continue
-        if name in processed:
-            notes.append(f"Kept output; dropped rejection for {name!r}")
-            continue
-        if name in rejected:
-            notes.append(f"Ignored duplicate rejection for {name!r}")
-            continue
-        code = entry.get("reason")
-        detail = entry.get("detail", "")
-        if not isinstance(detail, str):
-            detail = json.dumps(detail, ensure_ascii=False)
-        if not isinstance(code, str) or code not in REASON_LABELS:
-            detail = f"Unknown reason code: {json.dumps(code, ensure_ascii=False)}. {detail}"
-            code = "refused"
-        rejected[name] = {"filename": name, "reason": code,
-                          "reason_zh": REASON_LABELS[code], "detail": detail}
-    for entry in inputs:
-        name = entry["filename"]
-        if name not in processed and name not in rejected:
-            rejected[name] = {"filename": name, "reason": "unprocessed",
-                              "reason_zh": REASON_LABELS["unprocessed"],
-                              "detail": "No output image or valid rejection entry was produced."}
-    final = [rejected[entry["filename"]] for entry in inputs if entry["filename"] in rejected]
-    return final, processed, extras, notes
-
-
-def export_results(work, root, destination, inputs, status, returncode, timed_out):
-    output = work / "output"
-    if output.is_symlink() or not output.is_dir():
-        raise OSError(f"Output directory is missing or is a symlink: {output}")
-    files = [path for path in sorted(output.iterdir()) if regular_file(path)]
-    raw = None
-    manifest = output / "rejected.json"
-    if manifest in files:
-        with open_regular(manifest) as reader:
-            raw = reader.read().decode("utf-8-sig", errors="replace")
-    final, processed, extras, notes = reconcile(inputs, [p.name for p in files], raw)
-    report = {
-        "inputs": len(inputs), "processed": len(processed), "rejected": len(final),
-        "rejected_by_reason": dict(Counter(entry["reason"] for entry in final)),
-        "unprocessed": sum(entry["reason"] == "unprocessed" for entry in final),
-        "extras": len(extras), "extra_files": extras, "codex_exit_status": status,
-        "codex_returncode": returncode, "timed_out": timed_out,
-        "filename_mapping": inputs, "notes": notes,
-    }
-    # Keep raw model metadata alongside the reconciled manifest, including invalid JSON.
-    exports = [(path, "rejected.codex.json" if path.name == "rejected.json" else path.name)
-               for path in files]
-    logs = ("codex-events.jsonl", "codex-stderr.log", "last-message.txt")
-    names = [name for _, name in exports] + list(logs) + ["rejected.json", "summary.json"]
-    if len(set(names)) != len(names):
-        raise FileExistsError("Inner output conflicts with a reserved report/log filename")
-    # Check every ancestor before mkdir; never resolve an export destination symlink.
-    for parent in (destination, *destination.parents):
-        if parent.is_symlink() or (parent.exists() and not parent.is_dir()):
-            raise FileExistsError(f"Destination is not a regular directory: {parent}")
-    destination.mkdir(parents=True, exist_ok=True)
-    for name in names:
-        if os.path.lexists(destination / name):
-            raise FileExistsError(f"Destination already exists: {destination / name}; no files overwritten")
-    for source, name in exports:
-        copy_regular(source, destination / name)
-    for name in logs:
-        source = root / name
-        if regular_file(source):
-            copy_regular(source, destination / name)
-        else:
-            with (destination / name).open("x", encoding="utf-8"):
-                pass
-    for name, value in (("rejected.json", final), ("summary.json", report)):
-        with (destination / name).open("x", encoding="utf-8") as writer:
-            json.dump(value, writer, ensure_ascii=False, indent=2)
-            writer.write("\n")
-    return report
-
-
-def clean(target, input_dir, output_dir,
-          model=DEFAULT_MODEL, effort=DEFAULT_EFFORT, timeout=DEFAULT_TIMEOUT,
-          codex="codex", keep_workdir=False):
-    if not math.isfinite(timeout) or timeout <= 0:
-        raise ValueError("timeout must be a positive finite number of seconds")
-    input_dir = Path(input_dir).expanduser().resolve(strict=True)
-    if not input_dir.is_dir():
-        raise ValueError("input_dir must be a directory")
-    paths = [path for path in sorted(input_dir.iterdir())
-             if path.suffix.lower() in IMAGE_EXTENSIONS and path.is_file()]
-    inputs = input_mapping(paths)
-    output_dir = Path(output_dir).expanduser().absolute()
-    destination = output_dir / "codex_clean"
-    executable = shutil.which(codex)
-    if not executable:
-        raise ValueError(f"Codex executable not found: {codex}")
-    executable = str(Path(executable).resolve())
-    source_home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex").expanduser()
+def clean_image(source, sheet, target, destination, executable, source_home,
+                model, effort, timeout, keep_workdir):
     root = Path(tempfile.mkdtemp(prefix="codex-clean-"))
     home, work = root / "home", root / "work"
+    logs = destination / "logs" / source.stem
+    logs.mkdir(parents=True, exist_ok=True)
+    status, timed_out = None, False
+    stdout = stderr = ""
     try:
         catalog = prepare_home(source_home, home, model)
-        (work / "input").mkdir(parents=True)
+        (work / "input/source").mkdir(parents=True)
         (work / "output").mkdir()
-        for source, entry in zip(paths, inputs):
-            shutil.copyfile(source, work / "input" / entry["input_filename"])
-        if keep_workdir:
-            print(f"Workdir: {work}", flush=True)
+        shutil.copyfile(source, work / "input/source" / source.name)
+        shutil.copyfile(sheet, work / "input/character-sheet.png")
         argv = command(executable, work, catalog, root / "last-message.txt", model, effort)
-        print(f"Argv: {shlex.join(argv)}", flush=True)
-        stdout = stderr = ""
-        status, returncode, timed_out = 0, None, False
+        prompt = build_prompt(target, source, home)
+        (logs / "argv.txt").write_text(shlex.join(argv) + "\n", "utf-8")
+        (logs / "prompt.txt").write_text(prompt, "utf-8")
         try:
-            # Exactly one launch. No retries, probes, or follow-up calls.
             run = subprocess.run(
-                argv, input=build_prompt(target, inputs, home), stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace",
-                timeout=timeout, check=False, cwd=str(work), env=isolated_environment(home),
-            )
-            stdout, stderr, returncode = run.stdout, run.stderr, run.returncode
-            status = returncode if returncode >= 0 else 128 - returncode
-            if status:
-                print(f"Codex exited with status {status}", file=sys.stderr)
+                argv, input=prompt, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                text=True, encoding="utf-8", errors="replace", timeout=timeout,
+                check=False, cwd=str(work), env=isolated_environment(home))
+            stdout, stderr, status = run.stdout, run.stderr, run.returncode
         except subprocess.TimeoutExpired as exc:
-            stdout, stderr = exc.stdout, exc.stderr
+            stdout, stderr = exc.stdout or "", exc.stderr or ""
+            stdout = stdout.decode("utf-8", "replace") if isinstance(stdout, bytes) else stdout
+            stderr = stderr.decode("utf-8", "replace") if isinstance(stderr, bytes) else stderr
             status, timed_out = 124, True
-            print(f"Codex timed out after {timeout:g} seconds", file=sys.stderr)
-        except OSError as exc:
-            status, stderr = 1, f"Could not launch Codex: {exc}\n"
-        for name, value in (("codex-events.jsonl", stdout), ("codex-stderr.log", stderr)):
-            (root / name).write_text(text_value(value), encoding="utf-8")
-        if stderr:
-            print(text_value(stderr), file=sys.stderr, end="" if text_value(stderr).endswith("\n") else "\n")
-        try:
-            report = export_results(work, root, destination, inputs, status, returncode, timed_out)
-        except (OSError, ValueError):
-            keep_workdir = True
-            print(f"Copy failed; results kept in workdir: {work}", file=sys.stderr)
-            raise
-        print(f"Destination: {destination}")
-        print(f"Inputs: {report['inputs']}; processed: {report['processed']}; "
-              f"rejected: {report['rejected']}; unprocessed: {report['unprocessed']}; extras: {report['extras']}")
-        print(f"Rejected by reason: {json.dumps(report['rejected_by_reason'], ensure_ascii=False)}")
-        print(f"Codex exit status: {status}")
-        for note in report["notes"]:
-            print(f"Note: {note}", file=sys.stderr)
-        for name in report["extra_files"]:
-            print(f"Extra image: {name}")
-        return status
+        last = root / "last-message.txt"
+        last_message = last.read_text("utf-8", errors="replace") if last.is_file() else ""
+        (logs / "codex-events.jsonl").write_text(stdout, "utf-8")
+        (logs / "codex-stderr.log").write_text(stderr, "utf-8")
+        (logs / "last-message.txt").write_text(last_message, "utf-8")
+        atomic_json(logs / "status.json", dict(status=status, timed_out=timed_out, root=str(root)))
+        output = work / "output" / (source.stem + ".png")
+        reason, detail = None, ""
+        if not timed_out and status == 0 and output.is_file():
+            return output.read_bytes(), None
+        if "moderation_blocked" in stdout + stderr + last_message:
+            reason, detail = "moderation_blocked", "Codex 回報 moderation_blocked。"
+        elif timed_out:
+            reason, detail = "timeout", f"超過每張 {timeout} 秒。"
+        elif status != 0:
+            reason, detail = "codex_failed", f"Codex exit status: {status}"
+        else:
+            rejection = work / "output/rejected.json"
+            if rejection.is_file():
+                try:
+                    record = json.loads(rejection.read_text("utf-8-sig"))
+                    record = record[0] if isinstance(record, list) and record else record
+                    if isinstance(record, dict) and record.get("reason") in REASON_LABELS:
+                        reason, detail = record["reason"], record.get("detail", "")
+                except (ValueError, UnicodeError):
+                    pass
+            if reason is None:
+                reason, detail = "codex_failed", "未產生輸出圖片或拒收紀錄。"
+        record = dict(filename=source.name, reason=reason, reason_zh=REASON_LABELS[reason], detail=detail)
+        if reason in HANDOFF_REASONS:
+            record["handoff"] = "grok"
+        return None, record
     finally:
         if keep_workdir:
-            print(f"Kept temporary directory: {root} (workdir: {work})", file=sys.stderr)
+            print(f"Kept temporary directory: {root} (workdir: {work})", file=sys.stderr, flush=True)
         else:
             shutil.rmtree(root)
+
+
+def clean(target, input_dir, output_dir, sheet,
+          model=DEFAULT_MODEL, effort=DEFAULT_EFFORT, timeout=DEFAULT_TIMEOUT,
+          jobs=3, codex="codex", keep_workdir=False, only=None):
+    input_dir = Path(input_dir).expanduser().resolve()
+    output_dir = Path(output_dir).expanduser().resolve()
+    destination = output_dir / "codex_clean"
+    sheet = Path(sheet).expanduser().resolve()
+    if not sheet.is_file():
+        raise ValueError(f"Missing character sheet: {sheet}")
+    paths = [p for p in sorted(input_dir.iterdir())
+             if p.is_file() and p.suffix.lower() in IMAGE_EXTENSIONS and (not only or p.name in only)]
+    destination.mkdir(parents=True, exist_ok=True)
+    rejected_file = destination / "rejected.json"
+    rejected = json.loads(rejected_file.read_text("utf-8")) if rejected_file.exists() else []
+    rejected_names = {e["filename"] for e in rejected}
+    pending = [p for p in paths if not (destination / (p.stem + ".png")).is_file() and p.name not in rejected_names]
+    executable = shutil.which(codex)
+    if pending and not executable:
+        raise ValueError(f"Codex executable not found: {codex}")
+    executable = str(Path(executable).resolve()) if executable else codex
+    source_home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex").expanduser()
+
+    def save_summary():
+        atomic_json(rejected_file, rejected)
+        atomic_json(destination / "summary.json", dict(
+            inputs=len(paths),
+            processed=sum((destination / (p.stem + ".png")).is_file() for p in paths),
+            rejected=len(rejected), rejected_by_reason=dict(Counter(e["reason"] for e in rejected))))
+
+    # Only this thread publishes outputs and manifests; workers own separate logs/workdirs.
+    save_summary()
+    done = len(paths) - len(pending)
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        futures = {pool.submit(clean_image, p, sheet, target, destination, executable, source_home,
+                               model, effort, timeout, keep_workdir): p for p in pending}
+        for future in as_completed(futures):
+            source = futures[future]
+            try:
+                image, record = future.result()
+            except Exception as exc:
+                image, record = None, dict(filename=source.name, reason="codex_failed",
+                                           reason_zh=REASON_LABELS["codex_failed"], detail=str(exc), handoff="grok")
+            if image is not None:
+                temporary = destination / (source.stem + ".png.tmp")
+                temporary.write_bytes(image)
+                temporary.replace(destination / (source.stem + ".png"))
+                result = "kept"
+            else:
+                rejected.append(record)
+                result = f"handoff grok ({record['reason']})" if record.get("handoff") else f"rejected ({record['reason']})"
+            save_summary()
+            done += 1
+            print(f"[{done}/{len(paths)}] {source.name}: {result}", flush=True)
+    return 0
 
 
 def build_parser():
@@ -410,11 +279,14 @@ def build_parser():
     parser.add_argument("target", help="Work title and character name as one verbatim string")
     parser.add_argument("input_dir", type=Path)
     parser.add_argument("output_dir", type=Path)
+    parser.add_argument("--sheet", type=Path, required=True)
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--effort", default=DEFAULT_EFFORT)
     parser.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT, metavar="SECONDS")
+    parser.add_argument("--jobs", type=int, default=3)
     parser.add_argument("--codex", default="codex", help="Codex executable path")
     parser.add_argument("--keep-workdir", action="store_true")
+    parser.add_argument("--only", nargs="+")
     return parser
 
 

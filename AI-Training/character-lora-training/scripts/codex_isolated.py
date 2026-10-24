@@ -77,9 +77,9 @@ def command(codex, cwd, catalog, last_message, model, effort, image_generation):
 
 
 def run_isolated(prompt, instructions, inputs, effort="medium", model=DEFAULT_MODEL,
-                 timeout=3600, image_generation=False, log_dir=None, label="call"):
+                 timeout=3600, image_generation=False, log_dir=None, label="call", codex="codex"):
     """inputs: list of (source_path, name_in_workdir_input). Returns (root, work, status, home)."""
-    codex = str(Path(shutil.which("codex")).resolve())
+    codex = str(Path(shutil.which(codex)).resolve())
     source_home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex").expanduser()
     root = Path(tempfile.mkdtemp(prefix=f"codex-{label}-"))
     home, work = root / "home", root / "work"
@@ -88,7 +88,10 @@ def run_isolated(prompt, instructions, inputs, effort="medium", model=DEFAULT_MO
     (work / "output").mkdir()
     for src, name in inputs:
         (work / "input" / name).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(src, work / "input" / name)
+        if Path(src).is_dir():
+            shutil.copytree(src, work / "input" / name)
+        else:
+            shutil.copyfile(src, work / "input" / name)
     argv = command(codex, work, catalog, root / "last-message.txt", model, effort, image_generation)
     status, timed_out = 0, False
     try:
