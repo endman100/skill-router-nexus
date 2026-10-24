@@ -36,7 +36,7 @@ python scripts/eval_lora.py --workspace "<WS>"
 
 showcase 資料檔每行一個 prompt 片段，只放場景／服裝／構圖文字，不含品質 tags；change 行包含服裝描述，keep 行只放場景與構圖。載入時逐行去除首尾空白、略過空行，保留其餘文字原樣，依序編為 c00、c01 等。`templates/showcase_prompt.tmpl` 為單行 `masterpiece, best quality, highres, ultra detailed, {trigger}, {character_features}, {cloth_feature}, {other}`，不含 `8K` 與固定的 `looking at viewer`。`{other}` 為 `solo_focus, human focus, ` 加上同序號 keep 行的場景；`{cloth_feature}` 在 keep 模式為主要服裝 tags，在 change 模式為 change 行去掉該場景後綴後的服裝描述。模板不固定 `full body`，構圖取自每行資料。第 i 個案例（從 0 起算）的 seed 為 `--showcase-seed-base`（預設 `31415926`）`+ i*10000`，並寫入 prompts.json，不從資料行讀取尺寸或 seed；解析度與步數沿用生成參數，預設 720×1280、40 steps。
 
-角色特徵預設由 `<WS>/05_caption/vocab/vocab.json` 的 `character_features`，依 vocab-params 的 `field_traits` 順序與共用 trait 映射組成，包含身高、體型、年齡、臉型、髮型／長度／顏色、眼色、膚色、胸部、頭部與身體特徵（詞表中所有角色特徵都納入，不論打標時是每張必填或可選）；排除配件欄位與 `main_outfit.json` 的 tags，去重後以逗號連接。若存在 `<WS>/07_validate/prompts/character_features.txt`，則改用該檔內容。三項測試的負向 prompt 均原樣使用 workflow 中 KSampler negative 所連接節點的文字（模板為 node 12），不設定逐圖負向 prompt；如需調整，請編輯 `<WS>/07_validate/workflow.json`。
+角色特徵預設由 `<WS>/05_caption/vocab/vocab.json` 的 `character_features`，依 vocab-params 的 `field_traits` 順序與共用 trait 映射組成，包含身高、體型、年齡、臉型、髮型／長度／顏色、眼色、膚色、胸部、頭部與身體特徵，以及角色本身的配件（`accessory_*` trait，詞表中所有角色特徵都納入，不論打標時是每張必填或可選）；僅排除服裝欄位與 `main_outfit.json` 的 tags，去重後以逗號連接。若存在 `<WS>/07_validate/prompts/character_features.txt`，則改用該檔內容。三項測試的負向 prompt 均原樣使用 workflow 中 KSampler negative 所連接節點的文字（模板為 node 12），不設定逐圖負向 prompt；如需調整，請編輯 `<WS>/07_validate/workflow.json`。
 
 可選參數：
 
