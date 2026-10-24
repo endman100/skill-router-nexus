@@ -43,6 +43,10 @@ def run_grok(prompt, cwd, log_dir, name, *, schema=None, web=False,
         Path(str(base) + suffix).write_text(value, "utf-8")
     prompt_file = Path(str(base) + ".prompt.md")
     log(".prompt.md", prompt)
+    if sandbox:
+        # The sandbox applies before the prompt file is read: keep a copy inside cwd.
+        prompt_file = cwd / f".prompt_{name}.md"
+        prompt_file.write_text(prompt, "utf-8")
     session_id = str(uuid.uuid4())
     argv = [str(grok_bin), "--prompt-file", str(prompt_file), "--output-format", "json",
             "--cwd", str(cwd), "--always-approve", "--session-id", session_id]
