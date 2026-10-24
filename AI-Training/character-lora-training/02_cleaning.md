@@ -33,7 +33,7 @@ python -B scripts/codex_clean.py --workspace <WS>
 python -B scripts/grok_clean.py --workspace <WS>
 ```
 
-預設讀取 `<WS>/02_clean/nsfw/` 全部圖片，以及 `<WS>/02_clean/codex_clean/rejected.json` 列出的 `<WS>/02_clean/sfw/` 圖片，逐張複製至暫存工作目錄，透過 Grok Build CLI 依第 3 步標準清理。需要時可用 `python -B scripts/wdtag.py --model-dir <ENV>/models/wd-eva02-large-tagger-v3 <WS>/02_clean/nsfw/<檔名>` 查看 tag。可疑內容（例如外觀未成年的性化圖片）直接排除，寫入 `grok_clean/suspicious.json` 並列給使用者。
+預設讀取 `<WS>/02_clean/nsfw/` 全部圖片，以及 `<WS>/02_clean/codex_clean/rejected.json` 列出的 `<WS>/02_clean/sfw/` 圖片，逐張複製至 `grok_clean/.grok_clean_*/` 隔離目錄，透過 Grok Build CLI（`image` profile：只有 read_file、image_edit，無 shell／寫檔）依第 3 步標準清理；Grok 以 structuredOutput 回傳判定、`output_file`（image_edit 的 session 圖，或空字串代表沿用原圖）與 0–1 比例的 `crop`，裁切由腳本以 PIL 完成。需要時可用 `python -B scripts/wdtag.py --model-dir <ENV>/models/wd-eva02-large-tagger-v3 <WS>/02_clean/nsfw/<檔名>` 查看 tag。可疑內容（例如外觀未成年的性化圖片）直接排除，寫入 `grok_clean/suspicious.json` 並列給使用者。
 
 腳本也會將 `codex_clean/*.png` 複製至 `collected_sfw/`。原先來自 `nsfw/` 的圖片通過後一律存入 `collected_nsfw/`，不因 Grok 的 rating 改送 Codex；Codex 拒絕圖則依 Grok 的 rating 存至 `collected_sfw/` 或 `collected_nsfw/`。步驟 05 以 `collected:nsfw=` 傳入後者，編號後存於 `images_nsfw/`，不進入 Codex 打標資料夾。
 

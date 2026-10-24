@@ -38,7 +38,7 @@ python -B scripts/codex_batch_image_gen.py --workspace <WS> N --fill-existing
 python -B scripts/grok_batch_image_gen.py --workspace <WS> N
 ```
 
-N 預設 30，參考圖預設 `<WS>/03_sheet/character-sheet.png`，輸出預設 `<WS>/04_generate/grok/`。先呼叫一次 Grok 規劃 N 個不同的 SFW 場景，寫入 `scenes.json`；重試或補圖沿用此檔，也可用 `--scenes <檔案>` 覆寫。每張由腳本要求一次 `image_edit`，`image=[sheet, sheet]` 讓長寬比生效，依檔案編號在 1:1、4:3、3:4、16:9、9:16 輪換。prompt 如下：
+N 預設 30，參考圖預設 `<WS>/03_sheet/character-sheet.png`，輸出預設 `<WS>/04_generate/grok/`。先呼叫一次 Grok（`read` profile，max-turns 5）規劃 N 個不同的 SFW 場景，由腳本寫入 `scenes.json`；重試或補圖沿用此檔，也可用 `--scenes <檔案>` 覆寫。每張在 `.grok_gen_*/` 隔離目錄（參考圖複製為 `reference.*`，`image` profile：只有 read_file、image_edit）由腳本要求一次 `image_edit`，`image=[sheet, sheet]` 讓長寬比生效，依檔案編號在 1:1、4:3、3:4、16:9、9:16 輪換。prompt 如下：
 
 ```
 幫我維持服裝設計與角色特徵 生成1張這個角色在不同背景 不同姿勢 不同動作 不同表情 不同長寬比的一張圖 採用乾淨的日系動畫賽璐璐上色，線稿俐落，色塊均勻，陰影簡潔，漸層平滑。皮膚與服裝表面乾淨，不添加膠片顆粒、紙張紋理、斑駁筆觸、細碎雜點或過度銳化。背景使用簡潔的動畫美術風格，避免密集零碎的材質細節。保留角色與服裝的必要細節。

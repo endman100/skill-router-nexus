@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Headless Grok Build calls, session artifacts, logs and retries."""
-import argparse, io, json, os, re, subprocess, sys, uuid
+import argparse, contextlib, io, json, os, re, subprocess, sys, tempfile, uuid
 from pathlib import Path
 from PIL import Image
 
@@ -8,6 +8,73 @@ DEFAULT = "/home/box/.local/bin/grok"
 DEFAULT = DEFAULT if Path(DEFAULT).exists() else "grok"
 IMAGE_SCHEMA = {"type": "object", "properties": {"output_file": {"type": "string"}},
                 "required": ["output_file"], "additionalProperties": False}
+
+# ---- Least-privilege permission profiles (Grok Build CLI 1.0.x) -------------------------------
+# Built-in tool names: read_file, list_dir, grep, run_terminal_command, search_replace, write,
+# image_gen, image_edit, image_to_video, reference_to_video, web_search, web_fetch, spawn_subagent,
+# todo_write, search_tool/use_tool (MCP meta tools), scheduler_*, monitor, workflow, ...
+# Permission-rule names: Bash, Read, Edit/Write, Grep/Glob, WebFetch, WebSearch, MCPTool, "*".
+# - `--tools` whitelists built-ins, but search_tool/use_tool survive it: always --disallowed-tools them.
+# - dontAsk runs read-only tools (read_file, list_dir, web_search) and refuses everything else headlessly.
+# - image_edit has no rule name of its own: neither `Edit` nor `Edit(./**)` approves it, only `*`;
+#   and a `Edit`/`Write` deny rule blocks it ("deny rule on edit"). So the image profile is
+#   dontAsk + allow `*`, and the real boundary is the tool whitelist (no shell/write/search_replace)
+#   + Bash/Web deny rules + the sandbox below.
+# - Sandbox "lora_min" = strict (reads: cwd + system paths + ~/.grok auth/config, writes: cwd)
+#   + no child-process network + deny /tmp/* and /var/tmp/* (strict alone leaves /tmp readable).
+#   The deny globs expand when the sandbox starts, so the cwd must not be under /tmp: isolated_cwd()
+#   puts it in the script's own output folder. Web tools run in-process, so web_search/web_fetch
+#   keep network only when the profile enables them.
+SANDBOX = "lora_min"
+SANDBOX_TOML = f"""[profiles.{SANDBOX}]
+extends = "strict"
+restrict_network = true
+deny = ["/tmp/*", "/var/tmp/*"]
+"""
+NO_SHELL_TOOLS = ("search_tool", "use_tool", "run_terminal_command", "search_replace", "write",
+                  "spawn_subagent", "image_gen", "image_to_video", "reference_to_video")
+PROFILES = {
+    # Look at staged files and answer with structured output only.
+    "read": dict(tools=("read_file", "list_dir"), allow=(), deny=("Bash", "Edit", "WebFetch", "WebSearch"),
+                 web=False, max_turns=20),
+    # Look at staged images and call image_edit; the script copies the session image out.
+    "image": dict(tools=("read_file", "image_edit"), allow=("*",), deny=("Bash", "WebFetch", "WebSearch"),
+                  web=False, max_turns=20),
+    # Search/fetch the web and answer with URLs; the script downloads the files.
+    "web": dict(tools=("read_file", "web_search", "web_fetch"), allow=("WebSearch", "WebFetch"),
+                deny=("Bash", "Edit"), web=True, max_turns=80),
+}
+
+
+@contextlib.contextmanager
+def isolated_cwd(parent, prefix):
+    """Fresh empty cwd under `parent` (never /tmp) with the lora_min sandbox profile; removed afterwards."""
+    parent = Path(parent).resolve()
+    for temp in ("/tmp", "/var/tmp"):
+        if parent == Path(temp) or Path(temp) in parent.parents:
+            raise ValueError(f"Grok cwd must not be under {temp} (the sandbox denies {temp}/*): {parent}")
+    parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=f".grok_{prefix}_", dir=parent) as temporary:
+        work = Path(temporary).resolve()
+        (work / ".grok").mkdir()
+        (work / ".grok" / "sandbox.toml").write_text(SANDBOX_TOML, "utf-8")
+        yield work
+
+
+def permission_args(profile, max_turns=None, sandbox=SANDBOX):
+    spec = PROFILES[profile]
+    argv = ["--permission-mode", "dontAsk", "--tools", ",".join(spec["tools"]),
+            "--disallowed-tools", ",".join(t for t in NO_SHELL_TOOLS if t not in spec["tools"]),
+            "--no-subagents", "--max-turns", str(max_turns or spec["max_turns"])]
+    for rule in spec["allow"]:
+        argv += ["--allow", rule]
+    for rule in spec["deny"]:
+        argv += ["--deny", rule]
+    if not spec["web"]:
+        argv.append("--disable-web-search")
+    if sandbox:
+        argv += ["--sandbox", sandbox]
+    return argv
 
 
 def write_json(path, value):
@@ -26,10 +93,16 @@ def options(parser, only=False):
         parser.add_argument("--only", nargs="+", help="只處理指定檔名")
 
 
-def run_grok(prompt, cwd, log_dir, name, *, schema=None, web=False,
+ISOLATION = ("Only read files inside the current working directory; never read, list or search other paths. "
+             "If a tool is refused, report the failure instead of rewording the request to get around it.")
+
+
+def run_grok(prompt, cwd, log_dir, name, *, profile, schema=None, max_turns=None,
              model=None, effort=None, timeout=3600, grok_bin=DEFAULT, extra_args=(),
-             sandbox=None, rules=None):
-    """sandbox: Grok Build --sandbox profile (e.g. "strict" = read only cwd + system paths + ~/.grok).
+             sandbox=SANDBOX, rules=None):
+    """profile: key of PROFILES (tool whitelist, permission rules, web, turn limit).
+    cwd: an isolated_cwd() folder holding only this call's inputs.
+    sandbox: Grok Build --sandbox profile (default lora_min, written by isolated_cwd; None = off).
     rules: extra system-prompt rules (--rules)."""
     cwd, log_dir = Path(cwd).resolve(), Path(log_dir).resolve()
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -49,12 +122,9 @@ def run_grok(prompt, cwd, log_dir, name, *, schema=None, web=False,
         prompt_file.write_text(prompt, "utf-8")
     session_id = str(uuid.uuid4())
     argv = [str(grok_bin), "--prompt-file", str(prompt_file), "--output-format", "json",
-            "--cwd", str(cwd), "--always-approve", "--session-id", session_id]
-    # Headless Grok Build rejects --add-dir; it can still read absolute paths outside cwd.
-    if not web:
-        argv.append("--disable-web-search")
-    if sandbox:
-        argv += ["--sandbox", sandbox]
+            "--cwd", str(cwd), "--session-id", session_id]
+    argv += permission_args(profile, max_turns, sandbox)
+    rules = " ".join(filter(None, [ISOLATION, rules]))
     if rules:
         argv += ["--rules", rules]
     if model:

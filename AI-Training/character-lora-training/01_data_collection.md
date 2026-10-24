@@ -24,4 +24,4 @@ python -B scripts/codex_collect.py --workspace <WS>
 python -B scripts/grok_collect.py --workspace <WS>
 ```
 
-使用同一句查詢，透過已登入的 `/home/box/.local/bin/grok` 啟用網路搜尋，在暫存工作目錄下載後複製至 `<WS>/01_collect/grok/`，包含 `sources.json`（filename、source_url）。預設 `--model grok-4.7 --timeout 3600 --retries 2`；`--query`、`--out` 可覆寫查詢與目的地，非空目的地會停止，不覆寫。呼叫紀錄存於 `grok/logs/`，結果寫入 `summary.json`、`failed.json`；可先加 `--dry-run` 查看計畫。
+使用同一句查詢，透過已登入的 `/home/box/.local/bin/grok`（`web` profile：只有 read_file、web_search、web_fetch，無 shell／寫檔，隔離 cwd + 沙箱）以 web_fetch 驗證後回傳圖片網址清單（structuredOutput `images[{image_url, source_url}]`），由腳本自行下載（僅 http/https、≤40MB、PIL 驗證、sha256 去重、獨佔建立不覆寫）至 `<WS>/01_collect/grok/`，包含 `sources.json`（filename、source_url、image_url）與下載失敗清單 `download_failed.json`。預設 `--model grok-4.7 --timeout 3600 --retries 2`；`--query`、`--out` 可覆寫查詢與目的地，非空目的地會停止，不覆寫。呼叫紀錄存於 `grok/logs/`，結果寫入 `summary.json`、`failed.json`；可先加 `--dry-run` 查看計畫。
