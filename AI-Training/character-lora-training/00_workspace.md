@@ -13,7 +13,7 @@ python -B scripts/ws.py create --workspace <WS> --work "<作品名>" --character
 ├── 01_collect/
 │   ├── codex/                    # Codex 收集圖 + sources.json
 │   ├── grok/                     # Grok Build 收集圖、sources.json、summary.json、failed.json、logs/
-│   └── reference/                # 使用者提供的參考圖（可選）
+│   └── reference/                # 使用者提供的參考圖（可選），一併去重與 WD Tagger 分流
 ├── 02_clean/
 │   ├── input_mapping.json        # 全部收集圖的唯一檔名 ↔ 原始路徑（含子資料夾）
 │   ├── dedup/  dedup.json        # 去重結果
@@ -25,6 +25,7 @@ python -B scripts/ws.py create --workspace <WS> --work "<作品名>" --character
 │   └── collected_nsfw/           # Grok 處理通過的 NSFW 收集圖
 ├── 03_sheet/
 │   ├── character-sheet.png       # 步驟 2 清理前產出；清理與 04 的參考圖
+│   ├── sheet_approved.json       # 設定圖核准紀錄：sheet、sha256、approved_at
 │   └── codex_sheet/              # chosen-inputs.json、sheet/ 呼叫紀錄
 ├── 04_generate/
 │   ├── codex/keep_outfit/        # Codex 維持服裝 N 張

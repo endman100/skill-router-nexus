@@ -9,4 +9,6 @@
 
 ## 安全規則
 
+主助理只有在使用者確認角色設定圖之後，或使用者在對話中明確表示全自動（full auto）時，才執行 `approve-sheet`；預設由使用者手動確認。
+
 NSFW 僅由 Grok Build 腳本（`scripts/grok_*.py`，呼叫已登入的 `/home/box/.local/bin/grok`）處理；Codex 永不接收 NSFW。維護本技能時同樣不得把 NSFW 圖片、NSFW caption 或露骨的 prompt／情境文字交給 Codex。

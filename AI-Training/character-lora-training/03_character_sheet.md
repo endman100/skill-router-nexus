@@ -8,13 +8,19 @@
 python -B scripts/codex_sheet.py --workspace <WS>
 ```
 
-單次隔離 Codex 執行（預設 `--model gpt-6.1-sol --effort high --timeout 3600`，啟用 image_generation），只取得 `<WS>/02_clean/sfw/` 全部圖片與複製的 `Image-Generation/character-sheet` 技能資料夾。Codex 瀏覽輸入並挑選 **4 張**主要服裝代表圖，依複製的 `SKILL.md` 生成。
+單次隔離 Codex 執行（預設 `--model gpt-6.1-sol --effort high --timeout 3600`，啟用 image_generation），取得 `<WS>/02_clean/sfw/` 最多 `--max-images` 張（預設 30）與複製的 `Image-Generation/character-sheet` 技能資料夾。依 `<WS>/02_clean/rating.json`，先按檔名選入 `source` 為 `reference` 的使用者參考圖，再從其餘按檔名排序的 SFW 圖等距取樣補足上限；只選輸入中存在的檔案，NSFW 參考圖不會進入。缺少 `rating.json` 時全部按檔名排序後等距取樣。Codex 瀏覽輸入並挑選 **4 張**主要服裝代表圖，優先使用 prompt 列出的使用者參考圖，依複製的 `SKILL.md` 生成。
 
 - 版面採用預設 unmeasured 5×3：正面、左側、背面全身，手部、鞋子、服裝細節，兩個表情與一張正面頭像。
 - 服裝維持參考圖原樣。
 - 輸出至 `<WS>/03_sheet/character-sheet.png`，供 Codex／Grok 清理與步驟 04 參考。
 - 選圖清單 `chosen-inputs.json` 與呼叫紀錄存入 `<WS>/03_sheet/codex_sheet/`；紀錄由 `run_isolated` 寫入 `sheet/`。
 
-`--inputs <檔案...>` 可傳入使用者提供的參考圖，僅限 SFW。`--sheet-skill` 可覆寫技能資料夾（預設為本技能資料夾相對的 `../../Image-Generation/character-sheet`）；`--out`、`--log-dir` 可覆寫輸出與紀錄位置，`--codex` 指定執行檔，`--dry-run` 只印出 JSON 計畫，不呼叫 Codex。
+`--inputs <檔案或目錄...>` 可覆寫 SFW 輸入；使用者參考圖先經步驟 2 去重與分流。`--rating` 可覆寫 rating.json 路徑（workspace 預設 `<WS>/02_clean/rating.json`）。`--sheet-skill` 可覆寫技能資料夾（預設為本技能資料夾相對的 `../../Image-Generation/character-sheet`）；`--out`、`--log-dir` 可覆寫輸出與紀錄位置，`--codex` 指定執行檔，`--dry-run` 只印出 JSON 計畫與選入清單，不呼叫 Codex。
 
-**使用者確認（暫停點）：** 生成後腳本印出設定圖路徑與中文暫停訊息，以狀態碼 0 結束。代理必須先停止並等待使用者確認設定圖或替換此圖，確認後才執行清理。使用者明確要求自動執行時加上 `--auto`，不要求確認，直接繼續步驟 2 的逐張清理。
+生成後腳本印出設定圖路徑，以狀態碼 0 結束。主助理只有在使用者確認角色設定圖之後，或使用者在對話中明確表示全自動（full auto）時，才執行下列指令；預設由使用者手動確認。已有設定圖同樣需要核准：
+
+```bash
+python -B scripts/ws.py approve-sheet --workspace <WS>
+```
+
+指令將 `sheet`（`03_sheet/character-sheet.png`）、目前圖片的 `sha256` 與含時區偏移的 ISO-8601 `approved_at` 寫入 `<WS>/03_sheet/sheet_approved.json`；缺少設定圖即停止。Codex／Grok 清理前檢查核准紀錄與目前圖片的 sha256，缺少或不符即停止；`grok_clean --dry-run` 可略過。替換設定圖後須重新確認並執行核准。
