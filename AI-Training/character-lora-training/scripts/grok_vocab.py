@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""以 Grok Build 檢視拼圖與原圖、建立詞表，驗證後等待使用者確認。
+"""備援：Codex 沒有交出可用詞表時，以 Grok Build 檢視拼圖與原圖、從零建立詞表，驗證後等待使用者確認。
+
+主路徑見 05_captioning.md a 節：Codex 先寫 vocab.json，Grok 只改錯誤 trait。本腳本會覆寫 vocab.json，
+Codex 草稿可用時不要執行。
 
 隔離與最小權限（grok_headless.PROFILES["read"]）：拼圖、原圖、詞表規則、params、vocab.schema.json
 先複製到 <out>/.grok_vocab_*/（每次新建），Grok 以該資料夾為 cwd，只有 read_file/list_dir、
@@ -60,7 +63,8 @@ def build_prompt(rules, params_data, sheets, originals):
     notes = params_data.get("trait_notes", {})
     fixed = vocab_tools.fixed_traits(params_data)
     lines = [
-        "請依 vocab_rules.md（下列 a 節）的詞表規則建立 vocab，以指定 schema 回傳。只做詞表，不做後續打標。",
+        "這次是備援撰寫（Codex 沒有可用草稿）。請依 vocab_rules.md（下列 a 節）直接建立整份 vocab，"
+        "以指定 schema 回傳。不要等 Codex，不要只列修正。只做詞表，不做後續打標。",
         rules,
         f"隔離規則：{ISOLATION} 所有輸入都已複製到目前工作資料夾：vocab_rules.md、caption_vocab_params.json、"
         "vocab.schema.json、contact_sheets/、originals/。",
