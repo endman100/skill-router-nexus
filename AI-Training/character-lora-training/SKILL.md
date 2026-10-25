@@ -37,7 +37,7 @@ Grok 步驟一律使用各步驟的 `grok_*.py` 腳本，透過已登入的 Grok
 1. **資料收集**：閱讀 [01_data_collection.md](01_data_collection.md)。
 2. **清理**：閱讀 [02_cleaning.md](02_cleaning.md)。
 3. **三視圖**：閱讀 [03_character_sheet.md](03_character_sheet.md)。
-4. **資料集生成**：閱讀 [04_dataset_generation.md](04_dataset_generation.md)。
+4. **資料集生成**：閱讀 [04_dataset_generation.md](04_dataset_generation.md)。先寫完全部案例（Codex `cases.json`、Grok `scenes.json`），再逐張生圖；重跑只補缺圖。
 5. **整理訓練集與打標**：閱讀 [05_captioning.md](05_captioning.md)。
 6. **LoRA 訓練**：閱讀 [06_lora_training.md](06_lora_training.md)。
 7. **LoRA 驗證**：閱讀 [07_lora_validation.md](07_lora_validation.md)。

@@ -25,12 +25,13 @@ python -B scripts/ws.py create --workspace <WS> --work "<作品名>" --character
 ├── 03_sheet/
 │   └── character-sheet.png       # 角色設定圖（04 的參考圖）
 ├── 04_generate/
-│   ├── codex/keep_outfit/        # Codex 維持服裝 N 張
-│   ├── codex/change_outfit/      # Codex 換服裝 2N 張
-│   ├── codex/missing.json        # 未補齊時才有
+│   ├── codex/keep_outfit/        # Codex 維持服裝 N 張（keep_01 → 01.png）
+│   ├── codex/change_outfit/      # Codex 換服裝 2N 張（change_01 → 01.png）
+│   ├── codex/cases.json          # 全部案例規劃；重跑與補圖沿用，不覆寫
+│   ├── codex/missing.json        # 未補齊時才有（張數、案例 id、最後錯誤）
 │   └── grok/
 │       ├── keep_outfit/          # Grok Build 維持服裝 N 張 PNG
-│       ├── scenes.json           # 場景規劃，重試／補圖沿用
+│       ├── scenes.json           # 案例規劃（穩定 id）；舊版字串清單依序對應 keep_01…
 │       ├── missing.json          # 未補齊時才有
 │       └── summary.json  logs/   # 結果與逐次呼叫紀錄
 ├── 05_caption/
