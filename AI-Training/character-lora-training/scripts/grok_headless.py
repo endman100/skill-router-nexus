@@ -2,7 +2,6 @@
 """Headless Grok Build calls, session artifacts, logs and retries."""
 import argparse, contextlib, io, json, os, re, subprocess, sys, tempfile, uuid
 from pathlib import Path
-from PIL import Image
 
 DEFAULT = "/home/box/.local/bin/grok"
 DEFAULT = DEFAULT if Path(DEFAULT).exists() else "grok"
@@ -226,6 +225,7 @@ def generated_image(result):
 
 
 def png_bytes(path):
+    from PIL import Image
     buffer = io.BytesIO()
     with Image.open(path) as im:
         im.convert("RGB").save(buffer, format="PNG")

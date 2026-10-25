@@ -1,102 +1,112 @@
 #!/usr/bin/env python3
-"""以 Grok Build 維持服裝生成 N 張，重跑僅補足有效 PNG 缺額。
+"""以 Grok Build 維持服裝生成 N 張。先寫齊全部案例，再逐張生圖。
 
-最小權限：場景設計用 grok_headless.PROFILES["read"]（空的隔離 cwd，只回 structuredOutput）；
-每張圖用 PROFILES["image"]：參考圖複製到 <out>/.grok_gen_*/（沙箱 lora_min），Grok 只有 read_file + image_edit。
+scenes.json 為案例計畫（穩定 id／檔名）。重跑與 --only 沿用該檔，只補缺少或損壞的 PNG。
+場景設計用 grok_headless.PROFILES["read"]（隔離 cwd，只回 structuredOutput）；
+每張圖用 PROFILES["image"]：參考圖複製到 <out>/.grok_gen_*/，Grok 只有 read_file + image_edit。
 """
-import argparse, hashlib, json, shutil
+import argparse
+import json
+import shutil
 from pathlib import Path
-from ws import parse_args
-from codex_batch_image_gen import existing_images, next_number, update_missing_json, positive_int
-from grok_headless import options, retry, write_json, generated_image, png_bytes, IMAGE_SCHEMA, entry, isolated_cwd
 
-PROMPT = "幫我維持服裝設計與角色特徵 生成1張這個角色在不同背景 不同姿勢 不同動作 不同表情 不同長寬比的一張圖 採用乾淨的日系動畫賽璐璐上色，線稿俐落，色塊均勻，陰影簡潔，漸層平滑。皮膚與服裝表面乾淨，不添加膠片顆粒、紙張紋理、斑駁筆觸、細碎雜點或過度銳化。背景使用簡潔的動畫美術風格，避免密集零碎的材質細節。保留角色與服裝的必要細節。"
-RATIOS = ("1:1", "4:3", "3:4", "16:9", "9:16")
+from ws import parse_args
+from codex_batch_image_gen import (
+    KEEP, TEXT_FIELDS, assign_cases, grok_image_prompt, positive_int, run_case_generation,
+)
+from grok_headless import IMAGE_SCHEMA, entry, generated_image, isolated_cwd, options, png_bytes, retry, write_json
+
+
+def design_cases(args, n):
+    schema = {
+        "type": "object", "additionalProperties": False, "required": ["scenes"],
+        "properties": {"scenes": {
+            "type": "array", "minItems": n, "maxItems": n,
+            "items": {
+                "type": "object", "additionalProperties": False,
+                "required": list(TEXT_FIELDS),
+                "properties": {field: {"type": "string"} for field in TEXT_FIELDS},
+            },
+        }},
+    }
+    prompt = (
+        f"請設計 {n} 個互不相同的 SFW 角色圖案例，順序對應 keep_01 到 keep_{n:02d}。"
+        "每個案例包含具體的背景、姿勢、動作、表情、鏡頭。"
+        "背景為乾淨、具真實場景感的動畫美術背景，同一批不可重複，姿勢、動作與表情的組合也不可重複。"
+        "服裝維持參考圖，不要描述換裝。回傳一個物件，scenes 為案例陣列，不要寫禁止事項。"
+    )
+
+    def accept(result):
+        return assign_cases(n, result["structured"], groups=(KEEP,))
+
+    with isolated_cwd(args.out, "scenes") as work:
+        plan, error = retry(prompt, work, args.out / "logs", "scenes", args, schema=schema,
+                            profile="read", max_turns=5, accept=accept)
+    if plan is None:
+        raise RuntimeError(error or "scene planning failed")
+    return plan
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("n", type=positive_int, nargs="?", default=30)
-    p.add_argument("--reference", type=Path, required=True)
-    p.add_argument("--out", type=Path, required=True)
-    p.add_argument("--scenes", type=Path)
-    p.add_argument("--max-rounds", type=positive_int, default=3)
-    options(p, only=True)
-    a = parse_args(p, "grok_generate", argv)
-    folder = a.out / "keep_outfit"
-    valid, invalid = existing_images(folder) if folder.exists() else ([], [])
-    number = next_number(folder) if folder.exists() else 1
-    need = max(0, a.n - len(valid))
-    scenes_file = a.scenes or a.out / "scenes.json"
-    print(json.dumps(dict(target=a.n, existing_valid=len(valid), existing_invalid=[p.name for p in invalid],
-                          to_generate=need, next_filename=f"{number:02d}.png", scenes=str(scenes_file),
-                          reference=str(a.reference), aspect_ratios=RATIOS, only=a.only), ensure_ascii=False))
-    if a.dry_run:
-        return 0
-    folder.mkdir(parents=True, exist_ok=True)
-    results, last_error = [], None
-    scenes = []
-    if need:
-        if scenes_file.exists():
-            scenes = json.loads(scenes_file.read_text("utf-8"))["scenes"]
-        else:
-            schema = {"type": "object", "required": ["scenes"], "additionalProperties": False,
-                      "properties": {"scenes": {"type": "array", "minItems": a.n, "maxItems": a.n,
-                          "uniqueItems": True, "items": {"type": "string"}}}}
-            prompt = (f"請設計 {a.n} 個互不相同的 SFW 角色圖場景，各自包含背景、姿勢、動作、表情、鏡頭。"
-                      "背景為乾淨、具真實場景感的動畫美術背景；服裝維持參考圖。回傳 scenes 字串清單。")
-            with isolated_cwd(a.out, "scenes") as work:
-                result, last_error = retry(prompt, work, a.out / "logs", "scenes", a, schema=schema,
-                                           profile="read", max_turns=5)
-            if result:
-                write_json(scenes_file, result["structured"])
-                scenes = result["structured"]["scenes"]
-        if not scenes and not last_error:
-            last_error = "Empty scenes list"
-    call_args = argparse.Namespace(**vars(a))
-    call_args.retries = 0
-    hashes = {hashlib.sha256(p.read_bytes()).digest() for p in valid}
-    for round_no in range(1, a.max_rounds + 1):
-        if not need or not scenes:
-            break
-        numbers = ([int(Path(n).stem) for n in a.only if not (folder / n).exists()] if a.only
-                   else range(next_number(folder), next_number(folder) + need))
-        for number in numbers:
-            if not need:
-                break
-            name = f"{number:02d}.png"
-            scene = scenes[(number - 1) % len(scenes)]
-            ratio = RATIOS[(number - 1) % len(RATIOS)]
-            prompt = (f'{PROMPT}\n{scene}\noutfit identical to the reference front view\n'
-                      f'用 image_edit，image=["{{reference}}", "{{reference}}"]，aspect_ratio="{ratio}"。'
-                      '一次產生一張；必須檢視結果並與參考正面比較，若服裝走樣則重新生成該張，'
-                      '回報最終 session 圖片絕對路徑 output_file。'
-                      '遇工具拒絕則記錄失敗，不改寫要求繞過限制。')
-            def accept(result):
-                data = png_bytes(generated_image(result))
-                digest = hashlib.sha256(data).digest()
-                if digest in hashes:
-                    raise ValueError("sha256 duplicate image discarded")
-                with (folder / name).open("xb") as handle:
-                    handle.write(data)
-                hashes.add(digest)
-                return str(folder / name)
-            # Each round provides one attempt per missing image.
-            with isolated_cwd(a.out, "gen") as work:
-                reference = work / ("reference" + a.reference.suffix.lower())
-                shutil.copy2(a.reference, reference)
-                result, error = retry(prompt.replace("{reference}", str(reference)), work, a.out / "logs",
-                                      f"{Path(name).stem}_round{round_no}", call_args,
-                                      schema=IMAGE_SCHEMA, accept=accept, profile="image", max_turns=20)
-            results.append(dict(name=name, round=round_no, ok=result is not None, error=error))
-            if result:
-                need -= 1
-            else:
-                last_error = error
-    missing = max(0, a.n - len(existing_images(folder)[0]))
-    update_missing_json(folder, "keep_outfit", missing, last_error)
-    write_json(a.out / "summary.json", dict(results=results, missing=missing, last_error=last_error if missing else None))
-    return int(bool(missing))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("n", type=positive_int, nargs="?", default=30)
+    parser.add_argument("--reference", type=Path, required=True)
+    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--scenes", "--cases", type=Path, dest="scenes",
+                        help="案例計畫 JSON，預設 <out>/scenes.json")
+    parser.add_argument("--max-rounds", type=positive_int, default=3)
+    parser.add_argument("--design-only", action="store_true", help="寫入 scenes.json 後停止，不生圖")
+    options(parser, only=True)
+    args = parse_args(parser, "grok_generate", argv)
+    folder = args.out / "keep_outfit"
+    attempts_per_case = {}
+
+    def designer(reference, n):
+        del reference
+        return design_cases(args, n)
+
+    def generator(reference, case, dest):
+        del dest
+        attempts_per_case[case["id"]] = attempts_per_case.get(case["id"], 0) + 1
+        found = {}
+
+        def accept(result):
+            found["data"] = png_bytes(generated_image(result))
+            return found["data"]
+
+        call_args = argparse.Namespace(**vars(args))
+        call_args.retries = 0
+        with isolated_cwd(args.out, "gen") as work:
+            staged = work / ("reference" + Path(reference).suffix.lower())
+            shutil.copy2(reference, staged)
+            result, error = retry(
+                grok_image_prompt(case).replace("{reference}", str(staged)), work, args.out / "logs",
+                f"{case['id']}_round{attempts_per_case[case['id']]}", call_args,
+                schema=IMAGE_SCHEMA, accept=accept, profile="image", max_turns=20)
+        if "data" not in found:
+            raise RuntimeError(error or "no image")
+        return found["data"]
+
+    result = run_case_generation(
+        n=args.n, cases_file=args.scenes or (args.out / "scenes.json"),
+        plan_groups=(KEEP,), generate_groups=(KEEP,),
+        output_for=lambda case: folder / case["filename"], reference=args.reference,
+        designer=designer, generator=generator, dry_run=args.dry_run,
+        design_only=args.design_only, only=args.only, max_rounds=args.max_rounds)
+    print(json.dumps(result["report"], ensure_ascii=False))
+    if not args.dry_run and not args.design_only:
+        remaining = set(result["report"]["remaining"])
+        last_error = None
+        if result["exit_code"]:
+            for item in reversed(result["attempts"]):
+                if item["error"] and item["id"] in remaining:
+                    last_error = item["error"]
+                    break
+            last_error = last_error or f"{len(remaining)} planned image(s) still missing"
+        write_json(args.out / "summary.json", {
+            "results": result["attempts"], "missing": result["missing"], "last_error": last_error,
+        })
+    return result["exit_code"]
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
 DIRECTORIES = (
     "01_collect/codex", "01_collect/grok", "01_collect/reference",
     "02_clean/grok_clean", "02_clean/collected_sfw", "02_clean/collected_nsfw", "03_sheet",
-    "04_generate/codex", "04_generate/grok/keep_outfit",
+    "04_generate/codex/keep_outfit", "04_generate/codex/change_outfit", "04_generate/grok/keep_outfit",
     "05_caption/vocab", "05_caption/train_set", "06_train", "07_validate/prompts",
     "08_release",
 )
@@ -174,8 +174,6 @@ def parse_args(parser, step, argv=None):
             ws.set_main_outfit(explicit_main)
         if step == "caption":
             del a.nsfw_schema
-        if step == "fill":
-            del a.n
         return a
     except (ValueError, OSError) as exc:
         parser.error(str(exc))
