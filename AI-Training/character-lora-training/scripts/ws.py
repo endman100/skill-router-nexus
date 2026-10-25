@@ -97,7 +97,7 @@ class Workspace:
             return dict(out=images, groups=specs, nsfw_out=p("05_caption/images_nsfw"),
                         character=f"{meta['character']} ({meta['work']})", trigger=meta["trigger"])
         if step == "sheets":
-            self.params()  # Grok uses the project params while authoring the vocabulary.
+            self.params()  # Caption params for Codex drafting vocab.json, or Grok if that draft fails.
             return dict(images=images, manifest=images / "manifest.json", out=vocab)
         if step == "check":
             return dict(vocab=vocab / "vocab.json", names=vocab / "names.json",

@@ -37,15 +37,38 @@ python -B scripts/build_train_set.py --workspace <WS>
 - 防呆機制：若同一個來源資料夾同時被指定為一般與 NSFW 群組，或一般群組含有與 NSFW 群組 sha256 相同的圖片時，程式將直接停止。
 - 因此 Codex 打標的輸入資料夾 `<WS>/05_caption/images` 僅有 SFW 圖片；`<WS>/05_caption/images_nsfw/` 則僅提供給 Grok。
 
-## a. 詞表（Grok Build 腳本）
+## a. 詞表（Codex 起草，Grok 覆核）
 
-僅檢視**清理後的收集圖**（`source_group = collected`，不含 Grok / Codex 生成圖）：
+僅檢視**清理後的收集圖**（`source_group = collected`，不含 Grok / Codex 生成圖）。NSFW 收集圖從 manifest 的 `nsfw_dir` 讀取，可放進拼圖，但只給 Grok；Codex 不得看到任何 NSFW 拼圖或原圖。
+
+被 `grok_vocab.py` 叫起來時，本節會出現在隔離資料夾的 `vocab_rules.md`。那是備援撰寫：直接看完全部拼圖與至少一張原圖，依下列規則以 schema 回傳整份 vocab。不要等 Codex，也不要只列修正。
+
+**誰寫詞表：** 預設 Codex 起草，Grok 只覆核並改正看錯的特徵。不要把 Grok 從零寫詞表當成主路徑。Codex 成功交出草稿時，Grok 不重寫整份；Codex 拒絕、無法完成，或草稿嚴重不可用時，才改由 Grok 撰寫。
+
+1. **Codex 起草（主路徑）。** 不要先跑 `grok_vocab.py`。先產生拼圖、`names.json` 與 `vocab.schema.json`：
+
+```
+python -B scripts/vocab_tools.py sheets --workspace <WS>
+```
+
+目前沒有 `codex_vocab.py`。操作者另開一次 Codex，只把下列檔案交給它（不要附上其他案件的 `vocab.json`，也不要給 NSFW）：
+
+- 只含 SFW 圖格的 `<WS>/05_caption/vocab/contact_sheets/sheet_*.jpg`。對照 manifest，任一格是 NSFW 就整張拼圖不給 Codex。
+- 至少一張清楚的 SFW 原圖（`<WS>/05_caption/images/`，建議主要服裝、正面且臉部清楚）。
+- 本節規則、`<WS>/05_caption/vocab/caption_vocab_params.json` 與 `vocab.schema.json`。
+
+Codex 依 schema 寫入 `<WS>/05_caption/vocab/vocab.json`。它看不到的 NSFW 收集圖不要猜檔名或服裝；留給下一步補進 `outfits[].images`。
+
+2. **Grok 覆核（Codex 已交出可用草稿時）。** 沒有覆核腳本，也不要跑 `grok_vocab.py`（它會覆寫 `vocab.json`）。Grok 對照全部拼圖（含 NSFW）與至少一張原圖，檢查 Codex 的 `vocab.json`。只改正看錯的 trait（例如胸部尺寸、髮型、瀏海），並把 Codex 不能看的 NSFW 圖補進所屬服裝。直接改 `vocab.json` 裡的那些欄位。草稿大致可用時不要整份重寫。
+
+3. **Grok 撰寫整份詞表（僅備援）。** 以下情況改跑既有腳本，由 Grok Build 從零建立並覆寫 `vocab.json`：
+
+- Codex 因內容審核拒絕、拒絕產出或工具失敗，沒有完成草稿。
+- 草稿嚴重不可用：多數特徵與畫面不符、服裝蓋不住收集圖，或只改少數 trait 後仍無法通過 check。
 
 ```
 python -B scripts/grok_vocab.py --workspace <WS> [--main-outfit <主要服裝id>]
 ```
-
-（NSFW 收集圖從 manifest 的 `nsfw_dir` 讀取，一起放進拼圖；拼圖僅提供給 Grok 檢視。）
 
 腳本先執行 `vocab_tools.py sheets`，再把拼圖、原圖、本節規則、params 與 `vocab.schema.json` 複製到 `05_caption/vocab/.grok_vocab_*/` 隔離資料夾，以它為 cwd 並加上 `--sandbox lora_min`（strict + 禁讀 `/tmp/*`；kernel 限制只能讀 cwd、系統路徑與 `~/.grok`）、`read` profile（只有 read_file、list_dir）及「只能讀工作資料夾內檔案」的規則呼叫 Grok Build，避免讀到 `/workspace` 其他舊詞表；Grok 檢視 `contact_sheets/sheet_*.jpg`（每格標示檔名，每張 8 格）及**至少一張原圖**（建議主要服裝、正面且臉部清楚），確認臉型、髮型、瀏海、眼睛與配件。腳本以 `vocab.schema.json` 取得 structuredOutput 寫入 `vocab.json`，並從 session 的 `chat_history.jsonl` 確認所有拼圖及至少一張原圖確實被檢視；未檢視則重試。規則如下：
 
@@ -76,7 +99,7 @@ trait 名稱決定歸入哪一個 caption 欄位（參考 `<WS>/05_caption/vocab
 
 服裝 tag 中屬於配件者（例如 choker、necklace、sunglasses…），由 `outfit_accessory_tags` 清單分流至 character_accessories_tags，其餘則歸入 character_clothing_tags。若角色擁有清單外的配件，請加入 `<WS>/05_caption/vocab/caption_vocab_params.json` 的清單中（Grok 沒有寫檔工具，改以 structuredOutput 的 `outfit_accessory_tags_add` 回報要新增的配件，腳本把原檔備份成 `caption_vocab_params.prev_<時間>.json` 後寫回）；驗證與打標預設使用本案版本，亦可透過 `--params` 覆寫。
 
-腳本接著自動執行下列驗證；若依使用者回饋手動修改詞表，也可單獨重跑並記錄主要服裝（供後續測試使用）：
+Codex 草稿經 Grok 改完，或依使用者回饋手動改過詞表之後，執行下列驗證（`grok_vocab.py` 在備援撰寫成功後會自己跑）。通過後記錄主要服裝，供後續測試使用：
 
 ```
 python -B scripts/vocab_tools.py check --workspace <WS> --main-outfit <主要服裝id>
@@ -86,9 +109,9 @@ python -B scripts/vocab_tools.py check --workspace <WS> --main-outfit <主要服
 
 驗證 PASS 後將寫入 `<WS>/05_caption/vocab/vocab_summary.md` 與 `<WS>/05_caption/vocab/main_outfit.json`（包含 main_outfit_id、name、tags、image_count），並印出各欄位的選項。若出現 ERROR（如未對應的 trait、缺少每張必填的 trait、欄位缺少 tag、圖片未分組等），請修正 vocab 後重新執行。
 
-預設 `--model grok-4.7 --timeout 3600 --retries 2 --sandbox lora_min`（`strict` 仍可讀 `/tmp`，`off` 不建議），輸出預設 `05_caption/vocab/`，含 `logs/`、`summary.json`、`failed.json`；可覆寫 `--out`、`--images`、`--manifest`，`--dry-run` 只列計畫。
+`grok_vocab.py` 預設 `--model grok-4.7 --timeout 3600 --retries 2 --sandbox lora_min`（`strict` 仍可讀 `/tmp`，`off` 不建議），輸出預設 `05_caption/vocab/`，含 `logs/`、`summary.json`、`failed.json`；可覆寫 `--out`、`--images`、`--manifest`，`--dry-run` 只列計畫。Codex 起草這條路不使用這些參數。
 
-**使用者確認（暫停點）：** 腳本印出 `vocab_summary.md` 與主要服裝重點後即結束；除非使用者明確說要自動執行並加上 `--auto`，否則 vocab 驗證 PASS 後必須先暫停，不要進入 b. 打標。把 `vocab_summary.md` 的重點（每張必填的身高、體型、年齡，以及臉型、髮色、髮型、瀏海、眼睛、膚色等特徵，主要服裝及其 tags、各服裝分組與圖數）整理給使用者，請使用者確認特徵是否都正確；依回饋修改 vocab 並重新執行 check，直到使用者確認後才繼續打標。
+**使用者確認（暫停點）：** check PASS 後必須先暫停，不要進入 b. 打標。`grok_vocab.py` 會印出 `vocab_summary.md` 與主要服裝重點後結束；除非使用者明確說要自動執行並對該腳本加上 `--auto`，否則不要加 `--auto`。Codex 起草沒有 `--auto`，跑完 check 就暫停。把 `vocab_summary.md` 的重點（每張必填的身高、體型、年齡，以及臉型、髮色、髮型、瀏海、眼睛、膚色等特徵，主要服裝及其 tags、各服裝分組與圖數）整理給使用者，請使用者確認特徵是否都正確；依回饋修改 vocab 並重新執行 check，直到使用者確認後才繼續打標。
 
 向使用者呈現詞表供確認時，每個英文／SDXL tag 旁必須附上繁體中文翻譯（例如 `pink hair`（粉紅髮））：
 

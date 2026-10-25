@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""打標 a（詞表）的小工具。詞表由 grok_vocab.py 呼叫 Grok Build 看拼圖與原圖建立，這支程式不呼叫任何模型。
+"""打標 a（詞表）的小工具。不呼叫任何模型。
+
+主路徑：Codex 看 SFW 拼圖與至少一張清楚原圖，起草 vocab.json；Grok 只覆核並改正錯誤 trait。
+Codex 拒絕、工具失敗或草稿嚴重不可用時，才由 grok_vocab.py 讓 Grok 從零建立。見 05_captioning.md a 節。
 
   sheets：從 manifest 取出收集圖（source_group = collected，不含生成圖），做 8 格拼圖（每格標檔名），
-          寫 names.json 與 vocab.schema.json，給 Grok 看圖寫 vocab.json。
+          寫 names.json 與 vocab.schema.json。SFW 拼圖給 Codex 起草；含 NSFW 的拼圖只給 Grok。
   check ：驗證 vocab.json（JSON schema、每張收集圖恰屬一套服裝、tag 不重複／不過長／無佔位詞），
           檢查每個 trait 都對應到 caption 欄位、params 的 fixed_traits（每張必填）都在詞表、固定欄位有選項；
           通過後寫 vocab_summary.md，
