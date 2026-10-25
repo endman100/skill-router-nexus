@@ -90,6 +90,13 @@ python -B scripts/vocab_tools.py check --workspace <WS> --main-outfit <主要服
 
 **使用者確認（暫停點）：** 腳本印出 `vocab_summary.md` 與主要服裝重點後即結束；除非使用者明確說要自動執行並加上 `--auto`，否則 vocab 驗證 PASS 後必須先暫停，不要進入 b. 打標。把 `vocab_summary.md` 的重點（每張必填的身高、體型、年齡，以及臉型、髮色、髮型、瀏海、眼睛、膚色等特徵，主要服裝及其 tags、各服裝分組與圖數）整理給使用者，請使用者確認特徵是否都正確；依回饋修改 vocab 並重新執行 check，直到使用者確認後才繼續打標。
 
+向使用者呈現詞表供確認時，每個英文／SDXL tag 旁必須附上繁體中文翻譯（例如 `pink hair`（粉紅髮））：
+
+- 翻譯角色固定特徵（`fixed_traits`）、可選角色特徵，以及每套服裝的 tag。
+- 服裝分組 id（例如 `outfit_white_dress`）維持原樣；翻譯的是人可讀的 tag 清單。
+- 只翻譯 `vocab.json` 已列出的 tag，不可自創詞表沒有的項目。
+- 這是確認步驟的呈現要求，不改變 `vocab.json` 的 schema，也不把中文寫進詞表檔。
+
 ## b. 逐張打標（Codex）
 
 先以 dry-run 檢查分組與 prompt（此步驟不呼叫 Codex）：
