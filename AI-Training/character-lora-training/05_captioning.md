@@ -77,7 +77,7 @@ python -B scripts/grok_vocab.py --workspace <WS> [--main-outfit <主要服裝id>
 - **每張必填 vs 可選**：`caption_vocab_params.json` 的 `fixed_traits`（預設 `height`、`body_type`、`age`）是唯一定義處；這些 trait 必須寫進詞表，逐張打標時對應欄位每張都必填、不可留空。其他角色特徵（含 `face_shape`）與所有服裝 tag 皆為可選：打標時只能從詞表列出的 tag 挑選（schema enum，不可自創），看不到就留空。
 - `face_shape` 必填進詞表（看過原圖後判斷），字串、恰好一個 tag：臉部整體輪廓與臉頰的 danbooru 式 tag。候選例：`round face`、`oval face`、`long face`、`pointy chin`、`chubby cheeks`、`square jaw`；都不合適時可自行寫一個簡短 danbooru 式 tag（小寫、≤ 4 個英文單字）。表情（如 puffy cheeks、blush）不放這裡，其他頭部細節放 `head_*`。
 - tag 採用 danbooru 式、小寫、≤ 4 個英文單字，不可有同義詞、佔位詞或版面用語；角色特徵 tag 不可重複出現在服裝中。
-- 起草時就點算並寫入 `count`（對照拼圖，必要時看原圖；已有 caption 時用 caption 核對畫面上是否真的有）。只計確實看得到、而且起草時打算用這個 tag 描述的張數。沒看到就不要列這個 tag，不要填 0，也不要發明詞表裡沒有依據的 tag。`count` 不可大於分母（服裝 tag 的分母是該套 `images` 張數，角色特徵的分母是全部收集圖張數）。主要服裝只收多數圖的典型樣貌；只出現在少數圖的特徵不要放進主要服裝 tag（例如 22 張白裙裡只有 3 張有褲襪，就不要把 `pantyhose` 放進主要服裝）。
+- 起草時就點算並寫入 `count`。出現率點算以 `contact_sheets/` 拼圖為主，不需要逐張開啟或顯示大圖／原尺寸原圖；某一格看不清才開那一張原圖。已有 caption 時用 caption 核對畫面上是否真的有。只計確實看得到、而且起草時打算用這個 tag 描述的張數。沒看到就不要列這個 tag，不要填 0，也不要發明詞表裡沒有依據的 tag。`count` 不可大於分母（服裝 tag 的分母是該套 `images` 張數，角色特徵的分母是全部收集圖張數）。主要服裝只收多數圖的典型樣貌；只出現在少數圖的特徵不要放進主要服裝 tag（例如 22 張白裙裡只有 3 張有褲襪，就不要把 `pantyhose` 放進主要服裝）。
 - 年齡採用 danbooru 式（例如 `girl`）。身體特徵必須包含在詞表內。
 
 trait 名稱決定歸入哪一個 caption 欄位（參考 `<WS>/05_caption/vocab/caption_vocab_params.json` 的 `field_traits`，Grok 隔離資料夾內為 `./caption_vocab_params.json`；完全相同者優先，其次為 `前綴*`）：
@@ -112,13 +112,14 @@ python -B scripts/vocab_tools.py check --workspace <WS> --main-outfit <主要服
 
 `grok_vocab.py` 預設 `--model grok-4.7 --timeout 3600 --retries 2 --sandbox lora_min`（`strict` 仍可讀 `/tmp`，`off` 不建議），輸出預設 `05_caption/vocab/`，含 `logs/`、`summary.json`、`failed.json`；可覆寫 `--out`、`--images`、`--manifest`，`--dry-run` 只列計畫。Codex 起草這條路不使用這些參數。
 
-**使用者確認（暫停點）：** check PASS 後必須先暫停，不要進入 b. 打標。`grok_vocab.py` 會印出 `vocab_summary.md` 與主要服裝重點後結束；除非使用者明確說要自動執行並對該腳本加上 `--auto`，否則不要加 `--auto`。Codex 起草沒有 `--auto`，跑完 check 就暫停。把 `vocab_summary.md` 的重點（每張必填的身高、體型、年齡，以及臉型、髮色、髮型、瀏海、眼睛、膚色等特徵，主要服裝及其 tags 與出現率、各服裝分組與圖數）整理給使用者，請使用者確認特徵是否都正確；依回饋修改 vocab 並重新執行 check，直到使用者確認後才繼續打標。
+**使用者確認（暫停點）：** check PASS 後必須先暫停，不要進入 b. 打標。`grok_vocab.py` 會印出 `vocab_summary.md` 與主要服裝重點後結束；除非使用者明確說要自動執行並對該腳本加上 `--auto`，否則不要加 `--auto`。Codex 起草沒有 `--auto`，跑完 check 就暫停。把 `vocab_summary.md` 的重點（每張必填的身高、體型、年齡，以及臉型、髮色、髮型、瀏海、眼睛、膚色等特徵，主要服裝及其 tags 與出現率、各服裝分組與圖數）整理給使用者，請使用者確認特徵是否都正確。確認時給摘要、出現率與繁體中文翻譯即可，不必逐張顯示大圖。依回饋修改 vocab 並重新執行 check，直到使用者確認後才繼續打標。
 
 向使用者呈現詞表供確認時，每個英文／SDXL tag 旁必須附上繁體中文翻譯，而且每個服裝 tag 必須附上它在該套服裝已分配收集圖中的出現率（角色特徵 tag 也一併附上出現率）。格式是 `tag (k/n, p%)`，翻譯寫在旁邊，例如 `pink hair (40/40, 100%)`（粉紅髮）、`pantyhose (3/22, 14%)`（褲襪）。不要只給 tag 清單。
 
 - 翻譯角色固定特徵（`fixed_traits`）、可選角色特徵，以及每套服裝的 tag。
-- 服裝 tag 的分母 `n` 是該套 `images` 的張數；分子 `k` 是這些圖裡看得到這個 tag、起草時有理由列入的張數。對照 `contact_sheets/` 點算（必要時看原圖；若該圖已有 caption，用 caption 核對）。`vocab_tools.py check` 用 tag 上的 `count` 當分子，把 `tag (k/n, p%)` 寫進 `vocab_summary.md`，並在終端印出。呈現給使用者的數字必須與這份摘要一致。
-- 角色特徵 tag 的分母是全部收集圖張數（`names.json`），分子是看得到該特徵的張數，同樣寫進摘要。
+- **出現率點算以 `contact_sheets/` 為主。** 點算 `k`，以及把出現率呈現給使用者確認時，都不需要逐張開啟或顯示大圖／原尺寸原圖。拼圖每一格已標檔名，用來數有這個 tag 的張數即可。只有某一格看不清時，才開那一張原圖。
+- 服裝 tag 的分母 `n` 是該套 `images` 的張數；分子 `k` 是這些圖裡看得到這個 tag、起草時有理由列入的張數。對照 `contact_sheets/` 點算，不逐張把原圖開成大圖或原尺寸顯示；某一格看不清才開該張原圖。若該圖已有 caption，用 caption 核對。`vocab_tools.py check` 用 tag 上的 `count` 當分子，把 `tag (k/n, p%)` 寫進 `vocab_summary.md`，並在終端印出。呈現給使用者的數字必須與這份摘要一致。
+- 角色特徵 tag 的分母是全部收集圖張數（`names.json`），分子是看得到該特徵的張數，同樣以 `contact_sheets/` 點算（看不清才開原圖）並寫進摘要。
 - 摘要若出現 `tag (?/n)`，表示還沒點算。先把 `count` 寫回 `vocab.json`、重跑 check，用新摘要再給使用者看。不要在對話裡口頭補數字、摘要仍留著 `?`。
 - 低於半數（`k * 2 < n`）的服裝 tag，摘要會在該 tag 後標「少數」。主要服裝的 tag 必須是該組多數圖的典型樣貌。明顯少數的項目不要留在主要服裝的核心 tag，否則會寫進 `main_outfit.json`，之後 showcase keep 的 prompt 會被少數特徵污染。只有使用者明確要求保留時才留。其他服裝的少數 tag 也要帶出現率，由使用者決定是否保留。
 - 服裝分組 id（例如 `outfit_white_dress`）維持原樣；翻譯的是人可讀的 tag。出現率的數字與 `k/n` 不要翻譯。
