@@ -8,8 +8,8 @@ Codex 拒絕、工具失敗或草稿嚴重不可用時，才由 grok_vocab.py �
           寫 names.json 與 vocab.schema.json。SFW 拼圖給 Codex 起草；含 NSFW 的拼圖只給 Grok。
   check ：驗證 vocab.json（JSON schema、每張收集圖恰屬一套服裝、tag 不重複／不過長／無佔位詞），
           檢查每個 trait 都對應到 caption 欄位、params 的 fixed_traits（每張必填）都在詞表、固定欄位有選項；
-          通過後寫 vocab_summary.md，
-          給 --main-outfit 時同時寫 main_outfit.json。
+          通過後寫 vocab_summary.md（服裝 tag 與角色特徵附出現率 `tag (k/n, p%)`；
+          沒填 count 時為 `tag (?/n)`）。給 --main-outfit 時同時寫 main_outfit.json。
 
 用法：
   python3 vocab_tools.py sheets --images <訓練資料夾> --manifest <訓練資料夾>/manifest.json --out <vocab資料夾>
@@ -30,6 +30,8 @@ MAY_HAVE_NO_TAGS = {"character_head_features_tags", "character_accessories_tags"
 
 def make_schema():
     tag = {"type": "string", "minLength": 2, "maxLength": 40, "pattern": "^[a-z0-9][a-z0-9 \\-]*[a-z0-9]$"}
+    # 選填。服裝 tag：該套 images 裡看得到的張數。角色特徵：全部收集圖裡看得到的張數。
+    count = {"type": "integer", "minimum": 0}
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object", "additionalProperties": False,
@@ -37,7 +39,7 @@ def make_schema():
         "properties": {
             "character_features": {"type": "array", "minItems": 3, "items": {
                 "type": "object", "additionalProperties": False, "required": ["trait", "tag"],
-                "properties": {"trait": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"}, "tag": tag}}},
+                "properties": {"trait": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"}, "tag": tag, "count": count}}},
             "outfits": {"type": "array", "minItems": 1, "items": {
                 "type": "object", "additionalProperties": False, "required": ["id", "name", "tags", "images"],
                 "properties": {
@@ -45,7 +47,7 @@ def make_schema():
                     "name": {"type": "string", "minLength": 1, "maxLength": 60},
                     "tags": {"type": "array", "minItems": 1, "items": {
                         "type": "object", "additionalProperties": False, "required": ["tag"],
-                        "properties": {"tag": tag}}},
+                        "properties": {"tag": tag, "count": count}}},
                     "images": {"type": "array", "minItems": 1, "uniqueItems": True, "items": {"type": "string"}}}}},
         },
     }
@@ -99,7 +101,69 @@ def validate(data, names, schema):
             errs.append(f"tag too long (>4 words): {x}")
         if any(b in x for b in BANNED):
             errs.append(f"banned word in tag: {x}")
+    n_all = len(names)
+    for f in data["character_features"]:
+        errs += _count_errs(f"character tag {f['tag']}", item_count(f), n_all)
+    for o in data["outfits"]:
+        for t in o["tags"]:
+            errs += _count_errs(f"{o['id']}: tag {t['tag']}", item_count(t), len(o["images"]))
     return errs
+
+
+def item_count(item):
+    """選填 count。缺了表示還沒點算；0 與大於分母由 validate 拒絕。"""
+    if isinstance(item, dict) and "count" in item and item["count"] is not None:
+        return item["count"]
+    return None
+
+
+def _count_errs(where, count, n):
+    if count is None:
+        return []
+    if count == 0:
+        return [f"{where} count 為 0（沒有收集圖支持，不要列入詞表）"]
+    if count > n:
+        return [f"{where} count {count} 大於分母 {n}"]
+    return []
+
+
+def occurrence_label(tag, count, n, mark_minority=False):
+    """確認用出現率。有 count 時為 `tag (k/n, p%)`；還沒點算則 `tag (?/n)`。"""
+    if count is None or n <= 0:
+        return f"{tag} (?/{n})"
+    pct = (100 * count + n // 2) // n
+    label = f"{tag} ({count}/{n}, {pct}%)"
+    if mark_minority and count * 2 < n:
+        label += " 少數"
+    return label
+
+
+def rate_warnings(data, main_outfit=None):
+    """沒填 count、或服裝 tag 低於半數時提醒。不因此讓 check 失敗。"""
+    warns, missing = [], []
+    for f in data["character_features"]:
+        if item_count(f) is None:
+            missing.append(f"{f['trait']}={f['tag']}")
+    for o in data["outfits"]:
+        n = len(o["images"])
+        rare = []
+        for t in o["tags"]:
+            c = item_count(t)
+            if c is None:
+                missing.append(f"{o['id']}:{t['tag']}")
+            elif n > 0 and c * 2 < n:
+                rare.append(occurrence_label(t["tag"], c, n, mark_minority=True))
+        if rare:
+            if main_outfit and o["id"] == main_outfit:
+                warns.append(
+                    f"{o['id']}: {', '.join(rare)}。主要服裝不要把這些留成核心 tag，"
+                    "除非使用者明確要求；核心 tag 應是多數圖的典型樣貌。")
+            else:
+                warns.append(f"{o['id']}: {', '.join(rare)}。確認時標出出現率，是否保留由使用者決定。")
+    if missing:
+        warns.append("以下 tag 還沒有 count，摘要是 (?/n)。給使用者確認前要對照拼圖點算，寫回 vocab.json 後重跑 check："
+                     + ", ".join(missing))
+    return warns
 
 
 def strip_legacy(data):
@@ -124,15 +188,25 @@ def fixed_fields(params):
     return {trait_field(t, params["field_traits"]) for t in fixed_traits(params)} - {None}
 
 
-def summary_md(data, params=None):
+def summary_md(data, params=None, n_collected=None):
     fixed = set(fixed_traits(params or {}))
+    if n_collected is None:
+        n_collected = len({im for o in data.get("outfits", []) for im in o.get("images", [])})
     lines = ["| 特徵 | tag | 每張必填 |", "|---|---|---|"]
-    lines += [f"| {f['trait']} | {f['tag']} | {'✓' if f['trait'] in fixed else ''} |" for f in data["character_features"]]
+    lines += [f"| {f['trait']} | {occurrence_label(f['tag'], item_count(f), n_collected)} | "
+              f"{'✓' if f['trait'] in fixed else ''} |" for f in data["character_features"]]
     lines += ["", "| id | 名稱 | 圖片數 | tags |", "|---|---|---:|---|"]
     for o in data["outfits"]:
-        tags = ", ".join(t["tag"] for t in o["tags"])
-        lines.append(f"| {o['id']} | {o['name']} | {len(o['images'])} | {tags} |")
-    lines += ["", f"每張必填（fixed_traits）：{', '.join(sorted(fixed)) or '-'}；"
+        n = len(o["images"])
+        tags = ", ".join(occurrence_label(t["tag"], item_count(t), n, mark_minority=True) for t in o["tags"])
+        lines.append(f"| {o['id']} | {o['name']} | {n} | {tags} |")
+    lines += ["",
+              "出現率寫在 tag 後面：`tag (k/n, p%)`。服裝 tag 的 n 是該套 images 張數；角色特徵的 n 是全部收集圖張數。"
+              "`(?/n)` 表示尚未點算，確認前須把 count 寫回 vocab.json 後重跑 check。"
+              "服裝 tag 標「少數」表示低於半數。主要服裝不要把少數 tag 留成核心 tag，除非使用者明確要求；"
+              "主要服裝應是多數圖的典型樣貌。",
+              "",
+              f"每張必填（fixed_traits）：{', '.join(sorted(fixed)) or '-'}；"
               "其餘角色特徵與服裝 tag 皆為可選，打標時只能從本詞表挑選，看不到可留空。"]
     return "\n".join(lines) + "\n"
 
@@ -203,8 +277,11 @@ def cmd_check(a):
     names = json.loads(a.names.read_text("utf-8"))
     params = json.loads(a.params.read_text("utf-8"))
     errs = validate(data, names, make_schema())
-    cerrs, warns, opts = coverage(data, params) if not errs else ([], [], {})
+    n_collected = len(names)
+    warns = rate_warnings(data, a.main_outfit) if not errs else []
+    cerrs, cov_warns, opts = coverage(data, params) if not errs else ([], [], {})
     errs += cerrs
+    warns += cov_warns
     outfits = {o["id"]: o for o in data.get("outfits", [])}
     if a.main_outfit and a.main_outfit not in outfits:
         errs.append(f"main outfit {a.main_outfit} 不在 outfits 裡")
@@ -213,10 +290,17 @@ def cmd_check(a):
     if errs:
         print("\n".join("ERROR " + e for e in errs)); return 1
     required = fixed_fields(params)
+    feat_counts = {f["tag"]: item_count(f) for f in data["character_features"]}
     for field, o in opts.items():
         mark = "（每張必填）" if field in required else ""
-        print(f"{field}{mark}: {', '.join(t['tag'] for t in o) or '-'}")
-    (a.vocab.parent / "vocab_summary.md").write_text(summary_md(data, params), "utf-8")
+        shown = ", ".join(occurrence_label(t["tag"], feat_counts.get(t["tag"]), n_collected) for t in o) or "-"
+        print(f"{field}{mark}: {shown}")
+    for o in data["outfits"]:
+        n = len(o["images"])
+        tags = ", ".join(occurrence_label(t["tag"], item_count(t), n, mark_minority=True) for t in o["tags"])
+        main = "（主要服裝）" if a.main_outfit and o["id"] == a.main_outfit else ""
+        print(f"{o['id']}{main} ({n}): {tags}")
+    (a.vocab.parent / "vocab_summary.md").write_text(summary_md(data, params, n_collected), "utf-8")
     if a.main_outfit:
         o = outfits[a.main_outfit]
         (a.vocab.parent / "main_outfit.json").write_text(json.dumps(dict(
