@@ -147,7 +147,9 @@ def main(argv=None):
         if main.exists():
             print(main.read_text("utf-8"))
         if not a.auto:
-            print("暫停：請使用者確認每張必填特徵（身高、體型、年齡）、臉型與其他特徵、主要服裝及各服裝分組與圖數，確認後才進入 b. 打標。")
+            print("暫停：請使用者確認每張必填特徵（身高、體型、年齡）、臉型與其他特徵、主要服裝及各服裝分組與圖數。"
+                  "每個服裝 tag 與角色特徵都要帶出現率 tag (k/n, p%) 與繁體中文翻譯；摘要中的 (?/n) 須先點算、寫回 count 並重跑 check。"
+                  "主要服裝不要留下低於半數的少數 tag，除非使用者明確要求。確認後才進入 b. 打標。")
     return status
 
 
