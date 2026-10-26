@@ -39,7 +39,7 @@ Grok 步驟一律使用各步驟的 `grok_*.py` 腳本，透過已登入的 Grok
 2. **清理**：閱讀 [02_cleaning.md](02_cleaning.md)，依序去重 → WD Tagger 分流 → 依 [03_character_sheet.md](03_character_sheet.md) 生成三視圖、確認後執行 `approve-sheet` → 逐張 Codex 清理 SFW → Grok 處理 NSFW 與 Codex 交接圖。
 3. **三視圖**：已移至步驟 2 分流後、清理前產出；沿用 [03_character_sheet.md](03_character_sheet.md) 與 `03_sheet/`，此處不重複生成。
 4. **資料集生成**：閱讀 [04_dataset_generation.md](04_dataset_generation.md)。先寫完全部案例（Codex `cases.json`、Grok `scenes.json`），再逐張生圖；重跑只補缺圖。
-5. **整理訓練集與打標**：閱讀 [05_captioning.md](05_captioning.md)。向使用者確認詞表時，每個英文／SDXL tag 旁附繁體中文翻譯，並附出現率 `tag (k/n, p%)`（服裝 tag 以該套已分配收集圖為分母；數字來自 `vocab_summary.md`）。主要服裝只保留多數圖的典型 tag；低於半數的 tag 須經使用者明確要求才留在主要服裝。
+5. **整理訓練集與打標**：閱讀 [05_captioning.md](05_captioning.md)。向使用者確認詞表時，每個英文／SDXL tag 旁附繁體中文翻譯，並附出現率 `tag (k/n, p%)`（服裝 tag 以該套已分配收集圖為分母；數字來自 `vocab_summary.md`）。出現率點算以 `contact_sheets` 拼圖為主，不需要逐張把原圖開成大圖顯示；某一格看不清才開該張原圖。主要服裝只保留多數圖的典型 tag；低於半數的 tag 須經使用者明確要求才留在主要服裝。
 6. **LoRA 訓練**：閱讀 [06_lora_training.md](06_lora_training.md)。
 7. **LoRA 驗證**：閱讀 [07_lora_validation.md](07_lora_validation.md)。
 8. **發布到 Civitai**：閱讀 [08_civitai_release.md](08_civitai_release.md)，打包使用者選定的 checkpoint，由有瀏覽器的代理上傳並存為草稿；由使用者審閱後自行發布。

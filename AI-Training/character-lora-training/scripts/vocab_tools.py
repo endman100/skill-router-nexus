@@ -161,7 +161,7 @@ def rate_warnings(data, main_outfit=None):
             else:
                 warns.append(f"{o['id']}: {', '.join(rare)}。確認時標出出現率，是否保留由使用者決定。")
     if missing:
-        warns.append("以下 tag 還沒有 count，摘要是 (?/n)。給使用者確認前要對照拼圖點算，寫回 vocab.json 後重跑 check："
+        warns.append("以下 tag 還沒有 count，摘要是 (?/n)。給使用者確認前要對照 contact_sheets 拼圖點算，不需要逐張開啟或顯示大圖；某一格看不清才開原圖。寫回 vocab.json 後重跑 check："
                      + ", ".join(missing))
     return warns
 
@@ -203,6 +203,7 @@ def summary_md(data, params=None, n_collected=None):
     lines += ["",
               "出現率寫在 tag 後面：`tag (k/n, p%)`。服裝 tag 的 n 是該套 images 張數；角色特徵的 n 是全部收集圖張數。"
               "`(?/n)` 表示尚未點算，確認前須把 count 寫回 vocab.json 後重跑 check。"
+              "點算以 contact_sheets 拼圖為主，不需要逐張開啟或顯示大圖／原尺寸原圖；某一格看不清才開原圖。"
               "服裝 tag 標「少數」表示低於半數。主要服裝不要把少數 tag 留成核心 tag，除非使用者明確要求；"
               "主要服裝應是多數圖的典型樣貌。",
               "",
