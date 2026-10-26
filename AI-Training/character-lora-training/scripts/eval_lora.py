@@ -41,7 +41,8 @@ def parse_args():
                         default=TEMPLATES / 'validate_scenario_prompt.tmpl')
     parser.add_argument('--scenarios', type=Path,
                         default=TEMPLATES / 'validate_scenarios.txt')
-    parser.add_argument('--outfit', choices=('change', 'keep'), default='change')
+    parser.add_argument('--outfit', choices=('change', 'keep', 'both'), default='both',
+                        help='Showcase outfits: change, keep, or both (default: both, change then keep)')
     parser.add_argument('--showcase-template', type=Path,
                         default=TEMPLATES / 'showcase_prompt.tmpl')
     parser.add_argument('--showcase-change', type=Path,
@@ -304,15 +305,15 @@ def scenario_cases(args):
             'scenarios': str(args.scenarios), 'cases': cases}
 
 
-def showcase_cases(args):
+def showcase_cases(args, outfit):
     features, source = character_features(args)
     template = args.showcase_template.read_text(encoding='utf-8').strip()
-    data_file = args.showcase_change if args.outfit == 'change' else args.showcase_keep
+    data_file = args.showcase_change if outfit == 'change' else args.showcase_keep
     metadata = {'trigger': args.trigger, 'character_features': features,
-                'character_features_source': str(source), 'outfit': args.outfit,
+                'character_features_source': str(source), 'outfit': outfit,
                 'template': str(args.showcase_template), 'data_file': str(data_file),
                 'showcase_seed_base': args.showcase_seed_base}
-    if args.outfit == 'keep':
+    if outfit == 'keep':
         outfit_source = args.workspace / '07_validate' / 'prompts' / 'main_outfit_tags.txt'
         outfit_json = args.workspace / '05_caption' / 'vocab' / 'main_outfit.json'
         if outfit_source.exists():
@@ -331,7 +332,7 @@ def showcase_cases(args):
         rows = [line.strip() for line in lines if line.strip()]
     cases = []
     for index, (row, scene) in enumerate(zip(rows, scenes)):
-        cloth = (', '.join(outfit_tags) if args.outfit == 'keep'
+        cloth = (', '.join(outfit_tags) if outfit == 'keep'
                  else row[:-len(scene)].strip().rstrip(',').strip())
         other = 'solo_focus, human focus, ' + scene
         prompt = template.replace('{trigger}', args.trigger).replace(
@@ -377,26 +378,36 @@ def main():
         rows = ([] if args.no_base else [('base', None)]) + loras
         reference = args.out_dir / 'reconstruction' / 'reference'
         reconstruction = []
-        cases_by_test = {}
+        workloads = []
         if 'reconstruction' in args.tests:
             reconstruction = reconstruction_cases(train, reference, args.num_reconstruction, True)
-            cases_by_test['reconstruction'] = reconstruction
-        prompt_tests = {}
-        for name, build_cases in (('scenario', scenario_cases), ('showcase', showcase_cases)):
-            if name in args.tests:
-                prompt_tests[name] = build_cases(args)
-                cases_by_test[name] = prompt_tests[name]['cases']
-        test_dirs = {name: args.out_dir / (f'showcase_{args.outfit}' if name == 'showcase' else name)
-                     for name in cases_by_test}
+            workloads.append({'key': 'reconstruction', 'name': 'reconstruction',
+                              'dir': args.out_dir / 'reconstruction', 'cases': reconstruction,
+                              'prompts': None})
+        if 'scenario' in args.tests:
+            built = scenario_cases(args)
+            workloads.append({'key': 'scenario', 'name': 'scenario',
+                              'dir': args.out_dir / 'scenario', 'cases': built['cases'],
+                              'prompts': built})
+        if 'showcase' in args.tests:
+            modes = ('change', 'keep') if args.outfit == 'both' else (args.outfit,)
+            for outfit in modes:
+                built = showcase_cases(args, outfit)
+                workloads.append({
+                    'key': f'showcase_{outfit}' if len(modes) > 1 else 'showcase',
+                    'name': 'showcase', 'dir': args.out_dir / f'showcase_{outfit}',
+                    'cases': built['cases'], 'prompts': built})
         tests = {}
-        for name, cases in cases_by_test.items():
+        for workload in workloads:
+            name = workload['name']
             jobs = [{'test': name, 'label': label, 'case': case['case'], 'seed': seed,
                      'lora_file': str(lora) if lora else None, 'output_path': str(
-                         test_dirs[name] / 'lora_test' / f"{label}_{case['case']}_seed{seed}.png"),
+                         workload['dir'] / 'lora_test' / f"{label}_{case['case']}_seed{seed}.png"),
                      'prompt': case['prompt']}
-                    for label, lora in rows for case in cases
+                    for label, lora in rows for case in workload['cases']
                     for seed in (args.seeds if name == 'reconstruction' else [case['seed']])]
-            tests[name] = {'jobs': jobs, 'job_count': len(jobs)}
+            workload['jobs'] = jobs
+            tests[workload['key']] = {'jobs': jobs, 'job_count': len(jobs)}
         references = [{'case': case['case'], 'image': case['reference'],
                        'caption': str(Path(case['reference']).with_suffix('.txt')),
                        'source_file': case['source_file']} for case in reconstruction]
@@ -414,15 +425,17 @@ def main():
         confirm_loras(args, loras)
         if 'reconstruction' in tests:
             reconstruction_cases(train, reference, args.num_reconstruction, False)
-        for name, test in tests.items():
-            test_dir = test_dirs[name]
+        for workload in workloads:
+            name = workload['name']
+            test_dir = workload['dir']
+            jobs = workload['jobs']
             (test_dir / 'lora_test').mkdir(parents=True, exist_ok=True)
-            if name in prompt_tests:
+            if workload['prompts'] is not None:
                 (test_dir / 'prompts.json').write_text(
-                    json.dumps(prompt_tests[name], ensure_ascii=False, indent=2) + '\n',
+                    json.dumps(workload['prompts'], ensure_ascii=False, indent=2) + '\n',
                     encoding='utf-8')
             entries = []
-            for job in test['jobs']:
+            for job in jobs:
                 path = Path(job['output_path'])
                 if not path.exists():
                     lora = Path(job['lora_file']) if job['lora_file'] else None
@@ -435,17 +448,17 @@ def main():
                         rgb.save(path, format='PNG')
                 entries.append({**job, **inspect_image(path)})
             meta = {'trigger': args.trigger, 'selected_tests': args.tests,
-                    'negative': negative, 'seeds': list(dict.fromkeys(j['seed'] for j in test['jobs'])),
+                    'negative': negative, 'seeds': list(dict.fromkeys(j['seed'] for j in jobs)),
                     'strength': args.strength, 'workflow': str(args.workflow), 'unet': args.unet,
                     'width': args.width, 'height': args.height, 'steps': args.steps, 'cfg': args.cfg,
                     'sampler': args.sampler, 'scheduler': args.scheduler, 'images': entries}
             if name == 'reconstruction':
                 meta['reference_files'] = references
             elif name == 'showcase':
-                meta.update({key: value for key, value in prompt_tests[name].items() if key != 'cases'})
+                meta.update({key: value for key, value in workload['prompts'].items() if key != 'cases'})
             (test_dir / 'test_meta.json').write_text(
                 json.dumps(meta, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-            columns = [(case['case'], seed) for case in cases_by_test[name]
+            columns = [(case['case'], seed) for case in workload['cases']
                        for seed in (args.seeds if name == 'reconstruction' else [case['seed']])]
             comparison(args, rows, test_dir, columns,
                        {case['case']: case['reference'] for case in reconstruction}
