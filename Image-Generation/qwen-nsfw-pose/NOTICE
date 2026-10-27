@@ -1,0 +1,13 @@
+qwen-nsfw-pose
+Copyright 2026 Arekejoker
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+Vendored into skill-router-nexus from the upstream main tip:
+
+- Homepage: https://github.com/Arekejoker/qwen21-nsfw-pose-skill
+- Commit: 15e107bf903f8a909dba937214d2f1e448e549a2
+- Upstream frontmatter name: qwen21-nsfw-pose
+- Nexus folder and frontmatter name: qwen-nsfw-pose
+
+Local change: SKILL.md frontmatter `name` was set to `qwen-nsfw-pose` to match this knowledge base's skill naming rules. Operational scripts, workflows, prompts, references, downloads, and the pose library are the upstream files at that commit.
