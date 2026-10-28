@@ -6,6 +6,7 @@ description: >-
   session auth in ~/.grok/auth.json — same family as `grok -p`, without the TUI.
   Use for single-turn Grok Build prompts from a bot. Not for forging login or
   bypassing CLI version / token-auth headers.
+  Grok Bot host only (hostname grok-bot-vm*).
 ---
 
 # Grok Build cli-chat-proxy client
@@ -14,6 +15,13 @@ One script: `{baseDir}/grok_cli_chat_proxy_client.py`
 Target: `POST https://cli-chat-proxy.grok.com/v1/chat/completions` (SSE stream)
 
 Derived from Grok CLI **1.0.67** + official README section *Using auth.json for API Access*, verified live on 2026-10-28.
+
+## Host lock（強制）
+
+**Only run on the Grok Bot host** (`hostname` starts with `grok-bot-vm`, e.g. this box).  
+Do **not** install, copy, or invoke this skill on joe’s other machines, CI runners, or arbitrary laptops.
+
+The `.py` client exits unless `socket.gethostname()` starts with `grok-bot-vm` (override only with env `GROK_HOST_UNLOCK=1` if joe explicitly unlocks).
 
 ## When to use
 
