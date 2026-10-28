@@ -327,6 +327,60 @@ async def recv_until_completed(ws) -> dict[str, Any]:
     }
 
 
+def resolve_collab_and_role(model: dict, model_slug: str) -> tuple[str, str, str | None]:
+    """Some cache entries (gpt-5.6-*, gpt-reserve, codex-auto-review) have
+    collaboration_modes / multi_agent == null. Borrow strings from a donor
+    model that has them so the turn payload still matches the gpt-6 wire shape,
+    while keeping request `model` = the selected slug.
+    """
+    mm = model.get("model_messages") or {}
+    collab_modes = mm.get("collaboration_modes")
+    multi = mm.get("multi_agent")
+    collab = None
+    role_root = None
+    if isinstance(collab_modes, dict):
+        collab = collab_modes.get("default")
+    if isinstance(multi, dict):
+        role = multi.get("role") or {}
+        if isinstance(role, dict):
+            role_root = role.get("root")
+    donor = None
+    if not isinstance(collab, str) or not isinstance(role_root, str):
+        # Prefer another listed model that has full collab+role; default sol.
+        cache = load_json(CODEX_HOME / "models_cache.json")
+        preferred = [
+            "gpt-6.1-sol",
+            "gpt-6-sol",
+            "gpt-6.1-terra",
+            "gpt-6-astra",
+            "gpt-6-luna",
+        ]
+        donors = preferred + [m.get("slug") for m in cache.get("models") or [] if m.get("slug") not in preferred]
+        for slug in donors:
+            if not slug or slug == model_slug:
+                continue
+            try:
+                other = load_model(slug)
+            except SystemExit:
+                continue
+            omm = other.get("model_messages") or {}
+            oc = (omm.get("collaboration_modes") or {}).get("default") if isinstance(omm.get("collaboration_modes"), dict) else None
+            om = omm.get("multi_agent") if isinstance(omm.get("multi_agent"), dict) else None
+            oroot = ((om or {}).get("role") or {}).get("root") if isinstance(om, dict) else None
+            if isinstance(oc, str) and isinstance(oroot, str):
+                if not isinstance(collab, str):
+                    collab = oc
+                if not isinstance(role_root, str):
+                    role_root = oroot
+                donor = slug
+                break
+    if not isinstance(collab, str) or not isinstance(role_root, str):
+        raise SystemExit(
+            f"model {model_slug} lacks collaboration_modes/multi_agent and no donor found in models_cache.json"
+        )
+    return collab, role_root, donor
+
+
 async def main(prompt: str) -> None:
     token, account_id = load_auth()
     cfg = load_config()
@@ -334,8 +388,7 @@ async def main(prompt: str) -> None:
     effort = cfg.get("model_reasoning_effort", "high")
     model = load_model(model_slug)
     base_instructions = model["model_messages"]["instructions_template"]
-    collab = model["model_messages"]["collaboration_modes"]["default"]
-    role_root = model["model_messages"]["multi_agent"]["role"]["root"]
+    collab, role_root, collab_donor = resolve_collab_and_role(model, model_slug)
     verbosity = model.get("default_verbosity") or "low"
     inst = installation_id()
     sandbox_mode = "read-only"
@@ -546,6 +599,11 @@ async def main(prompt: str) -> None:
             "chatgpt-account-id": "~/.codex/auth.json tokens.account_id",
             "installation_id": "~/.codex/installation_id",
             "model/verbosity/instructions": "~/.codex/models_cache.json + config.toml",
+            "collaboration_mode/multi_agent.role": (
+                f"borrowed from {collab_donor} (selected model cache had null)"
+                if collab_donor
+                else "selected model model_messages"
+            ),
             "reasoning.effort": "config.toml model_reasoning_effort",
             "session/turn/window ids": "uuid7()",
             "item ids (msg_/at_)": "uuid5(NAMESPACE_OID(session), content_bytes)",
