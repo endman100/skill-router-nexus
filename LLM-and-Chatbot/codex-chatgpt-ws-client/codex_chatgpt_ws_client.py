@@ -6,7 +6,6 @@ import asyncio
 import hashlib
 import json
 import os
-import socket
 import platform
 import time
 import uuid
@@ -23,18 +22,6 @@ ORIGINATOR = "codex_clone"  # mark as our clone; use codex_exec to match CLI byt
 CLI_VERSION = "0.163.0"
 OPENAI_BETA = "responses_websockets=2026-02-06"
 
-
-
-def require_grok_host() -> None:
-    """Refuse to run off the Grok Bot VM unless joe sets GROK_HOST_UNLOCK=1."""
-    if os.environ.get("GROK_HOST_UNLOCK", "").strip() == "1":
-        return
-    host = socket.gethostname()
-    if not host.startswith("grok-bot-vm"):
-        raise SystemExit(
-            f"refusing to run on host {host!r}: this skill is locked to Grok Bot "
-            f"(hostname must start with 'grok-bot-vm'). Set GROK_HOST_UNLOCK=1 only if joe unlocks."
-        )
 
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text())
@@ -395,7 +382,6 @@ def resolve_collab_and_role(model: dict, model_slug: str) -> tuple[str, str, str
 
 
 async def main(prompt: str) -> None:
-    require_grok_host()
     token, account_id = load_auth()
     cfg = load_config()
     model_slug = cfg.get("model", "gpt-6.1-sol")

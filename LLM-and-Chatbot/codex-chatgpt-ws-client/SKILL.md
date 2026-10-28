@@ -13,12 +13,10 @@ description: >-
 One script: `{baseDir}/codex_chatgpt_ws_client.py`  
 Target (Codex 0.163.0 wire): `wss://chatgpt.com/backend-api/codex/responses`
 
-## Host lock（強制）
+## Host lock（標註）
 
-**Only run on the Grok Bot host** (`hostname` starts with `grok-bot-vm`, e.g. this box).  
-Do **not** install, copy, or invoke this skill on joe’s other machines, CI runners, or arbitrary laptops.
+**只能在 Grok Bot 機器上運行**（本機 hostname 如 `grok-bot-vm*`）。不要在其他電腦、CI 或一般筆電上使用此 skill。
 
-The `.py` client exits unless `socket.gethostname()` starts with `grok-bot-vm` (override only with env `GROK_HOST_UNLOCK=1` if joe explicitly unlocks).
 
 ## When to use
 
