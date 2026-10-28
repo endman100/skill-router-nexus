@@ -5,12 +5,20 @@ description: >-
   (wss://chatgpt.com/backend-api/codex/responses) without launching `codex exec`.
   Use when you need a single-turn Codex/ChatGPT Responses call from a bot, with
   local ~/.codex auth. Not for chatgpt.com web UI / Sentinel bypass.
+  Grok Bot host only (hostname grok-bot-vm*).
 ---
 
 # Codex ChatGPT WS client
 
 One script: `{baseDir}/codex_chatgpt_ws_client.py`  
 Target (Codex 0.163.0 wire): `wss://chatgpt.com/backend-api/codex/responses`
+
+## Host lock（強制）
+
+**Only run on the Grok Bot host** (`hostname` starts with `grok-bot-vm`, e.g. this box).  
+Do **not** install, copy, or invoke this skill on joe’s other machines, CI runners, or arbitrary laptops.
+
+The `.py` client exits unless `socket.gethostname()` starts with `grok-bot-vm` (override only with env `GROK_HOST_UNLOCK=1` if joe explicitly unlocks).
 
 ## When to use
 
