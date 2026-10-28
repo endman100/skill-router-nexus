@@ -29,13 +29,13 @@ Reads `model` from `~/.codex/config.toml`; slug must exist in `models_cache.json
 | `gpt-6.1-terra` | works |
 | `gpt-6-sol` | works |
 | `gpt-6-luna` | works |
-| `gpt-reserve` | **blocked in client** — `model_messages.collaboration_modes` / `multi_agent` are `null` |
-| `gpt-5.6-sol` | **blocked in client** — same |
-| `gpt-5.6-terra` | **blocked in client** — same |
-| `gpt-5.6-luna` | **blocked in client** — same |
-| `codex-auto-review` | **blocked in client** — same (`visibility: hide`) |
+| `gpt-reserve` | works (borrows collab/role strings) |
+| `gpt-5.6-sol` | works (borrows collab/role strings) |
+| `gpt-5.6-terra` | works (borrows collab/role strings) |
+| `gpt-5.6-luna` | works (borrows collab/role strings) |
+| `codex-auto-review` | works (borrows collab/role strings; cache `visibility: hide`) |
 
-Working models have `collaboration_modes.default` + `multi_agent.role.root` in cache. The script currently indexes those unconditionally (`TypeError` if null). That is a client assumption from the Codex 0.163.0 wire for the gpt-6.* family, not proof the API rejects the other slugs.
+**Null-cache models:** some entries have `model_messages.collaboration_modes` / `multi_agent` = `null`. The script still uses that slug for the request `model` field, but borrows `collaboration_modes.default` + `multi_agent.role.root` text from a donor (prefer `gpt-6.1-sol`). Own `instructions_template` is always used.
 
 ## Place these files on the machine (do not paste secrets into chat)
 
