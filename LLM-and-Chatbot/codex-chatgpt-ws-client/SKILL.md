@@ -18,6 +18,25 @@ Target (Codex 0.163.0 wire): `wss://chatgpt.com/backend-api/codex/responses`
 - Prefer a **thin WS client** over spawning the full CLI
 - Do **not** use this for chatgpt.com web `/f/conversation` (different API + Sentinel)
 
+## Models (verified 2026-10-28 on this box)
+
+Reads `model` from `~/.codex/config.toml`; slug must exist in `models_cache.json`.
+
+| Model slug | Status with this script |
+|---|---|
+| `gpt-6.1-sol` | works (default) |
+| `gpt-6-astra` | works |
+| `gpt-6.1-terra` | works |
+| `gpt-6-sol` | works |
+| `gpt-6-luna` | works |
+| `gpt-reserve` | **blocked in client** — `model_messages.collaboration_modes` / `multi_agent` are `null` |
+| `gpt-5.6-sol` | **blocked in client** — same |
+| `gpt-5.6-terra` | **blocked in client** — same |
+| `gpt-5.6-luna` | **blocked in client** — same |
+| `codex-auto-review` | **blocked in client** — same (`visibility: hide`) |
+
+Working models have `collaboration_modes.default` + `multi_agent.role.root` in cache. The script currently indexes those unconditionally (`TypeError` if null). That is a client assumption from the Codex 0.163.0 wire for the gpt-6.* family, not proof the API rejects the other slugs.
+
 ## Place these files on the machine (do not paste secrets into chat)
 
 | Path | Required | What |
