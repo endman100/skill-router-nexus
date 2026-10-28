@@ -59,7 +59,9 @@ Optional env:
 | `GROK_CLONE_OUT` | where to write last_request/result JSON |
 | `GROK_HTTP_TIMEOUT` | seconds (default `180`) |
 
-## Models (`grok models`, grok.com login)
+## Models (`grok models`, grok.com login) — verified 2026-10-28
+
+All four return successfully via this script (HTTP 200 SSE):
 
 | Model id | Notes |
 |---|---|
