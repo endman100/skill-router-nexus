@@ -6,7 +6,7 @@ description: >-
   session auth in ~/.grok/auth.json — same family as `grok -p`, without the TUI.
   Use for single-turn Grok Build prompts from a bot. Not for forging login or
   bypassing CLI version / token-auth headers.
-  Grok Bot host only (hostname grok-bot-vm*).
+  OIDC auto-refresh via refresh_token. Grok Bot host only (hostname grok-bot-vm*).
 ---
 
 # Grok Build cli-chat-proxy client
@@ -38,7 +38,19 @@ Derived from Grok CLI **1.0.67** + official README section *Using auth.json for 
 
 Override home with env `GROK_HOME` if needed.
 
+## OIDC auto-refresh (matches Grok CLI)
+
+Access tokens in `~/.grok/auth.json` expire in ~6h (`expires_in=21600`). The official CLI silent-refreshes via IdP; this script does the same:
+
+1. Read entry (`key`, `refresh_token`, `oidc_client_id`, `oidc_issuer`, `expires_at`)
+2. If `expires_at` is within `GROK_AUTH_EARLY_INVALIDATION_SECS` (default **300**), or proxy returns **401**, POST to `{issuer}/.well-known/openid-configuration` → `token_endpoint` (for SpaceXAI: `https://auth.x.ai/oauth2/token`) with `grant_type=refresh_token` + `client_id` + `refresh_token` (public client, no secret)
+3. Rewrite `key` / `refresh_token` / `expires_at` in `auth.json` (mode `0600`)
+4. Retry the chat-completions call once after a 401-driven refresh
+
+Env: `GROK_AUTH_EARLY_INVALIDATION_SECS` (CLI default 300). CLI flag: `--force-refresh`.
+
 ## Run
+
 
 ```bash
 python3 {baseDir}/grok_cli_chat_proxy_client.py "your prompt here"
