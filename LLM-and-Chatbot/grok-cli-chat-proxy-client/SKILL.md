@@ -1,17 +1,18 @@
 ---
 name: grok-cli-chat-proxy-client
 description: >-
-  Call Grok Build quota via the official cli-chat-proxy
+  Call Grok Build via the official cli-chat-proxy
   (https://cli-chat-proxy.grok.com/v1/chat/completions) using `grok login`
-  session auth in ~/.grok/auth.json — same family as `grok -p`, without the TUI.
-  Use for single-turn Grok Build prompts from a bot. Not for forging login or
+  session auth in ~/.grok/auth.json — same family as `grok -p`, without the TUI —
+  or read weekly usage with grok_quota.py (GET /v1/billing?format=credits).
+  Use for single-turn Grok Build prompts or quota readout from a bot. Not for forging login or
   bypassing CLI version / token-auth headers.
   OIDC auto-refresh via refresh_token. Grok Bot host only (hostname grok-bot-vm*).
 ---
 
 # Grok Build cli-chat-proxy client
 
-One script: `{baseDir}/grok_cli_chat_proxy_client.py`  
+Scripts: `{baseDir}/grok_cli_chat_proxy_client.py` (chat), `{baseDir}/grok_quota.py` (quota)  
 Target: `POST https://cli-chat-proxy.grok.com/v1/chat/completions` (SSE stream)
 
 Derived from Grok CLI **1.0.67** + official README section *Using auth.json for API Access*, verified live on 2026-10-28.
@@ -136,3 +137,22 @@ Top-level keys look like `https://auth.x.ai::<uuid>` (docs curl still shows an o
 | Version gate | binary embeds version | must send `x-grok-client-version` |
 
 For full agent/tools, keep using `grok -p` / `grok agent`. This skill is the thin prompt path.
+
+## Usage / quota (read-only)
+
+Script: `{baseDir}/grok_quota.py`  
+Endpoint: `GET https://cli-chat-proxy.grok.com/v1/billing?format=credits` (same as TUI `/usage`)
+
+```bash
+python3 {baseDir}/grok_quota.py              # human summary (Asia/Taipei)
+python3 {baseDir}/grok_quota.py --json       # full JSON
+python3 {baseDir}/grok_quota.py --tries 20   # more retries on 503
+```
+
+Auth reuses `load_auth_token` from the sibling chat client (`~/.grok/auth.json`). Never paste tokens.
+
+Notes:
+- Unified weekly pool when `isUnifiedBillingUser` (Grok Bot / Build / API / Cursor share one limit).
+- Endpoint is flaky (503 `cursor billing` / `meter unavailable`); the script retries with backoff.
+- Ignore plain `GET /v1/billing` without `format=credits` — legacy monthly fields stay 0 on unified accounts.
+
