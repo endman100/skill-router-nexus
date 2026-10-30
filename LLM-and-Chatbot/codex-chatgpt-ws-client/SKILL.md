@@ -1,16 +1,17 @@
 ---
 name: codex-chatgpt-ws-client
 description: >-
-  Call ChatGPT Codex quota via the official Codex CLI WebSocket
-  (wss://chatgpt.com/backend-api/codex/responses) without launching `codex exec`.
-  Use when you need a single-turn Codex/ChatGPT Responses call from a bot, with
-  local ~/.codex auth. Not for chatgpt.com web UI / Sentinel bypass.
+  Call ChatGPT Codex via the official Codex CLI WebSocket
+  (wss://chatgpt.com/backend-api/codex/responses) without launching `codex exec`,
+  or read remaining usage with codex_usage_probe.py (GET wham/usage).
+  Use when you need a single-turn Codex/ChatGPT Responses call or quota readout
+  from a bot, with local ~/.codex auth. Not for chatgpt.com web UI / Sentinel bypass.
   Grok Bot host only (hostname grok-bot-vm*).
 ---
 
 # Codex ChatGPT WS client
 
-One script: `{baseDir}/codex_chatgpt_ws_client.py`  
+Scripts: `{baseDir}/codex_chatgpt_ws_client.py` (chat), `{baseDir}/codex_usage_probe.py` (quota)  
 Target (Codex 0.163.0 wire): `wss://chatgpt.com/backend-api/codex/responses`
 
 ## Host lock（標註）
@@ -142,3 +143,18 @@ Re-capture tools: run `codex exec` once through mitm, take the first client `res
 
 - chatgpt.com web UI, Sentinel/Turnstile, `/f/conversation`
 - Multi-turn tool loops beyond one generate (extend script if needed)
+
+## Usage / quota (read-only)
+
+Script: `{baseDir}/codex_usage_probe.py`  
+Endpoint: `GET https://chatgpt.com/backend-api/wham/usage`
+
+```bash
+python3 {baseDir}/codex_usage_probe.py          # human summary (Asia/Taipei)
+python3 {baseDir}/codex_usage_probe.py --json   # full JSON
+```
+
+Auth from `~/.codex/auth.json` (`tokens.access_token`, `tokens.account_id`) — never paste tokens into chat.
+
+Useful fields: `plan_type`, `rate_limit.primary_window.used_percent` / `reset_at`, `credits.balance` / `has_credits`.
+
