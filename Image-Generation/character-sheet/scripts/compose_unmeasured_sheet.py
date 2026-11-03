@@ -48,7 +48,7 @@ def fit_asset(asset_dir, entry, cell, canvas, draw, font, inset=18):
     size = (max(1, round(subject.width * scale)), max(1, round(subject.height * scale)))
     x = centered_x(left, right, size[0])
     y = top + max(8, (bottom - top - size[1]) // 2)
-    canvas.paste(subject.resize(size, Image.Resampling.LANCZOS), (x, y))
+    canvas.alpha_composite(subject.resize(size, Image.Resampling.LANCZOS), (x, y))
     label_box = draw_bottom_right_tag(
         draw, (left + 14, top + 14, right - 14, bottom - 14), entry["label"], font,
     )
@@ -91,7 +91,7 @@ def compose(asset_dir: Path, config: dict) -> tuple[Image.Image, dict]:
         math.ceil(max(subject.width * target_height / subject.height for subject in body_subjects)) + 2 * padding,
         max(label_widths) + 28,
     )
-    canvas = Image.new("RGB", (column_width * 5, height), "white")
+    canvas = Image.new("RGBA", (column_width * 5, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(canvas)
 
     detail_placements = {}
@@ -112,7 +112,7 @@ def compose(asset_dir: Path, config: dict) -> tuple[Image.Image, dict]:
             raise ValueError(f"{entry['name']}: body asset does not fit its grid column")
         x = centered_x(left, right, width)
         y = body_top + margin
-        canvas.paste(subject.resize((width, target_height), Image.Resampling.LANCZOS), (x, y))
+        canvas.alpha_composite(subject.resize((width, target_height), Image.Resampling.LANCZOS), (x, y))
         label_box = draw_bottom_right_tag(
             draw, (left + 14, body_top + 14, right - 14, body_bottom - 14), entry["label"], font,
         )
@@ -141,6 +141,7 @@ def compose(asset_dir: Path, config: dict) -> tuple[Image.Image, dict]:
     ordered = details + expressions + views + [neutral]
     return canvas, {
         "layout_mode": "unmeasured", "canvas": list(canvas.size),
+        "background": "native alpha",
         "asset_dir": str(asset_dir.resolve()),
         "ruler": None, "body_data": [],
         "grid": {

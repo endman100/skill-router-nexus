@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 
 CANVAS = (2300, 1876)
@@ -41,39 +41,25 @@ def load_font(size: int, bold: bool = False) -> ImageFont.ImageFont:
     return ImageFont.load_default()
 
 
-def on_white(image: Image.Image) -> Image.Image:
-    """Respect alpha before measuring or pasting; hidden RGB is not foreground."""
-    rgba = image.convert("RGBA")
-    white = Image.new("RGBA", image.size, "white")
-    return Image.alpha_composite(white, rgba).convert("RGB")
-
-
-def foreground_bbox(image: Image.Image, threshold: int = 6) -> tuple[int, int, int, int]:
-    """Retain faint clothing edges while suppressing isolated near-white noise.
-
-    Ignore the 0-5 channel-level background variation seen in generated white
-    assets while retaining the pale edges discarded by the former threshold 18.
-    This is white-margin detection, not semantic segmentation. Pure-white details
-    indistinguishable from the background still require visual crop review.
-    """
-    rgb = on_white(image)
-    channels = ImageChops.difference(rgb, Image.new("RGB", rgb.size, "white")).split()
-    difference = ImageChops.lighter(ImageChops.lighter(channels[0], channels[1]), channels[2])
-    faint = difference.point(lambda value: 255 if value > threshold else 0)
-    strong = difference.point(lambda value: 255 if value > max(18, threshold) else 0)
-    mask = ImageChops.lighter(faint.filter(ImageFilter.MedianFilter(3)), strong)
-    bbox = mask.getbbox()
+def alpha_bbox(image: Image.Image) -> tuple[int, int, int, int]:
+    """Require native transparency; include every nonzero-alpha edge pixel."""
+    if "A" not in image.getbands() and "transparency" not in image.info:
+        raise ValueError("Source must have native alpha")
+    alpha = image.convert("RGBA").getchannel("A")
+    if alpha.getextrema()[0] != 0:
+        raise ValueError("Source must have fully transparent pixels")
+    bbox = alpha.getbbox()
     if bbox is None:
-        raise ValueError("No non-white subject found")
+        raise ValueError("Source is fully transparent")
     return bbox
 
 
 def crop_subject(path: Path) -> Image.Image:
-    if not path.is_file():
-        raise FileNotFoundError(path)
+    """Crop native RGBA by alpha while preserving holes and translucent edges."""
     with Image.open(path) as source:
-        image = on_white(source)
-    return image.crop(foreground_bbox(image))
+        image = source.convert("RGBA")
+        bbox = alpha_bbox(source)
+    return image.crop(bbox)
 
 
 def centered_x(left: int, right: int, width: int) -> int:
@@ -217,7 +203,7 @@ def main() -> None:
         CANVAS = (BODY_RIGHT + 575, CANVAS[1])
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
-    canvas = Image.new("RGB", CANVAS, "white")
+    canvas = Image.new("RGBA", CANVAS, (0, 0, 0, 0))
     draw = ImageDraw.Draw(canvas)
     heading_font = load_font(30, bold=True)
     body_font = load_font(31)
@@ -263,7 +249,7 @@ def main() -> None:
         x = centered_x(panel_left, panel_right, width)
         if x < panel_left or x + width > panel_right:
             raise ValueError(f"{entry['name']} becomes wider than its body panel at the configured height")
-        canvas.paste(resized, (x, height_line_y))
+        canvas.alpha_composite(resized, (x, height_line_y))
         label_box = (panel_left + 18, height_line_y + 18, panel_right - 18, BASELINE_Y - 18)
         draw_bottom_right_text(draw, label_box, entry["label"], label_font)
         placements[entry["name"]] = {
@@ -278,9 +264,9 @@ def main() -> None:
     pixels = canvas.load()
     for y in range(max(0, height_line_y - 1), min(CANVAS[1], height_line_y + 2)):
         for x in range(RULER_X, BODY_RIGHT):
-            red, green, blue = pixels[x, y]
+            red, green, blue, alpha = pixels[x, y]
             if red > 244 and green > 244 and blue > 244:
-                pixels[x, y] = (224, 0, 0)
+                pixels[x, y] = (224, 0, 0, alpha)
 
     expression_height = CANVAS[1] // 3
     expression_placements: dict[str, dict[str, Any]] = {}
@@ -298,7 +284,7 @@ def main() -> None:
         resized = subject.resize(size, Image.Resampling.LANCZOS)
         x = centered_x(EXPRESSION_LEFT, CANVAS[0], size[0])
         y = cell_top + max(8, (available_height - size[1]) // 2)
-        canvas.paste(resized, (x, y))
+        canvas.alpha_composite(resized, (x, y))
         label_box = draw_bottom_right_tag(
             draw,
             (EXPRESSION_LEFT + 14, cell_top + 14, CANVAS[0] - 14, cell_bottom - 14),
