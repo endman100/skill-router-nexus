@@ -1,4 +1,4 @@
 interface:
   display_name: "Character Sheet"
   short_description: "Create 5x3 character turnaround and detail sheets"
-  default_prompt: "Use $character-sheet to create a 5-column by 3-row sheet with three body views, three design details, two expressions, and one large neutral portrait while preserving my reference character and omitting rulers and body data unless I request them."
+  default_prompt: "Use $character-sheet to create a 5-column by 3-row sheet with three body views, three design details, two expressions, and one large neutral portrait through the prompt-pack repo API pipeline while preserving my reference character and omitting rulers and body data."
