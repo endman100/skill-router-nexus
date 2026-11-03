@@ -39,11 +39,9 @@ Use the original's visible proportions and the accepted front as image reference
 
 A front-view correction improved a chibi asset in the recorded run. A later profile correction asking for aligned chin, waist, skirt, and knees did not improve the result and was rejected. Do not treat that profile recipe as proven. Matching silhouette tops and soles in Python does not repair generated anatomy or certify cross-view proportions. Do not stretch body parts to force agreement.
 
-### Crop extent or white-background noise
+### Crop extent and transparency
 
-Use the bundled compositor's `on_white` and `foreground_bbox`, not a separate ad hoc crop implementation. It composites alpha onto white, uses maximum RGB-channel distance from white, and defaults to threshold `6`. A 3-pixel median filter suppresses isolated faint noise; a separate strong mask preserves thin dark details. This retains pale garment edges lost at threshold `18` while ignoring the 0–5 channel variation that caused overly loose crops at threshold `3`.
-
-This is white-margin detection, not semantic segmentation. White-on-white edges and broader background gradients can remain ambiguous. Inspect the crop and final silhouette visually even when geometry verification passes. The compositor does not automatically whiten every source pixel or retouch faces. Fix a source-background defect with a targeted edit when needed; for a crop-code change, add a representative test before claiming it fixed.
+Use `alpha_bbox` and `crop_subject` from the bundled compositor. Require native alpha with fully transparent pixels, crop to all nonzero-alpha pixels, and retain RGBA throughout. Compose onto transparent RGBA with `alpha_composite`; do not flatten onto white. Inspect pale edges, translucent hair, and interior holes even when geometry verification passes. Opaque sources need a new transparent asset before composition.
 
 ### Face hidden in every reference
 

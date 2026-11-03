@@ -22,15 +22,15 @@ class UnmeasuredLayoutTests(unittest.TestCase):
         self.config = json.loads((Path(__file__).parents[1] / "references/config.example.json").read_text())
         self.config.update(canvas_height_px=360, body_margin_px=10, grid_column_width_px=240)
         for name, width in (("front", 80), ("profile", 65), ("back", 105)):
-            im = Image.new("RGB", (width+20, 220), "white")
+            im = Image.new("RGBA", (width+20, 220), (0, 0, 0, 0))
             ImageDraw.Draw(im).rectangle((10, 10, width+9, 209), fill="#456789")
             im.save(self.root / f"{name}.png")
         for name, color in (("detail-hands", "#996633"), ("detail-feet", "#333333"), ("detail-outfit", "#663399")):
-            im = Image.new("RGB", (140, 120), "white")
+            im = Image.new("RGBA", (140, 120), (0, 0, 0, 0))
             ImageDraw.Draw(im).rectangle((10, 10, 129, 109), fill=color)
             im.save(self.root / f"{name}.png")
         for i, color in enumerate(("#882222", "#224488", "#446622"), 1):
-            im = Image.new("RGB", (120, 140), "white")
+            im = Image.new("RGBA", (120, 140), (0, 0, 0, 0))
             ImageDraw.Draw(im).ellipse((10, 10, 109, 129), fill=color)
             im.save(self.root / f"expression-{i}.png")
         shutil.copyfile(self.root / "expression-3.png", self.root / "identity-anchor.png")
@@ -71,8 +71,8 @@ class UnmeasuredLayoutTests(unittest.TestCase):
         self.assertEqual([entry["panel_box"] for entry in data["body_views"].values()], [
             [0, row, width, im.height], [width, row, width * 2, im.height], [width * 2, row, width * 3, im.height],
         ])
-        self.assertEqual(im.getpixel((width * 4, row // 2)), (51, 51, 51))
-        self.assertNotEqual(im.getpixel((width * 4, row + 10)), (51, 51, 51))
+        self.assertEqual(im.getpixel((width * 4, row // 2)), (51, 51, 51, 255))
+        self.assertNotEqual(im.getpixel((width * 4, row + 10)), (51, 51, 51, 255))
         self.verify(im, data)
 
     def test_stale_metric_fields_do_not_change_pixels(self):
@@ -83,7 +83,7 @@ class UnmeasuredLayoutTests(unittest.TestCase):
         self.verify(actual, data)
 
     def test_wide_body_expands_without_squeezing(self):
-        im = Image.new("RGB", (420, 220), "white")
+        im = Image.new("RGBA", (420, 220), (0, 0, 0, 0))
         ImageDraw.Draw(im).rectangle((10, 10, 409, 209), fill="#456789")
         im.save(self.root / "back.png")
         im, data = self.render()
@@ -114,9 +114,36 @@ class UnmeasuredLayoutTests(unittest.TestCase):
 
     def test_exported_pixel_tampering_detected(self):
         im, data = self.render()
-        im.putpixel((0, 0), (255, 0, 0))
+        im.putpixel((0, 0), (255, 0, 0, 0))
         with self.assertRaisesRegex(AssertionError, "Exported pixels"):
             self.verify(im, data)
+
+    def test_native_alpha_survives_render_and_png_roundtrip(self):
+        path = self.root / "front.png"
+        with Image.open(path) as source:
+            source = source.copy()
+        ImageDraw.Draw(source).rectangle((35, 80, 55, 130), fill=(0, 0, 0, 0))
+        ImageDraw.Draw(source).rectangle((10, 20, 25, 60), fill=(252, 252, 252, 128))
+        source.save(path)
+        im, data = self.render()
+        self.assertEqual(im.mode, "RGBA")
+        self.assertEqual(im.getpixel((0, 0))[3], 0)
+        x, y, right, bottom = data["body_views"]["front"]["placed_box"]
+        self.assertEqual(im.getpixel((x + (right-x)//2, y + (bottom-y)//2))[3], 0)
+        self.assertTrue(any(im.getchannel("A").histogram()[1:255]))
+        output = self.root / "sheet.png"
+        im.save(output)
+        with Image.open(output) as saved:
+            self.verify(saved, data)
+
+    def test_verifier_rejects_flattened_output(self):
+        im, data = self.render()
+        with self.assertRaisesRegex(AssertionError, "RGBA"):
+            self.verify(im.convert("RGB"), data)
+        flat = Image.new("RGBA", im.size, "white")
+        flat.alpha_composite(im)
+        with self.assertRaisesRegex(AssertionError, "transparent"):
+            self.verify(flat, data)
 
     def test_expression_cell_shift_detected(self):
         im, data = self.render()

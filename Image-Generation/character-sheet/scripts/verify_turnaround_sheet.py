@@ -24,6 +24,8 @@ def require(condition: bool, message: str) -> None:
 def verify_unmeasured(image, data):
     """Check source geometry and compare exported pixels with a fresh render."""
     from compose_unmeasured_sheet import compose
+    require(image.mode == "RGBA", "Sheet must be RGBA with native alpha")
+    require(image.getchannel("A").getextrema()[0] == 0, "Sheet has no fully transparent pixels")
     require(list(image.size) == data["canvas"], "Canvas size does not match manifest")
     require(data["ruler"] is None and data["body_data"] == [], "Unmeasured mode contains measurement data")
     grid = data["grid"]
@@ -80,7 +82,7 @@ def verify_unmeasured(image, data):
     expected, fresh = compose(Path(data["asset_dir"]), config)
     for key in fresh:
         require(fresh[key] == data[key], f"Manifest mismatch: {key}")
-    require(expected.size == image.size and ImageChops.difference(expected, image).getbbox() is None, "Exported pixels differ from deterministic source render")
+    require(expected.size == image.size and not any(channel.getbbox() for channel in ImageChops.difference(expected, image).split()), "Exported pixels differ from deterministic source render")
     print(f"PASS: unmeasured 5x3 canvas {image.width}x{image.height}; figures {bottom-top}px tall")
     print("PASS: three 1x2 body views and three 1x1 design details occupy the left grid")
     print("PASS: two 1x1 expressions and one 2x2 neutral portrait occupy the right grid")
@@ -92,7 +94,8 @@ def verify_unmeasured(image, data):
 def main() -> None:
     args = parse_args()
     data = json.loads(args.manifest.read_text(encoding="utf-8"))
-    with Image.open(args.image).convert("RGB") as image:
+    with Image.open(args.image) as source:
+        image = source.copy() if data.get("layout_mode") == "unmeasured" else source.convert("RGB")
         if data.get("layout_mode") == "unmeasured":
             verify_unmeasured(image, data)
             return

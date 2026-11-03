@@ -14,10 +14,10 @@ Reuse a suitable original neutral portrait before generating one. If a change is
 Use case: identity-preserve
 Asset type: neutral portrait source for a character turnaround sheet
 Input images: Images 1 through N are all original references of the same subject. <Only if needed: outfit/hair from Image K; clearest face reference is Image J.>
-Primary request: Create one exact frontal, tight face-dominant neutral headshot of the same subject on a pure uniform white background.
+Primary request: Create one exact frontal, tight face-dominant neutral headshot of the same subject on a transparent background with native alpha.
 Composition/framing: crop from the topmost hair or ears to just below the chin or upper neck. Face and hair occupy roughly 80–90% of the image. Show at most a narrow edge of the shoulders or clothing neckline.
 Constraints: preserve the same person and apparent age shown in the originals; do not redesign, beautify, or retouch the face. Preserve the referenced hair, clothing neckline, and rendering treatment. Head level and facing straight ahead, both eyes naturally open, mouth closed and relaxed.
-Avoid: bust portrait, half-body portrait, visible chest, torso, upper arms, or waist; head rotation, perspective exaggeration, added labels, border, watermark. Preserve garment lettering and natural shading on the subject; no cast shadow on the white background.
+Avoid: bust portrait, half-body portrait, visible chest, torso, upper arms, or waist; head rotation, perspective exaggeration, added labels, border, watermark. Preserve garment lettering and natural shading on the subject; no cast shadow on the transparent background.
 ```
 
 Compare the portrait with the originals before accepting it. It is a framing and expression-editing guide, not proof of likeness; the originals remain the identity authority for subsequent calls.
@@ -30,7 +30,7 @@ Asset type: isolated character turnaround source asset
 Input images: Images 1 through N are every original reference and are the sole identity authority. <Only when it passed direct likeness review: Image N+1 is the accepted neutral portrait, used only as a pose/crop continuity guide.> <If needed: outfit/hair from Image K.>
 Primary request: Create one full-body FRONT view of the same character.
 Composition: upright neutral turnaround pose, entire body visible from the topmost hair or accessory to the soles, arms relaxed slightly away from the torso, feet visible, centered, orthographic-like presentation.
-Scene/backdrop: pure uniform white background; no floor plane.
+Scene/backdrop: transparent background with native alpha; no floor plane.
 Constraints: preserve the same person and apparent age shown in the originals; do not redesign or beautify the face. Preserve the reference's head-to-torso proportions without normalizing stylized anatomy. Preserve hairstyle, accessories, outfit, colors, and rendering treatment. Do not invent decorative garment details. Complete unseen clothing minimally and consistently.
 Preserve existing garment lettering, patterns, worn accessories, and natural shading on the subject. Omit unrelated scenery, background cast shadows or reflections, added labels, rulers, borders, and watermarks. Do not crop the head or feet.
 ```
@@ -43,7 +43,7 @@ Asset type: isolated character turnaround source asset
 Input images: Images 1 through N are every original reference and are the sole identity authority. Image N+1 is the accepted front full-body asset, guiding outfit, proportions, pose family, scale, and rendering. <Only if it passed direct likeness review and is attached: Image N+2 is the neutral portrait framing/continuity guide.>
 Primary request: Create one full-body <LEFT PROFILE / BACK> view of the same character.
 Composition: upright neutral turnaround pose, entire body visible from the topmost hair or accessory to the soles, arms relaxed slightly away from the torso, feet visible, centered, orthographic-like presentation. Match the accepted front asset's figure scale and vertical crop.
-Scene/backdrop: pure uniform white background; no floor plane.
+Scene/backdrop: transparent background with native alpha; no floor plane.
 Constraints: preserve the same person and apparent age shown in the originals; do not redesign or beautify the face. Preserve the referenced hairstyle and outfit. Match the accepted front's proportions and clothing continuity without copying facial drift. Infer only the minimum coherent hidden construction.
 Preserve existing garment lettering, patterns, worn accessories, and natural shading on the subject. Omit unrelated scenery, background cast shadows or reflections, added labels, rulers, borders, and watermarks. Do not crop the head or feet.
 ```
@@ -59,10 +59,10 @@ Use case: character-design-detail
 Asset type: isolated <HANDS / FEET OR FOOTWEAR / OUTFIT DETAILS / USER-SELECTED FEATURE> source for a character model sheet
 Input images: Images 1 through N are all original references and define identity and design. Image N+1 is the accepted front full-body asset, used only as a continuity guide.
 Primary request: Create one clear, centered close-up of <DETAIL>. Show <both hands / exactly two front-facing feet or shoes, one left and one right / the most identity-defining garment construction and worn accessory / selected feature> at a useful inspection scale.
-Scene/backdrop: pure uniform white background.
+Scene/backdrop: transparent background with native alpha.
 Constraints: preserve the exact design language, colors, materials, markings, fasteners, accessories, and rendering treatment visible in the originals. Keep left/right asymmetry when present. Infer only the minimum coherent construction for hidden portions and disclose that inference.
 Composition: fit the complete requested detail comfortably inside a square cell with clean separation and no clipping.
-Avoid: face portrait, full-body pose, unrelated props, decorative redesign, labels, rulers, borders, watermark, floor plane, or cast shadow on the white background. For FEET / FOOTWEAR, also avoid any third foot or shoe, extra limb, duplicate, alternate pair, inset, exploded view, side view, rear view, sole view, or mixed angle.
+Avoid: face portrait, full-body pose, unrelated props, decorative redesign, labels, rulers, borders, watermark, floor plane, or cast shadow on the transparent background. For FEET / FOOTWEAR, also avoid any third foot or shoe, extra limb, duplicate, alternate pair, inset, exploded view, side view, rear view, sole view, or mixed angle.
 ```
 
 For `HANDS`, include distinctive gloves, claws, jewelry, markings, or held accessories that are part of the design. For `FEET / FOOTWEAR`, show exactly two feet or shoes, one left and one right, both pointing straight toward the viewer, parallel, symmetric in scale, and fully visible. Preserve their toe shape, heel height, fasteners, markings, and material transitions without adding a sole or alternate-angle study. Visually count the result before acceptance: count other than two is an automatic failure. For `OUTFIT DETAILS`, prioritize construction that would otherwise be ambiguous to an animator or modeler: layered fabric, closures, trim, emblem, belt, collar, or signature worn accessory.
@@ -75,9 +75,9 @@ Asset type: facial-expression source asset for a character turnaround sheet
 Input images: Images 1 through N are all original references and define identity. Image N+1 is the accepted neutral portrait to edit, supplying pose, outfit, crop, and scale.
 Primary request: Create a centered, front-facing, tight face-dominant headshot with <EXPRESSION>.
 Composition/framing: crop from the topmost hair or ears to just below the chin or upper neck. Face and hair occupy roughly 80–90% of the image. Show at most a narrow edge of the shoulders or clothing neckline.
-Scene/backdrop: pure uniform white background.
+Scene/backdrop: transparent background with native alpha.
 Constraints: preserve the same person and apparent age shown in the originals; do not redesign, beautify, or retouch the face. Keep the target's head angle, hairstyle, clothing, rendering, crop, and scale. Allow the facial-muscle movement needed for the requested expression.
-Avoid: bust portrait, half-body portrait, visible chest, torso, upper arms, or waist; head rotation, perspective exaggeration, added accessories, added labels, border, watermark. Preserve garment lettering and natural shading on the subject; no cast shadow on the white background.
+Avoid: bust portrait, half-body portrait, visible chest, torso, upper arms, or waist; head rotation, perspective exaggeration, added accessories, added labels, border, watermark. Preserve garment lettering and natural shading on the subject; no cast shadow on the transparent background.
 ```
 
 ### Strong-expression default package
@@ -95,7 +95,7 @@ Use case: precise-object-edit
 Asset type: facial-expression source asset for a character turnaround sheet
 Input images: Images 1 through N are all original references and define identity. Image N+1 is the expression asset to edit.
 Primary request: Change only <THE REQUESTED EXPRESSION OR EYE STATE>.
-Constraints: preserve the same person and apparent age shown in the originals. Keep the target's emotion except for the requested change, head angle, gaze of the unedited eye, unedited facial features, hair, outfit, crop, scale, white background, and rendering unchanged.
+Constraints: preserve the same person and apparent age shown in the originals. Keep the target's emotion except for the requested change, head angle, gaze of the unedited eye, unedited facial features, hair, outfit, crop, scale, native alpha, and rendering unchanged.
 Avoid: added labels, border, watermark. Preserve original garment lettering and patterns.
 ```
 
