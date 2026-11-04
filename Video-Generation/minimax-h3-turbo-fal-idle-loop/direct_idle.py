@@ -54,8 +54,8 @@ def main():
                         help="also keep pre-crossfade provider mp4 as OUTPUT.raw.mp4")
     parser.add_argument("--no-loop-xfade", action="store_true",
                         help="skip ffmpeg end/start crossfade")
-    parser.add_argument("--cross", type=float, default=0.5,
-                        help="seamless loop crossfade seconds (default 0.5)")
+    parser.add_argument("--cross", type=float, default=0.15,
+                        help="seamless loop crossfade seconds (default 0.15; 0.5 often flickers)")
     args = parser.parse_args()
     output = args.output or args.input.with_suffix(".idle.mp4")
     mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}.get(args.input.suffix.lower())
