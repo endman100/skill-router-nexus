@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from urllib.request import Request, urlopen
 
-MODEL = "minimax/h3-max-turbo/image-to-video"
+MODEL = "minimax/h3-max/image-to-video"
 UPLOAD = "https://rest.alpha.fal.ai/storage/upload/initiate?storage_type=fal-cdn-v3"
 PROMPT = """How the reference pictures align with the target video: Picture 1 is the first frame at 0.00 seconds; Picture 2 is the identical final frame at 5.00 seconds.
 
@@ -34,7 +34,7 @@ def main():
         parser.error("Input must be PNG or JPEG")
     image = args.input.read_bytes()
     body = dict(prompt=PROMPT, image_url="https://fal.media/DRY-RUN.png",
-                end_image_url="https://fal.media/DRY-RUN.png", duration=5, resolution="480P",
+                end_image_url="https://fal.media/DRY-RUN.png", duration=5, resolution="768P",
                 prompt_expansion_mode="disabled", enable_safety_checker=False)
     if args.dry_run:
         print(json.dumps(dict(model=MODEL, body=body, output=str(output)), indent=2))
