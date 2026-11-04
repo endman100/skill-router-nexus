@@ -40,7 +40,7 @@ def seamless_loop(src: Path, dst: Path, cross=0.5):
         "ffmpeg", "-y", "-i", str(src), "-i", str(src),
         "-filter_complex",
         f"[0:v][1:v]xfade=transition=fade:duration={cross}:offset={offset}",
-        "-an", "-t", f"{duration}", "-c:v", "libx264", "-crf", "17", "-preset", "slow", "-pix_fmt", "yuv420p",
+        "-an", "-t", f"{duration}", "-c:v", "libx264", "-b:v", "5M", "-maxrate", "6M", "-bufsize", "10M", "-preset", "slow", "-pix_fmt", "yuv420p",
         "-movflags", "+faststart", str(dst),
     ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
