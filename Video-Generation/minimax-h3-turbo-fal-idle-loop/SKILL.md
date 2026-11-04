@@ -3,7 +3,7 @@ name: minimax-h3-turbo-fal-idle-loop
 description: >-
   Use when generating a five-second idle loop MP4 from one PNG/JPEG with
   MiniMax H3 Max on fal at 768P. Reuses the same image as first and last frame
-  for subtle breathing and blinking. Trigger on H3 idle loop, H3 Turbo idle loop, fal idle
+  for readable idle motion (breathing, blink, soft-body bounce) on a flat #ffffff background; character-agnostic. Trigger on H3 idle loop, H3 Turbo idle loop, fal idle
   video, 單圖待機循環影片. Not for Ref2VA video editing or upscaling.
 ---
 
@@ -26,7 +26,7 @@ CLI：`python3 direct_idle.py INPUT [OUTPUT] [--dry-run]`。省略 OUTPUT 時，
 
 ## 固定配方與交付
 
-腳本將圖片上傳至 fal storage，以同一個 URL 填入 `image_url`／`end_image_url`，同步呼叫 `minimax/h3-max/image-to-video`，使用內嵌原始 Idle prompt、5 秒、768P，再下載 `result.video.url`。prompt 固定鏡頭，只允許細微呼吸與眨眼；來源為 `endman100/h3-chat-system` 提交 `52b2837` 的 `templates.idle_loop_h3`，無外部檔案相依。
+腳本將圖片上傳至 fal storage，以同一個 URL 填入 `image_url`／`end_image_url`，同步呼叫 `minimax/h3-max/image-to-video`，使用內嵌原始 Idle prompt、5 秒、768P，再下載 `result.video.url`。prompt 固定鏡頭與純白背景 `#ffffff`，角色無關可換圖；允許較明顯呼吸／眨眼／髮絲與胸腔軟體慣性晃動，末秒回到相同首尾幀。無外部檔案相依。
 
 - 成功後確認 MP4 存在且非空，透過目前介面附上 MP4／artifact，並提供可用的檔案路徑。
 - `<OUTPUT>.result.json` 保存 provider 回應。若只有下載失敗，從其中的 `video.url` 取回影片，不要重新生成。生成逾時／失敗不自動重送；回報錯誤並先核對供應商結果，避免重複付費。
