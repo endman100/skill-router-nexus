@@ -11,6 +11,8 @@ description: "LensErase（LensFamily/LensErase）的 mask-based Erase Anything �
 
 以預訓練 Lens 生成模型為基礎，透過 Mask-Aware RoPE 將遮罩資訊注入來源影像 tokens，經 SFT 與 contract-guided、region-aware RL 改善消除品質；推論時以 TraceFusion 估計實際編輯區域並保留其餘內容。
 
+串流影片的遮罩式物件消除可參考 [StreamErase](../../Video-Editing/streamerase/SKILL.md)；兩者用途相近，未查得模型衍生關係。
+
 ## 發布狀態與執行方式
 
 查核日期：2026-11-11；[官方 repo](https://github.com/LensFamily/LensErase) `main` 查核版本：`0db2cb984517f8dcdc14c55199400a526e7a9201`。
