@@ -82,6 +82,7 @@ skill-router-nexus/
 ├── Agent-Plan-Review/
 ├── Agent-Execute/
 ├── Agent-Verification/
+├── Bot-Management/
 ├── MCP-Util/
 ├── Skill-Util/
 ├── CI-CD-and-Monitoring/
@@ -346,6 +347,7 @@ skill-router-nexus/
 ├── Agent-Plan-Review/
 ├── Agent-Execute/
 ├── Agent-Verification/
+├── Bot-Management/
 ├── MCP-Util/
 ├── Skill-Util/
 ├── CI-CD-and-Monitoring/

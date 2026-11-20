@@ -95,6 +95,7 @@ metadata:
 | 69 | `AI-Robotics/` | AI Robotics | 此分類涵蓋機器人策略、Vision-Language-Action 模型、模擬環境、操作任務微調與機器人評測。適用於訓練、部署或評估具身 AI 與機器人控制模型。 |
 | 70 | `Audio-and-Music-Generation/` | Audio & Music Generation | 此分類涵蓋 AI 音樂、音效及其他非語音音訊生成。適用於從文字或旋律條件建立音樂與聲音素材；語音合成應路由至 TTS-and-Voice-AI，語音辨識應路由至 Speech-Recognition。 |
 | 71 | `Agent-Delivery/` | Agent Delivery | DELIVER 階段優先檢查此分類。涵蓋使用者可讀的結果整理、成品連結、驗證證據、限制與阻塞狀態交付。適用於任何任務完成、部分完成或受阻時的最終回覆。 |
+| 72 | `Bot-Management/` | Bot Management | Bot 管理。此分類涵蓋 Bot 建立與重新部署、共用連線授權、持久狀態搬移及自動化驗收。適用於需要恢復 Bot 環境或讓團隊 Bot 重用部署流程的場景。 |
 
 > **新增 skill 時，必須按照下方「分類與 Skill 命名規範」及「新增 Skill 與分類分裂決策流程」操作。**
 
