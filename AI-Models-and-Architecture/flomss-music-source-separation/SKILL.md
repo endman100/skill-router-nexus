@@ -1,11 +1,11 @@
 ---
 name: flomss-music-source-separation
-description: "FLOMSS（Flow Matching for Music Source Separation，arXiv:2610.17821）生成式音樂音源分離研究與 MV 人聲去除選型評估。涵蓋 conditional flow matching、音樂分離、MV 人聲去除、伴奏提取、vocal removal、music source separation，以及與 HTDemucs、SCNet 在聽感、Mel 距離與 SDR 上的取捨分析。"
+description: "FLOMSS（《FLOMSS: Generative Music Source Separation by Flow Matching》，arXiv:2610.17821）生成式音樂音源分離研究與 MV 人聲去除選型評估。涵蓋 conditional flow matching、音樂分離、MV 人聲去除、伴奏提取、vocal removal、music source separation，以及與 HTDemucs、SCNet 在聽感、Mel 距離與 SDR 上的取捨分析。"
 ---
 
 # FLOMSS：基於 Flow Matching 的生成式音樂音源分離與 MV 人聲去除選型評估
 
-本條目整理論文 **《Flow Matching for Music Source Separation》（FLOMSS，arXiv:2610.17821）** 的方法設計、MUSDB18-HQ 實驗證據、官方儲存庫現況查核，以及針對「MV 初步濾除人聲／提取伴奏」任務的實務採用評估。本檔為外部研究簡易包裝，未在本環境執行實機推論或盲聽測試。
+本條目整理論文 **《FLOMSS: Generative Music Source Separation by Flow Matching》（arXiv:2610.17821）** 的方法設計、MUSDB18-HQ 實驗證據、官方儲存庫現況查核，以及針對「MV 初步濾除人聲／提取伴奏」任務的實務採用評估。本檔為外部研究簡易包裝，未在本環境執行實機推論或盲聽測試。
 
 - **查核日期**：`2026-11-21`
 - **中英檢索關鍵詞**：`FLOMSS`、`flow matching`、`音樂分離`、`音樂分軌`、`MV`、`人聲去除`、`伴奏`、`vocal removal`、`music source separation`、`OT-CFM`、`HTDemucs`、`SCNet`
@@ -62,10 +62,10 @@ description: "FLOMSS（Flow Matching for Music Source Separation，arXiv:2610.17
 
 ### 2. 標準處理流程（建議管線）
 
-1. **抽取音訊**：從原始 MV 影片（如 MP4）無損抽取 44.1 kHz 立體聲音軌。
+1. **抽取與解碼音訊**：從原始 MV 影片（如 MP4）保留原始音訊與時間軸，解碼為未壓縮 PCM（WAV），並視分離模型要求轉為 44.1 kHz 立體聲（原始 MV 常為 48 kHz 或有損壓縮編碼，解碼與重採樣無法恢復已丟失資訊，但中間過程應使用 PCM 以避免額外有損重編碼）。
 2. **四軌分離**：使用 `HTDemucs` 或 `SCNet` 分離出 `vocals`、`drums`、`bass`、`other`。
 3. **合成伴奏**：將非人聲軌（`drums + bass + other`）混合（或視模型支援直接輸出 `no_vocals`／伴奏軌）。
-4. **封裝配回畫面**：將混合後的伴奏音軌與原始 MV 視訊軌重新封裝（mux），保持影音時間軸同步。
+4. **封裝配回畫面**：將混合後的伴奏音軌與原始 MV 視訊軌重新封裝（mux，視訊流直接複製不重編碼），保持影音時間軸同步。
 
 ### 3. 評估性質與實務限制（風險揭露）
 
