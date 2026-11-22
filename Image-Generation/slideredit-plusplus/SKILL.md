@@ -23,7 +23,7 @@ description: "SliderEdit++（《SliderEdit++: Improved Slider Trajectories in In
 
 1. **基礎指令抑制架構（Partial Prompt Suppression, $\mathcal{L}_{\text{PPS}}$）**：
    - **凍結底模，僅訓練輕量 LoRA**：凍結 **FLUX-Klein 4B** 底模，於每個線性層注入 **rank-32 LoRA**（$\Delta W^\ell = B^\ell A^\ell$），以滑桿尺度 $\alpha \in [0, 1]$ 縮放為 $\alpha \Delta W^\ell$。
-   - **教師訊號與端點定義**：以凍結底模在「移除目標編輯指令（或中性無編輯提示 $P_\emptyset$）」下的速度預測（stop-gradient）作為教師目標，訓練 LoRA 在 $\alpha = 1$ 時完全抑制該編輯指令；因此推論時 **$\alpha = 0$ 為完整執行編輯指令，$\alpha = 1$ 為完全抑制編輯（維持原圖／中性）**。
+   - **教師訊號與端點定義**：以凍結底模在「移除目標編輯指令（或中性無編輯提示 $P_\emptyset$）」下的速度預測（stop-gradient）作為教師目標，訓練 LoRA 在 $\alpha = 1$ 時抑制該編輯指令；因此推論時 **$\alpha = 0$ 為完整執行編輯指令，$\alpha = 1$ 的訓練目標為完全抑制該指令、逼近底模在中性／移除目標指令下的速度預測（並非像素級完全復原原圖之保證）**。
    - **免配對強度資料、共用 Adapter**：訓練時無須準備逐強度配對目標圖（僅需 $\le 10\text{k}$ 非配對樣本），且學得的 LoRA adapter 可跨不同圖片與任意自然語言編輯指令通用。
 2. **三項互補軌跡連續性正則（解決單滑桿中間突變）**：
    - **速度空間中點一致性（Velocity-space Midpoint Regularizer, $\mathcal{L}_{\text{vel}}$）**：隨機採樣 $\alpha_1, \alpha_2 \sim \mathcal{U}[0,1]$ 及其中點 $\alpha_m = \frac{1}{2}(\alpha_1 + \alpha_2)$，懲罰中點速度預測與兩端點速度預測平均（stop-gradient）之差距，促使 $\alpha \mapsto \epsilon_{M_\theta^\alpha}$ 逼近仿射線性變化。
@@ -51,8 +51,8 @@ description: "SliderEdit++（《SliderEdit++: Improved Slider Trajectories in In
 
 - **SlideBench 基準**：涵蓋 7 大類別（Lighting、Composition、Camera、Environment、Character、Style、Object）、**57 個細粒度子類別**，每子類 5 筆樣本，共 **285 筆測試樣本**；評測時每個滑桿在 $\alpha \in [0, 1]$ 等距取樣 **$A = 8$ 個位置**，評估單調遞增性（Monotonic Progression）、連續均勻度（Continuity）與多滑桿解耦度（Disentanglement）。
 - **單滑桿整體表現（Table 1 & Table 2）**：
-  - **SliderEdit++ 整體分數達 `0.8116`**，對比最強既有方法（原版 SliderEdit `0.6847`），**相對提升 `18.5%`**。
-  - 對比**相同 FLUX-Klein 4B 底模但未加正則化**的重訓基線（SliderEdit Klein-4B，`0.7209`），**相對提升約 `12.6%`**，證實三項軌跡正則化在同底模下的獨立貢獻。
+  - **SliderEdit++ 整體分數達 `0.8116`**，對比 Table 1 最強既有基線方法（**VeloEdit `0.6847`**；原版 SliderEdit 為 `0.6506`），**相對提升 `18.5%`**。
+  - 對比**相同 FLUX-Klein 4B 底模但未加正則化**的重訓基線（Table 2 SliderEdit Klein-4B，`0.7209`），**相對提升約 `12.6%`**，證實三項軌跡正則化在同底模下的獨立貢獻。
 - **多滑桿表現（Table 3）**：整體分數由原版 SliderEdit 的 `0.7097` 提升至 **`0.8811`**。
 - **推論速度解讀注意**：論文報告較既有滑桿方法快約 **3× 至 20×**，此加速**主要包含採用 few-step 底模（FLUX-Klein 4B，8 steps）的架構收益，不能全部歸因於軌跡正則化本身**。
 
