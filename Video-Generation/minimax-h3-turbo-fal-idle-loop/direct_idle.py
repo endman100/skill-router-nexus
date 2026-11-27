@@ -7,14 +7,6 @@ from urllib.request import Request, urlopen
 
 MODEL = "minimax/h3-max/image-to-video"
 UPLOAD = "https://rest.alpha.fal.ai/storage/upload/initiate?storage_type=fal-cdn-v3"
-PROMPT = """How the reference pictures align with the target video: Picture 1 is the first frame at 0.00 seconds.
-
-integrated_multimodal_description: [Shot 1] Create a seamless five-second looping idle in 9:16 starting from the supplied first frame. Keep identity, outfit, pose silhouette, and every visible detail exactly as supplied; do not invent character-specific traits. Background must stay flat pure white #ffffff with no gradient, shadow spill, props, or environment change. Camera and framing stay completely locked. Keep continuous full-body idle energy for the entire clip with no freeze, hold, settle, or ease-to-stillness at any time including the final second: steady breathing that moves chest and torso; natural blink cadence; soft hair sway if hair is present; gentle soft-body secondary bounce on the chest/bust following the breath with light inertia; continuous lower-body micro-motion—small left-right hip sway / weight shift in the pelvis, subtle knee give, and tiny ankle or stance rock so legs and hips stay alive with the torso. Prefer periodic cyclic motion whose phase at the end is close to the start so a loop stitches cleanly. Keep overall pose and hand/arm placement; no walking steps, no speech, mouth acting, head turn, new gesture, pose rewrite, clothing removal, grabbing, cut, fade, zoom, or camera move. No captions, subtitles, logos, interface, or visible text.
-
-overall_soundscape: N/A
-
-non_diegetic_music: N/A
-"""
 
 
 def fetch(url, data=None, headers=None, method=None):
@@ -26,14 +18,23 @@ def main():
     parser = argparse.ArgumentParser(description="One image -> five-second H3 idle loop")
     parser.add_argument("input", type=Path)
     parser.add_argument("output", type=Path, nargs="?")
+    parser.add_argument(
+        "--background", choices=("white", "scene"), default="white",
+        help="white: flat #ffffff (default), scene: preserve the first frame's background",
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     output = args.output or args.input.with_suffix(".idle.mp4")
     mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}.get(args.input.suffix.lower())
     if not mime:
         parser.error("Input must be PNG or JPEG")
+    prompt_path = Path(__file__).resolve().parent / "prompts" / f"{args.background}.txt"
+    try:
+        prompt = prompt_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        parser.error(f"Prompt file not found for --background {args.background}: {prompt_path}")
     body = dict(
-        prompt=PROMPT,
+        prompt=prompt,
         image_url="https://fal.media/DRY-RUN.png",
         duration=5,
         resolution="768P",
